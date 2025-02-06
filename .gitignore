@@ -303,10 +303,6 @@ node_modules/
 *.dsw
 *.dsp
 
-# Visual Studio 6 technical files
-*.ncb
-*.aps
-
 # Visual Studio LightSwitch build output
 **/*.HTMLClient/GeneratedArtifacts
 **/*.DesktopClient/GeneratedArtifacts
@@ -379,12 +375,7 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # VS Code files for those working on multiple tools
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-*.code-workspace
+.vscode/
 
 # Local History for Visual Studio Code
 .history/
@@ -398,3 +389,31 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+###############################################
+# Additional Global Ignores
+###############################################
+
+# IntelliJ IDEA / JetBrains IDEs
+.idea/
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
+**/packages/
+**/riderModule.iml
+**/_ReSharper.Caches/
+*.iml
+*.iws
+out/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+###############################################
+# Linux Specific Files
+###############################################
+\#*\#
+.directory
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
