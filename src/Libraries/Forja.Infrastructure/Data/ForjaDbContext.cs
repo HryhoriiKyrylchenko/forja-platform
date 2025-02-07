@@ -2,7 +2,10 @@ namespace Forja.Infrastructure.Data;
 
 public class ForjaDbContext : DbContext
 {
-    public ForjaDbContext(DbContextOptions<ForjaDbContext> options) : base(options) { }
+    public ForjaDbContext(DbContextOptions<ForjaDbContext> options) : base(options)
+    {
+        Database.EnsureCreated();
+    }
     
     // Analytics entities (schema: analytics)
     public DbSet<AnalyticsAggregate> AnalyticsAggregates { get; set; }
@@ -45,11 +48,26 @@ public class ForjaDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Product>()
-            .HasDiscriminator<string>("ProductType")
-            .HasValue<Game>("Game")
-            .HasValue<GameAddon>("GameAddon")
-            .HasValue<Bundle>("Bundle");
+        // modelBuilder.Entity<Product>()
+        //     .HasDiscriminator<string>("ProductType")
+        //     .HasValue<Game>("Game")
+        //     .HasValue<GameAddon>("GameAddon");
 
+        // modelBuilder.Entity<BundleProduct>()
+        //     .HasKey(bp => new { bp.BundleId, bp.ProductId });
+        // modelBuilder.Entity<GameCategory>()
+        //     .HasKey(gc => new { gc.GameId, gc.CategoryId });
+        // modelBuilder.Entity<CartItem>()
+        //     .HasKey(ci => new { ci.CartId, ci.ProductId });
+        // modelBuilder.Entity<OrderItem>()
+        //     .HasKey(oi => new { oi.OrderId, oi.ProductId });
+        // modelBuilder.Entity<ProductDiscount>()
+        //     .HasKey(pd => new { pd.ProductId, pd.DiscountId });
+        // modelBuilder.Entity<UserAchievement>()
+        //     .HasKey(ua => new { ua.UserId, ua.AchievementId });
+        // modelBuilder.Entity<UserLibraryAddon>()
+        //     .HasKey(ula => new { ula.UserLibraryGameId, ula.AddonId });
+        // modelBuilder.Entity<UserLibraryGame>()
+        //     .HasKey(ulg => new { ulg.UserId, ulg.GameId });
     }
 }

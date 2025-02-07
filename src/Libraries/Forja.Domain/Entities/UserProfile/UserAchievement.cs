@@ -4,10 +4,12 @@ namespace Forja.Domain.Entities.UserProfile;
 public class UserAchievement
 {
     [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public Guid Id { get; set; }
+    
     [ForeignKey("User")]
     public Guid UserId { get; set; }
-    
-    [Key]
+
     [ForeignKey("Achievement")]
     public Guid AchievementId { get; set; }
     

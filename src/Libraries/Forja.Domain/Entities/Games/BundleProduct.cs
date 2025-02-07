@@ -4,10 +4,12 @@ namespace Forja.Domain.Entities.Games;
 public class BundleProduct
 {
     [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public Guid Id { get; set; }
+    
     [ForeignKey("Bundle")]
     public Guid BundleId { get; set; }
     
-    [Key]
     [ForeignKey("Product")]
     public Guid ProductId { get; set; }
     

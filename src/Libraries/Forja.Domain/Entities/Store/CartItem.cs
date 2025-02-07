@@ -4,10 +4,12 @@ namespace Forja.Domain.Entities.Store;
 public class CartItem : SoftDeletableEntity
 {
     [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public Guid Id { get; set; }
+    
     [ForeignKey("Cart")]
     public Guid CartId { get; set; }
     
-    [Key]
     [ForeignKey("Product")]
     public Guid ProductId { get; set; }
     

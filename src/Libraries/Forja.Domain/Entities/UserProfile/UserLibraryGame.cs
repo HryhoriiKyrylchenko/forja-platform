@@ -4,10 +4,12 @@ namespace Forja.Domain.Entities.UserProfile;
 public class UserLibraryGame : SoftDeletableEntity
 {
     [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public Guid Id { get; set; }
+    
     [ForeignKey("User")]
     public Guid UserId { get; set; }
 
-    [Key]
     [ForeignKey("Game")]
     public Guid GameId { get; set; }
     

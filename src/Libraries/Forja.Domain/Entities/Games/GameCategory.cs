@@ -4,10 +4,12 @@ namespace Forja.Domain.Entities.Games;
 public class GameCategory
 {
     [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public Guid Id { get; set; }
+    
     [ForeignKey("Game")]
     public Guid GameId { get; set; }
     
-    [Key]
     [ForeignKey("Category")]
     public Guid CategoryId { get; set; }
     

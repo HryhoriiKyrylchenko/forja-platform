@@ -13,18 +13,10 @@ public class Game : Product
     public virtual ICollection<GameCategory> GameCategories { get; set; } = [];
     
     public virtual ICollection<GameAddon> GameAddons { get; set; } = [];
-    
-    public virtual ICollection<ProductDiscount> ProductDiscounts { get; set; } = [];
-    
+
     public virtual ICollection<GameTag> GameTags { get; set; } = [];
-    
-    public virtual ICollection<CartItem> CartItems { get; set; } = [];
-    
-    public virtual ICollection<OrderItem> OrderItems { get; set; } = [];
     
     public virtual ICollection<UserLibraryGame> UserLibraryGames { get; set; } = [];
     
     public virtual ICollection<Review> Reviews { get; set; } = [];
-    
-    public virtual ICollection<Discount> Discounts { get; set; } = [];
 }

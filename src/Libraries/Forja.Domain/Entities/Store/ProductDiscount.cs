@@ -4,10 +4,12 @@ namespace Forja.Domain.Entities.Store;
 public class ProductDiscount
 {
     [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public Guid Id { get; set; }
+    
     [ForeignKey("Product")]
     public Guid ProductId { get; set; }
-
-    [Key]
+    
     [ForeignKey("Discount")]
     public Guid DiscountId { get; set; }
     

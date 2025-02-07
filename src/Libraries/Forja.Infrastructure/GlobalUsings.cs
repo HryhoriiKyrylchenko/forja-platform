@@ -4,3 +4,8 @@ global using Forja.Domain.Entities.Games;
 global using Forja.Domain.Entities.Store;
 global using Forja.Domain.Entities.Support;
 global using Forja.Domain.Entities.UserProfile;
+global using Forja.Domain.Repositories;
+global using Forja.Infrastructure.Data;
+global using Forja.Infrastructure.Repositories;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Hosting;

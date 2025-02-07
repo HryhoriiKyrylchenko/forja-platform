@@ -1,5 +1,6 @@
 namespace Forja.Domain.Entities.Games;
 
+[Table("Products", Schema = "games")]
 public abstract class Product : SoftDeletableEntity
 {
     [Key]
@@ -18,4 +19,12 @@ public abstract class Product : SoftDeletableEntity
     public DateTime ModifiedAt { get; set; } = DateTime.Now;
     
     public bool IsActive { get; set; }
+    
+    public virtual ICollection<Discount> Discounts { get; set; } = [];
+    
+    public virtual ICollection<CartItem> CartItems { get; set; } = [];
+    
+    public virtual ICollection<OrderItem> OrderItems { get; set; } = [];    
+    
+    public virtual ICollection<ProductDiscount> ProductDiscounts { get; set; } = [];
 }
