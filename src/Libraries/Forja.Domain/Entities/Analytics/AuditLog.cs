@@ -23,5 +23,5 @@ public class AuditLog
     
     public string Details { get; set; } = string.Empty;
     
-    public virtual User User { get; set; } = null!;    
+    public virtual User? User { get; set; } 
 }

@@ -7,11 +7,13 @@ public class GameTag
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
     
-    [MaxLength(30)]
-    public string Tag { get; set; } = string.Empty;
-    
     [ForeignKey("Game")]
     public Guid GameId { get; set; }
     
+    [ForeignKey("Tag")]
+    public Guid TagId { get; set; }
+    
     public virtual Game Game { get; set; } = null!;
+    
+    public virtual Tag Tag { get; set; } = null!;
 }

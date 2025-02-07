@@ -8,6 +8,7 @@ public class Discount : SoftDeletableEntity
     public Guid Id { get; set; }
 
     [Required]
+    [MaxLength(50)]
     public string Name { get; set; } = string.Empty;
 
     [Required]
@@ -16,9 +17,9 @@ public class Discount : SoftDeletableEntity
     // For Percentage type, use values between 0 and 100; for Fixed type, it is the discount amount.
     public decimal DiscountValue { get; set; }
 
-    public DateTime StartDate { get; set; }
+    public DateTime? StartDate { get; set; }
     
-    public DateTime EndDate { get; set; }
+    public DateTime? EndDate { get; set; }
 
-    public ICollection<ProductDiscount> ProductDiscounts { get; set; } = [];
+    public virtual ICollection<ProductDiscount> ProductDiscounts { get; set; } = [];
 }

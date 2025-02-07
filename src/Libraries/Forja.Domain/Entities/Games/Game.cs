@@ -6,9 +6,9 @@ public class Game : Product
     [Required]
     public DateTime ReleaseDate { get; set; }
     
-    public string SystemRequirements { get; set; } = string.Empty;
+    public string? SystemRequirements { get; set; }
     
-    public string StorageUrl { get; set; } = string.Empty;
+    public string? StorageUrl { get; set; }
     
     public virtual ICollection<GameCategory> GameCategories { get; set; } = [];
     

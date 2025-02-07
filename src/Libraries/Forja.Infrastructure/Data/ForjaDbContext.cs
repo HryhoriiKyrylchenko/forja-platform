@@ -21,6 +21,7 @@ public class ForjaDbContext : DbContext
     public DbSet<GameAddon> GameAddons { get; set; }
     public DbSet<GameCategory> GameCategories { get; set; }
     public DbSet<GameTag> GameTags { get; set; }
+    public DbSet<Tag> Tags { get; set; }
 
     // Orders and Payments (schema: store)
     public DbSet<Cart> Carts { get; set; }
@@ -29,6 +30,7 @@ public class ForjaDbContext : DbContext
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<Payment> Payments { get; set; }
+    public DbSet<Product> Products { get; set; }
     public DbSet<ProductDiscount> ProductDiscounts { get; set; }
     
     // Support entities (schema: support)
@@ -47,27 +49,5 @@ public class ForjaDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
-        // modelBuilder.Entity<Product>()
-        //     .HasDiscriminator<string>("ProductType")
-        //     .HasValue<Game>("Game")
-        //     .HasValue<GameAddon>("GameAddon");
-
-        // modelBuilder.Entity<BundleProduct>()
-        //     .HasKey(bp => new { bp.BundleId, bp.ProductId });
-        // modelBuilder.Entity<GameCategory>()
-        //     .HasKey(gc => new { gc.GameId, gc.CategoryId });
-        // modelBuilder.Entity<CartItem>()
-        //     .HasKey(ci => new { ci.CartId, ci.ProductId });
-        // modelBuilder.Entity<OrderItem>()
-        //     .HasKey(oi => new { oi.OrderId, oi.ProductId });
-        // modelBuilder.Entity<ProductDiscount>()
-        //     .HasKey(pd => new { pd.ProductId, pd.DiscountId });
-        // modelBuilder.Entity<UserAchievement>()
-        //     .HasKey(ua => new { ua.UserId, ua.AchievementId });
-        // modelBuilder.Entity<UserLibraryAddon>()
-        //     .HasKey(ula => new { ula.UserLibraryGameId, ula.AddonId });
-        // modelBuilder.Entity<UserLibraryGame>()
-        //     .HasKey(ulg => new { ulg.UserId, ulg.GameId });
     }
 }

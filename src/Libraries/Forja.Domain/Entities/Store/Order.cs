@@ -17,7 +17,7 @@ public class Order : SoftDeletableEntity
 
     public decimal TotalAmount { get; set; }
     
-    public virtual Payment Payment { get; set; } = null!;
+    public virtual Payment? Payment { get; set; }
     
     public virtual ICollection<OrderItem> OrderItems { get; set; } = [];
 }
