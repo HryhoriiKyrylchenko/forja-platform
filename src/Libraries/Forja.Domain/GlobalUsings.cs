@@ -1,0 +1,9 @@
+global using System.ComponentModel.DataAnnotations;
+global using System.ComponentModel.DataAnnotations.Schema;
+global using Forja.Domain.Enums;
+global using Forja.Domain.Entities.Common;
+global using Forja.Domain.Entities.UserProfile;
+global using Forja.Domain.Entities.Support;
+global using Forja.Domain.Entities.Analytics;
+global using Forja.Domain.Entities.Store;
+global using Forja.Domain.Entities.Games;
