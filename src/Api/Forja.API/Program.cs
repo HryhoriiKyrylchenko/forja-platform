@@ -6,6 +6,14 @@ builder.AddInfrastructureServices();
 
 // Add services to the container.
 
+builder.Services.AddAuthentication()
+    .AddKeycloakJwtBearer("keycloak", realm: "forja", options =>
+    {
+        options.Audience = "Forja.Api";
+    });
+
+builder.Services.AddAuthorization();
+
 builder.Services.AddApplicationServices();
 
 builder.Services.AddControllers();
@@ -41,6 +49,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -75,6 +75,10 @@ Download docker image.
     docker pull keycloak/keycloak:26.1
 ```
 
+Run Keycloak.
+- Create a Realm: Your system will operate within a specific realm (e.g., forja).
+- Configure the created realm.
+
 7. **Setup MinIO**
 
 Download docker image.
@@ -95,6 +99,8 @@ Download docker image.
 ```bash
     cd forja-platform/src/Web/forja-react
     npm install
+    
+    npm install keycloak-js
 ```
 
 10. **Run**
