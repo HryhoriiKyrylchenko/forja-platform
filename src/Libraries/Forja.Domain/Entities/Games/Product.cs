@@ -10,7 +10,6 @@ public abstract class Product : SoftDeletableEntity
     /// Gets or sets the unique identifier for the product.
     /// </summary>
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
     /// <summary>
@@ -32,7 +31,7 @@ public abstract class Product : SoftDeletableEntity
     /// <summary>
     /// Gets or sets the date and time when the product was created.
     /// </summary>
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     /// <summary>
     /// Gets or sets the date and time when the product was last modified.

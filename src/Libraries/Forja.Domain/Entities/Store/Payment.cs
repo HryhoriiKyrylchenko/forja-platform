@@ -10,7 +10,6 @@ public class Payment : SoftDeletableEntity
     /// Gets or sets the unique identifier for the payment.
     /// </summary>
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
     /// <summary>
@@ -33,7 +32,7 @@ public class Payment : SoftDeletableEntity
     /// <summary>
     /// Gets or sets the date and time when the payment was made.
     /// </summary>
-    public DateTime PaymentDate { get; set; } = DateTime.Now;
+    public DateTime PaymentDate { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Gets or sets the status of the payment.

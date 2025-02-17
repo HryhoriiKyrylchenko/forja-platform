@@ -10,7 +10,6 @@ public class GameCategory
     /// Gets or sets the unique identifier for the game category.
     /// </summary>
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
     
     /// <summary>

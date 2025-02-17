@@ -48,6 +48,18 @@ Init user secrets in Forja.AppHost
     dotnet user-secrets set Parameters:root-password <password>
 ```
 
+Add configuration in appsettings.json file in Forja.API project
+
+```
+"Keycloak": {
+    "BaseUrl": "http://localhost:8080",
+    "Realm": <realm>, //"forja"
+    "ClientId": <client-id>, //"Forja.Api"
+    "ClientUUID": <client-uuid>,
+    "ClientSecret": <secret>
+  }
+```
+
 4. **Setup Postgres**
 
 Download docker image.
@@ -76,8 +88,9 @@ Download docker image.
 ```
 
 Run Keycloak.
-- Create a Realm: Your system will operate within a specific realm (e.g., forja).
-- Configure the created realm.
+- Create a Realm: Your system will operate within a specific realm `forja`
+- Create a new client in the created realm `Forja.Api` (You can get client secret in a section 'Credentials')
+- Create roles.
 
 7. **Setup MinIO**
 

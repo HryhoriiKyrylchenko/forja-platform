@@ -10,7 +10,6 @@ public class GameTag
     /// Gets or sets the unique identifier for the game tag.
     /// </summary>
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
     
     /// <summary>

@@ -10,7 +10,6 @@ public class Discount : SoftDeletableEntity
     /// Gets or sets the unique identifier for the discount.
     /// </summary>
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
     /// <summary>

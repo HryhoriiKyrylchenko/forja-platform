@@ -10,7 +10,6 @@ public class UserAchievement
     /// Gets or sets the unique identifier for the user achievement.
     /// </summary>
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
     
     /// <summary>
@@ -28,7 +27,7 @@ public class UserAchievement
     /// <summary>
     /// Gets or sets the date and time when the achievement was earned.
     /// </summary>
-    public DateTime AchievedAt { get; set; } = DateTime.Now;
+    public DateTime AchievedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Gets or sets the user who earned the achievement.

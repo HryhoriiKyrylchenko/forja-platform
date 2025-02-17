@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace Forja.Domain.Entities.UserProfile;
 
 /// <summary>
@@ -10,14 +12,13 @@ public class User : SoftDeletableEntity
     /// Gets or sets the unique identifier for the user.
     /// </summary>
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
-    
+
     /// <summary>
     /// Gets or sets the Keycloak user identifier.
     /// </summary>
     [Required]
-    public Guid KeycloakUserId { get; set; }
+    public string KeycloakUserId { get; set; } = string.Empty;
     
     /// <summary>
     /// Gets or sets the username of the user.
@@ -52,7 +53,7 @@ public class User : SoftDeletableEntity
     /// <summary>
     /// Gets or sets the date and time when the user was created.
     /// </summary>
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     /// <summary>
     /// Gets or sets the date and time when the user was last modified.

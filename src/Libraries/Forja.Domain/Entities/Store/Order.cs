@@ -10,7 +10,6 @@ public class Order : SoftDeletableEntity
     /// Gets or sets the unique identifier for the order.
     /// </summary>
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
     /// <summary>
@@ -22,7 +21,7 @@ public class Order : SoftDeletableEntity
     /// <summary>
     /// Gets or sets the date and time when the order was placed.
     /// </summary>
-    public DateTime OrderDate { get; set; } = DateTime.Now;
+    public DateTime OrderDate { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Gets or sets the payment status of the order.

@@ -10,7 +10,6 @@ public class AuditLog
     /// Gets or sets the unique identifier for the audit log entry.
     /// </summary>
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
     /// <summary>
@@ -40,7 +39,7 @@ public class AuditLog
     /// <summary>
     /// Gets or sets the date and time when the action was performed.
     /// </summary>
-    public DateTime ActionDate { get; set; } = DateTime.Now;
+    public DateTime ActionDate { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Gets or sets additional details about the action.

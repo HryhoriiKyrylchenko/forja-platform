@@ -10,7 +10,6 @@ public class AnalyticsEvent
     /// Gets or sets the unique identifier for the analytics event.
     /// </summary>
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
     /// <summary>
@@ -28,7 +27,7 @@ public class AnalyticsEvent
     /// <summary>
     /// Gets or sets the timestamp when the event occurred.
     /// </summary>
-    public DateTime Timestamp { get; set; } = DateTime.Now;
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Gets or sets the metadata associated with the event.

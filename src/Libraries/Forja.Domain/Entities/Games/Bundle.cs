@@ -10,7 +10,6 @@ public class Bundle
     /// Gets or sets the unique identifier for the bundle.
     /// </summary>
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
     
     /// <summary>
@@ -32,7 +31,7 @@ public class Bundle
     /// <summary>
     /// Gets or sets the date and time when the bundle was created.
     /// </summary>
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     /// <summary>
     /// Gets or sets a value indicating whether the bundle is active.

@@ -41,7 +41,7 @@ builder.AddContainer("vault", "hashicorp/vault")
     .WithArgs("server");     
 
 //Keycloak Configuration
-var keycloakUsername = builder.AddParameter("keycloak-admin");
+var keycloakUsername = builder.AddParameter("keycloak-admin", secret: true);
 var keycloakPassword = builder.AddParameter("keycloak-password", secret: true);
 
 var keycloak = builder.AddKeycloak("keycloak", 8080, keycloakUsername, keycloakPassword)
@@ -77,7 +77,7 @@ var forjaApi = builder.AddProject<Projects.Forja_API>("forjaapi")
     .WithExternalHttpEndpoints()
     .WithReference(forjaDb).WaitFor(forjaDb)
     .WithReference(redis)
-    .WithReference(keycloak);
+    .WithReference(keycloak).WaitFor(keycloak);
 
 //frontend
 builder.AddNpmApp("forja-react", "../../Web/forja-react")
