@@ -15,3 +15,4 @@ global using Microsoft.Extensions.Hosting;
 global using Forja.Infrastructure.Keycloak;
 global using Microsoft.Extensions.Configuration;
 global using System.Text.Json.Serialization;
+global using Forja.Domain.Enums;

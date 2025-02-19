@@ -29,7 +29,7 @@ public class KeycloakClient : IKeycloakClient
 
         var userContent = new
         {
-            username = user.Email.Split('@')[0],
+            username = user.Email,
             email = user.Email,
             emailVerified = false,
             enabled = true,
@@ -63,12 +63,12 @@ public class KeycloakClient : IKeycloakClient
         }
     }
     
-    public async Task CreateClientRoleAsync(string roleName, string description = "")
+    public async Task CreateClientRoleAsync(UserRole role, string description = "")
     {
-        var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/admin/realms/{_realm}/clients/{_clientUUID}/roles");
-
-        var accessToken = await ObtainAdminToken();
+        string roleName = role.ToString();
         
+        var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/admin/realms/{_realm}/clients/{_clientUUID}/roles");
+        var accessToken = await ObtainAdminToken();
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         
         var payload = new 
@@ -107,12 +107,12 @@ public class KeycloakClient : IKeycloakClient
         return roles ?? new List<RoleRepresentation>();
     }
     
-    public async Task<RoleRepresentation?> GetClientRoleByNameAsync(string clientUuid, string roleName)
+    public async Task<RoleRepresentation?> GetClientRoleByNameAsync(string clientUuid, UserRole userRole)
     {
+        string roleName = userRole.ToString();
+        
         var request = new HttpRequestMessage(HttpMethod.Get, $"{_baseUrl}/admin/realms/{_realm}/clients/{clientUuid}/roles/{roleName}");
-    
         var accessToken = await ObtainAdminToken();
-
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
     
         var response = await _httpClient.SendAsync(request);
@@ -143,6 +143,11 @@ public class KeycloakClient : IKeycloakClient
         response.EnsureSuccessStatusCode();
     }
     
+    public async Task AssignClientRoleAsync(string userId, RoleRepresentation role)
+    {
+        await AssignClientRolesAsync(userId, new[] { role });
+    }
+    
     public async Task<UserRepresentation?> GetUserByEmailAsync(string email)
     {
         var request = new HttpRequestMessage(HttpMethod.Get, $"{_baseUrl}/admin/realms/{_realm}/users?email={Uri.EscapeDataString(email)}");
@@ -162,6 +167,85 @@ public class KeycloakClient : IKeycloakClient
         return users?.FirstOrDefault();
     }
 
+    public async Task<TokenResponse> LoginAsync(string username, string password)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/realms/{_realm}/protocol/openid-connect/token");
+
+        var content = new FormUrlEncodedContent(new[]
+        {
+            new KeyValuePair<string, string>("grant_type", "password"),
+            new KeyValuePair<string, string>("client_id", _clientId),
+            new KeyValuePair<string, string>("client_secret", _clientSecret),
+            new KeyValuePair<string, string>("username", username),
+            new KeyValuePair<string, string>("password", password)
+        });
+
+        request.Content = content;
+
+        var response = await _httpClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+
+        var responseContent = await response.Content.ReadAsStringAsync();
+        var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(responseContent, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+    
+        if (tokenResponse == null)
+        {
+            throw new Exception("Failed to deserialize token response.");
+        }
+    
+        return tokenResponse;
+    }
+    
+    public async Task LogoutAsync(string refreshToken)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/realms/{_realm}/protocol/openid-connect/logout");
+
+        var content = new FormUrlEncodedContent(new[]
+        {
+            new KeyValuePair<string, string>("client_id", _clientId),
+            new KeyValuePair<string, string>("client_secret", _clientSecret),
+            new KeyValuePair<string, string>("refresh_token", refreshToken)
+        });
+
+        request.Content = content;
+
+        var response = await _httpClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+    }
+    
+    public async Task<TokenResponse> RequestNewTokensAsync(string refreshToken)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/realms/{_realm}/protocol/openid-connect/token");
+
+        var content = new FormUrlEncodedContent(new[]
+        {
+            new KeyValuePair<string, string>("grant_type", "refresh_token"),
+            new KeyValuePair<string, string>("client_id", _clientId),
+            new KeyValuePair<string, string>("client_secret", _clientSecret),
+            new KeyValuePair<string, string>("refresh_token", refreshToken)
+        });
+
+        request.Content = content;
+
+        var response = await _httpClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+
+        var responseContent = await response.Content.ReadAsStringAsync();
+        var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(responseContent, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+    
+        if (tokenResponse == null)
+        {
+            throw new Exception("Failed to deserialize token response.");
+        }
+    
+        return tokenResponse;
+    }
     
     private async Task<string> ObtainAdminToken()
     {
@@ -180,7 +264,7 @@ public class KeycloakClient : IKeycloakClient
         response.EnsureSuccessStatusCode();
 
         var responseJson = await response.Content.ReadAsStringAsync();
-        var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(responseJson);
+        var tokenResponse = JsonSerializer.Deserialize<ClientTokenResponse>(responseJson);
 
         if (tokenResponse == null || string.IsNullOrEmpty(tokenResponse.AccessToken))
         {
