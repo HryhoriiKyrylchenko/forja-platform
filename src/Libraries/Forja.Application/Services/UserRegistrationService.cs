@@ -6,12 +6,12 @@ namespace Forja.Application.Services;
 public class UserRegistrationService : IUserRegistrationService
 {
     private readonly IKeycloakClient _keycloakClient;
-    private readonly IUserRepository _userRepository;
+    private readonly IUserProfileUnitOfWork _userProfileUnitOfWork;
     
-    public UserRegistrationService(IKeycloakClient keycloakClient, IUserRepository userRepository)
+    public UserRegistrationService(IKeycloakClient keycloakClient, IUserProfileUnitOfWork userProfileUnitOfWork)
     {
         _keycloakClient = keycloakClient;
-        _userRepository = userRepository;
+        _userProfileUnitOfWork = userProfileUnitOfWork;
     }
     
     /// <inheritdoc />
@@ -35,7 +35,8 @@ public class UserRegistrationService : IUserRegistrationService
             CreatedAt = DateTime.UtcNow
         };
 
-        await _userRepository.AddAsync(appUser);
+        await _userProfileUnitOfWork.Users.AddAsync(appUser);
+        await _userProfileUnitOfWork.SaveChangesAsync();
     }
     
     /// <inheritdoc />
@@ -122,7 +123,7 @@ public class UserRegistrationService : IUserRegistrationService
         string username = baseUsername;
         int suffix = 0;
         
-        while (await _userRepository.ExistsByUsernameAsync(username))
+        while (await _userProfileUnitOfWork.Users.ExistsByUsernameAsync(username))
         {
             suffix++;
             username = $"{baseUsername}{suffix}";

@@ -1,0 +1,59 @@
+namespace Forja.Domain.Repositories.UserProfile;
+
+/// <summary>
+/// Represents a repository for managing Review entities.
+/// Provides methods for common operations such as retrieval, addition, update, and deletion of reviews.
+/// </summary>
+public interface IReviewRepository
+{
+    /// <summary>
+    /// Asynchronously retrieves a review by its unique identifier.
+    /// </summary>
+    /// <param name="id">The unique identifier of the review to retrieve.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation.
+    /// The task result contains the <see cref="Review"/> if found; otherwise, null.
+    /// </returns>
+    Task<Review?> GetByIdAsync(Guid id);
+
+    /// <summary>
+    /// Retrieves all reviews associated with a specific user.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user whose reviews are to be retrieved.</param>
+    /// <returns>A collection of reviews associated with the specified user.</returns>
+    Task<IEnumerable<Review>> GetAllByUserIdAsync(Guid userId);
+
+    /// <summary>
+    /// Retrieves all reviews associated with a specific game.
+    /// </summary>
+    /// <param name="gameId">The unique identifier of the game whose reviews are to be retrieved.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a collection of reviews associated with the specified game.</returns>
+    Task<IEnumerable<Review>> GetAllByGameIdAsync(Guid gameId);
+
+    /// <summary>
+    /// Retrieves all reviews from the data source.
+    /// </summary>
+    /// <returns>An asynchronous task that returns an enumerable containing all reviews.</returns>
+    Task<IEnumerable<Review>> GetAllAsync();
+
+    /// <summary>
+    /// Asynchronously adds a new review to the repository.
+    /// </summary>
+    /// <param name="review">The review object to be added. Must not be null.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task AddAsync(Review review);
+
+    /// <summary>
+    /// Updates an existing review in the repository.
+    /// </summary>
+    /// <param name="review">The updated review object to be persisted.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    Task UpdateAsync(Review review);
+
+    /// <summary>
+    /// Deletes the review corresponding to the specified identifier.
+    /// </summary>
+    /// <param name="reviewId">The unique identifier of the review to be deleted.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    Task DeleteAsync(Guid reviewId);
+}

@@ -1,3 +1,7 @@
+using Forja.Domain.Repositories.Games;
+using Forja.Infrastructure.Repositories.Games;
+using Forja.Infrastructure.Repositories.UserProfile;
+
 namespace Forja.Infrastructure;
 
 public static class InfrastructureServiceCollectionExtensions

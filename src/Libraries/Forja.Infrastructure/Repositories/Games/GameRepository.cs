@@ -1,4 +1,4 @@
-namespace Forja.Infrastructure.Repositories;
+namespace Forja.Infrastructure.Repositories.Games;
 
 public class GameRepository : IGameRepository
 {
