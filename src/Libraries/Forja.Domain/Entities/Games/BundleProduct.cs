@@ -10,7 +10,6 @@ public class BundleProduct
     /// Gets or sets the unique identifier for the bundle product.
     /// </summary>
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
     
     /// <summary>

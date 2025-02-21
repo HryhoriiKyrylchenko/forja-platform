@@ -1,3 +1,6 @@
+global using System.Net.Http.Headers;
+global using System.Text;
+global using System.Text.Json;
 global using Microsoft.EntityFrameworkCore;
 global using Forja.Domain.Entities.Analytics;
 global using Forja.Domain.Entities.Games;
@@ -9,3 +12,9 @@ global using Forja.Infrastructure.Data;
 global using Forja.Infrastructure.Repositories;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Hosting;
+global using Forja.Infrastructure.Keycloak;
+global using Microsoft.Extensions.Configuration;
+global using System.Text.Json.Serialization;
+global using Polly;
+global using System.Net;
+global using Forja.Infrastructure.Http;

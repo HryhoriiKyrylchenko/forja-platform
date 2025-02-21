@@ -10,7 +10,6 @@ public class Tag
     /// Gets or sets the unique identifier for the tag.
     /// </summary>
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
     
     /// <summary>

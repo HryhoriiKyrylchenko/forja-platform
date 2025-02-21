@@ -10,7 +10,6 @@ public class ProductDiscount
     /// Gets or sets the unique identifier for the product discount.
     /// </summary>
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
     
     /// <summary>

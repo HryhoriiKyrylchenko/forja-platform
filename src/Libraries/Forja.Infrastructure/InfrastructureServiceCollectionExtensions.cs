@@ -8,6 +8,8 @@ public static class InfrastructureServiceCollectionExtensions
 
         // Register repositories or other infrastructure services here
         builder.Services.AddScoped<IGameRepository, GameRepository>();
+        builder.Services.AddScoped<IUserRepository, UserRepository>();
+        builder.Services.AddHttpClient<IKeycloakClient, KeycloakClient>();
             
         return builder;
     }

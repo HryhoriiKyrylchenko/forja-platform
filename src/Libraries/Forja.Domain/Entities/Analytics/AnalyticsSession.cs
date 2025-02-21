@@ -10,7 +10,6 @@ public class AnalyticsSession
     /// Gets or sets the unique identifier for the session.
     /// </summary>
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid SessionId { get; set; }
 
     /// <summary>
@@ -22,7 +21,7 @@ public class AnalyticsSession
     /// <summary>
     /// Gets or sets the start time of the session.
     /// </summary>
-    public DateTime StartTime { get; set; } = DateTime.Now;
+    public DateTime StartTime { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Gets or sets the end time of the session.

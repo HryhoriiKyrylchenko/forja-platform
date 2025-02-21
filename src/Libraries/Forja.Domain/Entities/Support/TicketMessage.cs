@@ -10,7 +10,6 @@ public class TicketMessage : SoftDeletableEntity
     /// Gets or sets the unique identifier for the ticket message.
     /// </summary>
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
     /// <summary>
@@ -40,7 +39,7 @@ public class TicketMessage : SoftDeletableEntity
     /// <summary>
     /// Gets or sets the date and time when the message was sent.
     /// </summary>
-    public DateTime SentAt { get; set; } = DateTime.Now;
+    public DateTime SentAt { get; set; } = DateTime.UtcNow;
     
     /// <summary>
     /// Gets or sets the related support ticket.

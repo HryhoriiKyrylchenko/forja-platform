@@ -10,7 +10,6 @@ public class Achievement : SoftDeletableEntity
     /// Gets or sets the unique identifier for the achievement.
     /// </summary>
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
     /// <summary>

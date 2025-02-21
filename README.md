@@ -148,41 +148,15 @@ You can run the project directly from Visual Studio or using the command line:
 
 ### Running Locally with Docker Compose
 
-The project includes a [`docker-compose.yml`](./deployment/docker-compose.yml) file that sets up all required services:
-
-```bash
-    docker-compose up --build
-```
-
 This command will build and run:
 
-- The .NET backend on port 5000.
+- The .NET backend.
 - The React frontend on port 3000.
 - PostgreSQL, Redis, Keycloak, Vault, and MinIO containers.
 
-### Running Individually
-
-- Backend:
-
-You can run the backend directly from Visual Studio or using the command line:
-
-```bash
-    dotnet run --project backend/Forja.API/Forja.API.csproj
-```
-
-- Frontend:
-
-Start the React development server:
-
-```bash
-    cd frontend
-    npm start
-```
----
-
 ## Deployment
 
-For production deployment, consider using your preferred cloud hosting or container orchestration service. Refer to the deployment/scripts/ folder for additional helper scripts and migration steps.
+For production deployment, consider using your preferred cloud hosting or container orchestration service.
 
 ---
 

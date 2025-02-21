@@ -10,7 +10,6 @@ public class SupportTicket : SoftDeletableEntity
     /// Gets or sets the unique identifier for the support ticket.
     /// </summary>
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; }
 
     /// <summary>
@@ -41,7 +40,7 @@ public class SupportTicket : SoftDeletableEntity
     /// <summary>
     /// Gets or sets the date and time when the support ticket was created.
     /// </summary>
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     /// <summary>
     /// Gets or sets the date and time when the support ticket was last updated.

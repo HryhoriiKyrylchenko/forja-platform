@@ -6,6 +6,7 @@ public static class ServiceCollectionExtensions
     {
         // Register your application services here
         services.AddScoped<IGameService, GameService>();
+        services.AddScoped<IUserRegistrationService, UserRegistrationService>();
 
         return services;
     }
