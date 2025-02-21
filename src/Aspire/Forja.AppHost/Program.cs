@@ -53,7 +53,8 @@ var keycloak = builder.AddKeycloak("keycloak", 8080, keycloakUsername, keycloakP
     .WithEnvironment("KC_DB_URL", "jdbc:postgresql://forja-postgres:5432/keycloakdb")
     .WithEnvironment("KC_DB_USERNAME", "postgres")
     .WithEnvironment("KC_DB_PASSWORD", postgresPassword)
-    .WithEnvironment("KC_HOSTNAME", "localhost");
+    .WithEnvironment("KC_HOSTNAME", "localhost")
+    .WithLifetime(ContainerLifetime.Persistent);
 
 //MinIO Configuration
 var minioRootUser = builder.AddParameter("root-user", secret: true);
@@ -70,7 +71,8 @@ builder.AddContainer("minio", "minio/minio")
     .WithEnvironment("MINIO_ADDRESS", ":9000")
     .WithEnvironment("MINIO_CONSOLE_ADDRESS", ":9001")
     .WithArgs("server", "/data")
-    .WithVolume("minio-data", "/data", isReadOnly: false);
+    .WithVolume("minio-data", "/data", isReadOnly: false)
+    .WithLifetime(ContainerLifetime.Persistent);
 
 //backend
 var forjaApi = builder.AddProject<Projects.Forja_API>("forjaapi")

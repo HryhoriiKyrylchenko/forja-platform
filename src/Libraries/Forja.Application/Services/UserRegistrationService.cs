@@ -1,5 +1,8 @@
 namespace Forja.Application.Services;
 
+/// <summary>
+/// Provides services for user registration, authentication, and role management operations.
+/// </summary>
 public class UserRegistrationService : IUserRegistrationService
 {
     private readonly IKeycloakClient _keycloakClient;
@@ -11,16 +14,15 @@ public class UserRegistrationService : IUserRegistrationService
         _userRepository = userRepository;
     }
     
+    /// <inheritdoc />
     public async Task RegisterUserAsync(RegisterUserCommand request)
     {
-        // 1. Call Keycloak to create a new user with minimal data
         string keycloakId = await _keycloakClient.CreateUserAsync(new KeycloakUser
         {
             Email = request.Email,
             Password = request.Password
         });
-        
-        // 2. Create domain entity for the application user
+
         var baseUsername = request.Email.Split('@')[0];
         var username = await GenerateUniqueUsernameAsync(baseUsername);
         
@@ -32,11 +34,88 @@ public class UserRegistrationService : IUserRegistrationService
             Email = request.Email,
             CreatedAt = DateTime.UtcNow
         };
-        
-        // 3. Save the new user in the local database
+
         await _userRepository.AddAsync(appUser);
     }
     
+    /// <inheritdoc />
+    public async Task<TokenResponse> LoginUserAsync(LoginUserCommand request)
+    {
+        return await _keycloakClient.LoginAsync(request.Email, request.Password);
+    }
+    
+    /// <inheritdoc />
+    public async Task LogoutUserAsync(LogoutCommand request)
+    {
+        await _keycloakClient.LogoutAsync(request.RefreshToken);
+    }
+    
+    /// <inheritdoc />
+    public async Task<TokenResponse> RefreshTokenAsync(RefreshTokenCommand request)
+    {
+        return await _keycloakClient.RequestNewTokensAsync(request.RefreshToken);
+    }
+    
+    /// <inheritdoc />
+    public async Task CreateRoleAsync(CreateRoleCommand command)
+    {
+        await _keycloakClient.CreateClientRoleAsync(command.RoleName, command.Description);
+    }
+    
+    /// <inheritdoc />
+    public async Task<IEnumerable<RoleRepresentation>> GetAllRolesAsync()
+    {
+        return await _keycloakClient.GetClientRolesAsync();
+    }
+        
+    /// <inheritdoc />
+    public async Task<RoleRepresentation?> GetRoleByNameAsync(string roleName)
+    {
+        return await _keycloakClient.GetClientRoleByNameAsync(roleName);
+    }
+    
+    /// <inheritdoc />
+    public async Task<IEnumerable<RoleRepresentation>> GetUserRolesAsync(string userId)
+    {
+        return await _keycloakClient.GetUserRolesAsync(userId);
+    }
+        
+    /// <inheritdoc />
+    public async Task<bool> CheckUserRoleAsync(string userId, string roleName)
+    {
+        return await _keycloakClient.CheckUserRoleAsync(userId, roleName);
+    }
+    /// <inheritdoc />
+    public async Task AssignRolesToUserAsync(string userId, IEnumerable<RoleRepresentation> roles)
+    {
+        await _keycloakClient.AssignRolesAsync(userId, roles);
+    }
+    
+    /// <inheritdoc />
+    public async Task AssignRoleToUserAsync(string userId, RoleRepresentation role)
+    {
+        await _keycloakClient.AssignRoleAsync(userId, role);
+    }
+    
+    /// <inheritdoc />
+    public async Task DeleteRolesFromUserAsync(string userId, IEnumerable<RoleRepresentation> roles)
+    {
+        await _keycloakClient.DeleteClientRolesAsync(userId, roles);
+    }
+        
+    /// <inheritdoc />
+    public async Task DeleteRoleFromUserAsync(string userId, RoleRepresentation role)
+    {
+        await _keycloakClient.DeleteClientRoleAsync(userId, role);
+    }
+    
+    /// <inheritdoc />
+    public async Task<UserRepresentation?> GetKeycloakUserByEmailAsync(string email)
+    {
+        return await _keycloakClient.GetUserByEmailAsync(email);
+    }
+    
+    /// <inheritdoc />
     private async Task<string> GenerateUniqueUsernameAsync(string baseUsername)
     {
         baseUsername = baseUsername.Trim().ToLowerInvariant();

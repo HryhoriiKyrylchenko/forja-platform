@@ -7,3 +7,4 @@ global using Forja.Domain.Entities.UserProfile;
 global using System.ComponentModel.DataAnnotations;
 global using Forja.Application.DTOs;
 global using Forja.Infrastructure.Keycloak;
+global using Forja.Domain.Enums;
