@@ -18,6 +18,16 @@ public interface IUserRepository
     Task<User?> GetByIdAsync(Guid id);
 
     /// <summary>
+    /// Asynchronously retrieves a user by their Keycloak unique identifier.
+    /// </summary>
+    /// <param name="userKeycloakId">The Keycloak unique identifier of the user to retrieve.</param>
+    /// <returns>
+    /// A task representing the asynchronous operation, containing the user entity if found,
+    /// or null if no matching user exists.
+    /// </returns>
+    Task<User?> GetByKeycloakIdAsync(string userKeycloakId);
+
+    /// <summary>
     /// Asynchronously retrieves a user by their email address.
     /// </summary>
     /// <param name="email">The email address of the user to retrieve.</param>
@@ -29,6 +39,14 @@ public interface IUserRepository
     /// </summary>
     /// <returns>A task representing the asynchronous operation. The task result contains an enumerable of <see cref="User"/> objects.</returns>
     Task<IEnumerable<User>> GetAllAsync();
+
+    /// <summary>
+    /// Asynchronously retrieves all users that have been soft deleted.
+    /// </summary>
+    /// <returns>
+    /// A task representing the asynchronous operation, containing a collection of soft-deleted user entities.
+    /// </returns>
+    Task<IEnumerable<User>> GetAllDeletedAsync();
 
     /// <summary>
     /// Asynchronously adds a new user to the repository.

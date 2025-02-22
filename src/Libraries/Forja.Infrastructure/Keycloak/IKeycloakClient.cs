@@ -149,4 +149,8 @@ public interface IKeycloakClient
     /// <exception cref="ArgumentException">Thrown when the provided refresh token is null or whitespace.</exception>
     /// <exception cref="Exception">Thrown when the request fails or the server response cannot be deserialized.</exception>
     Task<TokenResponse> RequestNewTokensAsync(string refreshToken);
+    
+    //TODO: Add change password functionality
+    //TODO: Add 2FA functionality
+    //TODO: Add validate token functionality
 }

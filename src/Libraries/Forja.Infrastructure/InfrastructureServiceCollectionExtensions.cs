@@ -11,8 +11,7 @@ public static class InfrastructureServiceCollectionExtensions
         builder.AddNpgsqlDbContext<ForjaDbContext>("forjadb");
 
         // Register repositories or other infrastructure services here
-        builder.Services.AddScoped<IGameRepository, GameRepository>();
-        builder.Services.AddScoped<IUserRepository, UserRepository>();
+        builder.Services.AddScoped<IUserProfileUnitOfWork, UserProfileUnitOfWork>();
         builder.Services.AddHttpClient<IKeycloakClient, KeycloakClient>();
             
         return builder;

@@ -46,6 +46,11 @@ public class User : SoftDeletableEntity
     public string Email { get; set; } = string.Empty;
     
     /// <summary>
+    /// Gets or sets the phone number of the user.
+    /// </summary>
+    public string? PhoneNumber { get; set; }
+    
+    /// <summary>
     /// Gets or sets the URL of the user's avatar.
     /// </summary>
     public string? AvatarUrl { get; set; }

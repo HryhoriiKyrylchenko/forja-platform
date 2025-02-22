@@ -1,4 +1,4 @@
-namespace Forja.Application.DTOs;
+namespace Forja.Application.DTOs.UserRegistration;
 
 /// <summary>
 /// Represents a command to log out a user by invalidating an associated refresh token.

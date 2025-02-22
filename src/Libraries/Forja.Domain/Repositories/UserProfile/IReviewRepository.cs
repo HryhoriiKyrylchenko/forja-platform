@@ -24,6 +24,16 @@ public interface IReviewRepository
     Task<IEnumerable<Review>> GetAllByUserIdAsync(Guid userId);
 
     /// <summary>
+    /// Asynchronously retrieves all deleted reviews associated with a specific user.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user whose deleted reviews are to be retrieved.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation.
+    /// The task result contains a collection of deleted reviews associated with the specified user.
+    /// </returns>
+    Task<IEnumerable<Review>> GetAllDeletedByUserIdAsync(Guid userId);
+
+    /// <summary>
     /// Retrieves all reviews associated with a specific game.
     /// </summary>
     /// <param name="gameId">The unique identifier of the game whose reviews are to be retrieved.</param>
@@ -31,10 +41,38 @@ public interface IReviewRepository
     Task<IEnumerable<Review>> GetAllByGameIdAsync(Guid gameId);
 
     /// <summary>
+    /// Asynchronously retrieves all deleted reviews associated with a specific game.
+    /// </summary>
+    /// <param name="gameId">The unique identifier of the game whose deleted reviews are to be retrieved.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation.
+    /// The task result contains a collection of deleted <see cref="Review"/> entities associated with the specified game.
+    /// </returns>
+    Task<IEnumerable<Review>> GetAllDeletedByGameIdAsync(Guid gameId);
+
+    /// <summary>
     /// Retrieves all reviews from the data source.
     /// </summary>
     /// <returns>An asynchronous task that returns an enumerable containing all reviews.</returns>
     Task<IEnumerable<Review>> GetAllAsync();
+
+    /// <summary>
+    /// Asynchronously retrieves all reviews that have not been approved.
+    /// </summary>
+    /// <returns>
+    /// A task that represents the asynchronous operation.
+    /// The task result contains a collection of reviews that are not approved.
+    /// </returns>
+    Task<IEnumerable<Review>> GetAllNotApprovedAsync();
+
+    /// <summary>
+    /// Asynchronously retrieves all deleted reviews.
+    /// </summary>
+    /// <returns>
+    /// A task that represents the asynchronous operation.
+    /// The task result contains a collection of deleted <see cref="Review"/> entities.
+    /// </returns>
+    Task<IEnumerable<Review>> GetAllDeletedAsync();
 
     /// <summary>
     /// Asynchronously adds a new review to the repository.
@@ -56,4 +94,14 @@ public interface IReviewRepository
     /// <param name="reviewId">The unique identifier of the review to be deleted.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     Task DeleteAsync(Guid reviewId);
+
+    /// <summary>
+    /// Asynchronously restores a soft-deleted review by its unique identifier.
+    /// </summary>
+    /// <param name="reviewId">The unique identifier of the review to restore.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation.
+    /// The task result contains the restored <see cref="Review"/> if successfully restored.
+    /// </returns>
+    Task<Review> RestoreAsync(Guid reviewId);
 }

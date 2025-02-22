@@ -1,4 +1,4 @@
-namespace Forja.Application.DTOs;
+namespace Forja.Application.DTOs.UserRegistration;
 
 /// <summary>
 /// Represents a command for logging in a user by providing email and password.

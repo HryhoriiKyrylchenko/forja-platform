@@ -9,40 +9,74 @@ public class UserRepository : IUserRepository
         _users = context.Set<User>();
     }
 
+    /// <inheritdoc />
     public async Task<User?> GetByIdAsync(Guid id)
     {
+        if (id == Guid.Empty)
+        {
+            throw new ArgumentException("User id is required", nameof(id));
+        }
+        
         return await _users
-            .Include(u => u.UserAchievements)
-            .Include(u => u.Reviews)
+            .Where(u => u.IsDeleted == false)
             .FirstOrDefaultAsync(u => u.Id == id);
     }
+    
+    /// <inheritdoc />
+    public async Task<User?> GetByKeycloakIdAsync(string userKeycloakId)
+    {
+        if (string.IsNullOrWhiteSpace(userKeycloakId))
+        {
+            throw new ArgumentException("User keycloak id is required", nameof(userKeycloakId));
+        }
+        
+        return await _users
+            .Where(u => u.IsDeleted == false)
+            .FirstOrDefaultAsync(u => u.KeycloakUserId == userKeycloakId);
+    }
 
+    /// <inheritdoc />
     public async Task<User?> GetByEmailAsync(string email)
     {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            throw new ArgumentException("User email is required", nameof(email));
+        }
+        
         return await _users
-            .Include(u => u.UserAchievements)
-            .Include(u => u.Reviews)
+            .Where(u => u.IsDeleted == false)
             .FirstOrDefaultAsync(u => u.Email == email);
     }
 
+    /// <inheritdoc />
     public async Task<IEnumerable<User>> GetAllAsync()
     {
         return await _users
-            .Include(u => u.UserAchievements)
-                .ThenInclude(ua => ua.Achievement)
-            .Include(u => u.Reviews)
+            .Where(u => u.IsDeleted == false)
+            .ToListAsync();
+    }
+    
+    /// <inheritdoc />
+    public async Task<IEnumerable<User>> GetAllDeletedAsync()
+    {
+        return await _users
+            .Where(u => u.IsDeleted == true)
             .ToListAsync();
     }
 
     /// <inheritdoc />
     public async Task AddAsync(User user)
     {
+        //TODO: Validate user
+        
         await _users.AddAsync(user);
     }
 
     /// <inheritdoc />
     public Task UpdateAsync(User user)
     {
+        //TODO: Validate user
+        
         _users.Update(user);
         return Task.CompletedTask;
 
@@ -51,6 +85,11 @@ public class UserRepository : IUserRepository
     /// <inheritdoc />
     public async Task DeleteAsync(Guid userId)
     {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User id is required", nameof(userId));
+        }
+        
         var user = await GetByIdAsync(userId);
         if (user != null)
         {
@@ -64,7 +103,9 @@ public class UserRepository : IUserRepository
     public async Task<bool> ExistsByUsernameAsync(string username)
     {
         if (string.IsNullOrWhiteSpace(username))
+        {
             throw new ArgumentException("Username is required", nameof(username));
+        }
         
         return await _users.AnyAsync(u => u.Username.ToLower() == username.ToLower());
     }
