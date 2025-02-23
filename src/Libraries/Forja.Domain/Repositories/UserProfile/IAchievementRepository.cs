@@ -14,13 +14,6 @@ public interface IAchievementRepository
     Task<Achievement?> GetByIdAsync(Guid id);
 
     /// <summary>
-    /// Retrieves all achievements associated with a specific user.
-    /// </summary>
-    /// <param name="userId">The unique identifier of the user.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains a collection of achievements linked to the specified user.</returns>
-    Task<IEnumerable<Achievement>> GetAllByUserIdAsync(Guid userId);
-
-    /// <summary>
     /// Retrieves all achievements associated with a specific game identifier.
     /// </summary>
     /// <param name="gameId">The unique identifier of the game for which achievements are to be retrieved.</param>
@@ -28,10 +21,26 @@ public interface IAchievementRepository
     Task<IEnumerable<Achievement>> GetAllByGameIdAsync(Guid gameId);
 
     /// <summary>
+    /// Retrieves all deleted achievements associated with a specific game.
+    /// </summary>
+    /// <param name="gameId">The unique identifier of the game whose deleted achievements are to be retrieved.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation.
+    /// The task result contains a collection of deleted achievements associated with the specified game.
+    /// </returns>
+    Task<IEnumerable<Achievement>> GetAllDeletedByGameIdAsync(Guid gameId);
+
+    /// <summary>
     /// Retrieves all achievements from the data source asynchronously.
     /// </summary>
     /// <returns>A task representing the asynchronous operation, containing a collection of all achievements.</returns>
     Task<IEnumerable<Achievement>> GetAllAsync();
+
+    /// <summary>
+    /// Retrieves all achievements that have been marked as deleted.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation. The task result contains an enumerable collection of deleted achievements.</returns>
+    Task<IEnumerable<Achievement>> GetAllDeletedAsync();
 
     /// <summary>
     /// Asynchronously adds a new achievement to the repository.
@@ -53,4 +62,11 @@ public interface IAchievementRepository
     /// <param name="achievementId">The unique identifier of the achievement to delete.</param>
     /// <returns>A task representing the asynchronous delete operation.</returns>
     Task DeleteAsync(Guid achievementId);
+
+    /// <summary>
+    /// Restores a previously deleted achievement by its unique identifier.
+    /// </summary>
+    /// <param name="achievementId">The unique identifier of the achievement to restore.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the restored achievement if successful.</returns>
+    Task<Achievement> RestoreAsync(Guid achievementId); 
 }

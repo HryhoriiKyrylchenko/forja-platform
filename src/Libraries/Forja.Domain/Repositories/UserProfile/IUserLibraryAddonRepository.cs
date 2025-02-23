@@ -13,19 +13,39 @@ public interface IUserLibraryAddonRepository
     /// <returns>A task representing the asynchronous operation. The task result contains the user library addon if found, or null if no addon with the specified identifier exists.</returns>
     Task<UserLibraryAddon?> GetByIdAsync(Guid id);
 
+    /// <summary>
+    /// Retrieves a deleted user library addon by its unique identifier.
+    /// </summary>
+    /// <param name="id">The unique identifier of the deleted user library addon.</param>
+    /// <returns>A task representing the asynchronous operation. The task result contains the deleted user library addon if found, or null if no deleted addon with the specified identifier exists.</returns>
+    Task<UserLibraryAddon?> GetDeletedByIdAsync(Guid id);
+
 
     /// <summary>
     /// Asynchronously retrieves all user library addons associated with a specific game.
     /// </summary>
-    /// <param name="gameTitle">The title of the game for which to retrieve associated library addons.</param>
+    /// <param name="gameId">The id of the game for which to retrieve associated library addons.</param>
     /// <returns>A task representing the asynchronous operation. The task result contains an enumerable collection of UserLibraryAddon objects associated with the specified game.</returns>
-    Task<IEnumerable<UserLibraryAddon>> GetAllByGameAsync(string gameTitle);
+    Task<IEnumerable<UserLibraryAddon>> GetAllByGameIdAsync(Guid gameId);
+
+    /// <summary>
+    /// Retrieves all deleted user library addons associated with a specific game by its unique identifier.
+    /// </summary>
+    /// <param name="gameId">The unique identifier of the game for which deleted user library addons are to be retrieved.</param>
+    /// <returns>A task representing the asynchronous operation. The task result contains a collection of deleted user library addons related to the specified game.</returns>
+    Task<IEnumerable<UserLibraryAddon>> GetAllDeletedByGameIdAsync(Guid gameId);
 
     /// <summary>
     /// Asynchronously retrieves all user library addons from the repository.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation. The task result contains an enumerable collection of UserLibraryAddon objects.</returns>
     Task<IEnumerable<UserLibraryAddon>> GetAllAsync();
+
+    /// <summary>
+    /// Retrieves all deleted user library addons.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation. The task result contains a collection of deleted user library addons.</returns>
+    Task<IEnumerable<UserLibraryAddon>> GetAllDeletedAsync();
 
     /// <summary>
     /// Asynchronously adds a new UserLibraryAddon entity to the repository.
@@ -55,4 +75,11 @@ public interface IUserLibraryAddonRepository
     /// <param name="userLibraryAddonId">The unique identifier of the user library addon to delete.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     Task DeleteAsync(Guid userLibraryAddonId);
+
+    /// <summary>
+    /// Restores a previously deleted user library addon to an active state.
+    /// </summary>
+    /// <param name="userLibraryAddonId">The unique identifier of the user library addon to restore.</param>
+    /// <returns>A task representing the asynchronous operation. The task result contains the restored user library addon.</returns>
+    Task<UserLibraryAddon> RestoreAsync(Guid userLibraryAddonId);
 }

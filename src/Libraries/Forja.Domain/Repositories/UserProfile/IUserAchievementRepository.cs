@@ -27,6 +27,23 @@ public interface IUserAchievementRepository
     Task<IEnumerable<UserAchievement>> GetAllAsync();
 
     /// <summary>
+    /// Retrieves all user achievements associated with a specific user by their unique identifier.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user whose achievements are to be retrieved.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains an enumerable collection of user achievements associated with the specified user.</returns>
+    Task<IEnumerable<UserAchievement>> GetAllByUserIdAsync(Guid userId);
+
+    /// <summary>
+    /// Retrieves all user achievements associated with a specific game identifier.
+    /// </summary>
+    /// <param name="gameId">The unique identifier of the game to retrieve achievements for.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation. The task result contains
+    /// an enumerable collection of user achievements linked to the specified game identifier.
+    /// </returns>
+    Task<IEnumerable<UserAchievement>> GetAllByGameIdAsync(Guid gameId);
+
+    /// <summary>
     /// Adds a new user achievement to the repository asynchronously.
     /// </summary>
     /// <param name="userAchievement">The user achievement object to add.</param>

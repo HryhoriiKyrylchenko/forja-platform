@@ -21,16 +21,30 @@ public class UserLibraryAddonRepository : IUserLibraryAddonRepository
             .Where(ula => !ula.IsDeleted)
             .Include(ula => ula.UserLibraryGame)
             .Include(ula => ula.GameAddon)
-                .ThenInclude(ga => ga.Game)
             .FirstOrDefaultAsync(ula => ula.Id == id);
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<UserLibraryAddon>> GetAllByGameAsync(string gameTitle)
+    public async Task<UserLibraryAddon?> GetDeletedByIdAsync(Guid id)
     {
-        if (string.IsNullOrWhiteSpace(gameTitle))
+        if (id == Guid.Empty)
         {
-            throw new ArgumentException("Game title cannot be empty.", nameof(gameTitle));
+            throw new ArgumentException("User library addon id cannot be empty.", nameof(id));
+        }
+        
+        return await _userLibraryAddons
+            .Where(ula => ula.IsDeleted)
+            .Include(ula => ula.UserLibraryGame)
+            .Include(ula => ula.GameAddon)
+            .FirstOrDefaultAsync(ula => ula.Id == id);
+    }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<UserLibraryAddon>> GetAllByGameIdAsync(Guid gameId)
+    {
+        if (gameId == Guid.Empty)
+        {
+            throw new ArgumentException("Game id cannot be empty.", nameof(gameId));
         }
         
         return await _userLibraryAddons
@@ -38,29 +52,54 @@ public class UserLibraryAddonRepository : IUserLibraryAddonRepository
             .Include(ula => ula.UserLibraryGame)
             .Include(ula => ula.GameAddon)
                 .ThenInclude(ga => ga.Game)
-            .Where(ula => ula.UserLibraryGame.Game.Title == gameTitle)
+            .Where(ula => ula.UserLibraryGame.Game.Id == gameId)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<UserLibraryAddon>> GetAllDeletedByGameIdAsync(Guid gameId)
+    {
+        if (gameId == Guid.Empty)
+        {
+            throw new ArgumentException("Game id cannot be empty.", nameof(gameId));
+        }
+        
+        return await _userLibraryAddons
+            .Where(ula => ula.IsDeleted)
+            .Include(ula => ula.UserLibraryGame)
+            .Include(ula => ula.GameAddon)
+                .ThenInclude(ga => ga.Game)
+            .Where(ula => ula.UserLibraryGame.Game.Id == gameId)
             .ToListAsync();
     }
 
     /// <inheritdoc />
     public async Task<IEnumerable<UserLibraryAddon>> GetAllAsync()
     {
-        if (_userLibraryAddons == null)
-        {
-            throw new Exception("User library addons not found.");
-        }
-        
         return await _userLibraryAddons
             .Where(ula => !ula.IsDeleted)
             .Include(ula => ula.UserLibraryGame)
             .Include(ula => ula.GameAddon)
-            .ThenInclude(ga => ga.Game)
+            .ToListAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<UserLibraryAddon>> GetAllDeletedAsync()
+    {
+        return await _userLibraryAddons
+            .Where(ula => ula.IsDeleted)
+            .Include(ula => ula.UserLibraryGame)
+            .Include(ula => ula.GameAddon)
             .ToListAsync();
     }
 
     /// <inheritdoc />
     public async Task AddAsync(UserLibraryAddon userLibraryAddon)
     {
+        if (userLibraryAddon == null)
+        {
+            throw new ArgumentNullException(nameof(userLibraryAddon));
+        }
+        
         //TODO: Validate userLibraryAddon
         
         await _userLibraryAddons.AddAsync(userLibraryAddon);
@@ -89,5 +128,30 @@ public class UserLibraryAddonRepository : IUserLibraryAddonRepository
             userLibraryAddon.IsDeleted = true;
             _userLibraryAddons.Update(userLibraryAddon);
         }
+    }
+
+    /// <inheritdoc />
+    public async Task<UserLibraryAddon> RestoreAsync(Guid userLibraryAddonId)
+    {
+        if (userLibraryAddonId == Guid.Empty)
+        {
+            throw new ArgumentException("User library addon id cannot be empty.", nameof(userLibraryAddonId));
+        }
+        
+        var deletedUserLibraryAddon = await GetDeletedByIdAsync(userLibraryAddonId);
+        if (deletedUserLibraryAddon == null)
+        {
+            throw new ArgumentException("User library game not found.", nameof(userLibraryAddonId));
+        }
+
+        if (!deletedUserLibraryAddon.IsDeleted)
+        {
+            return deletedUserLibraryAddon;
+        }
+        
+        deletedUserLibraryAddon.IsDeleted = false;
+        _userLibraryAddons.Update(deletedUserLibraryAddon);
+        
+        return deletedUserLibraryAddon;
     }
 }

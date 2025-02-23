@@ -16,10 +16,49 @@ public interface IUserLibraryGameRepository
     Task<UserLibraryGame?> GetByIdAsync(Guid id);
 
     /// <summary>
+    /// Retrieves a soft-deleted user library game by its unique identifier.
+    /// </summary>
+    /// <param name="id">The unique identifier of the soft-deleted user library game to retrieve.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation. The task result contains the
+    /// <see cref="UserLibraryGame"/> object if found; otherwise, null.
+    /// </returns>
+    Task<UserLibraryGame?> GetDeletedByIdAsync(Guid id);
+
+    /// <summary>
     /// Asynchronously retrieves all user library games.
     /// </summary>
     /// <returns>A collection of <see cref="UserLibraryGame"/> entities.</returns>
     Task<IEnumerable<UserLibraryGame>> GetAllAsync();
+
+    /// <summary>
+    /// Asynchronously retrieves all soft-deleted user library games.
+    /// </summary>
+    /// <returns>
+    /// A task that represents the asynchronous operation. The task result contains a collection of
+    /// <see cref="UserLibraryGame"/> entities that have been soft-deleted.
+    /// </returns>
+    Task<IEnumerable<UserLibraryGame>> GetAllDeletedAsync();
+
+    /// <summary>
+    /// Asynchronously retrieves all user library games associated with a specific user by their unique user identifier.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user whose library games are to be retrieved.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation. The task result contains a collection
+    /// of <see cref="UserLibraryGame"/> objects associated with the specified user.
+    /// </returns>
+    Task<IEnumerable<UserLibraryGame>> GetAllByUserIdAsync(Guid userId);
+
+    /// <summary>
+    /// Retrieves all soft-deleted user library games associated with a specific user.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user whose soft-deleted games are to be retrieved.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation. The task result contains a collection
+    /// of <see cref="UserLibraryGame"/> entities associated with the specified user that were soft-deleted.
+    /// </returns>
+    Task<IEnumerable<UserLibraryGame>> GetAllDeletedByUserIdAsync(Guid userId);
 
     /// <summary>
     /// Asynchronously adds a new UserLibraryGame entity to the repository.
@@ -45,4 +84,14 @@ public interface IUserLibraryGameRepository
     /// <param name="userLibraryGameId">The unique identifier of the UserLibraryGame to be deleted.</param>
     /// <returns>A task that represents the asynchronous delete operation.</returns>
     Task DeleteAsync(Guid userLibraryGameId);
+
+    /// <summary>
+    /// Restores a previously soft-deleted user library game by its unique identifier.
+    /// </summary>
+    /// <param name="id">The unique identifier of the user library game to restore.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation. The task result contains the restored
+    /// <see cref="UserLibraryGame"/> object if restoration is successful.
+    /// </returns>
+    Task<UserLibraryGame> RestoreAsync(Guid id);
 }

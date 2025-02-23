@@ -19,21 +19,8 @@ public class AchievementRepository : IAchievementRepository
         
         return await _achievements
             .Where(a => !a.IsDeleted)
+            .Include(a => a.Game)
             .FirstOrDefaultAsync(a => a.Id == id);
-    }
-
-    /// <inheritdoc />
-    public async Task<IEnumerable<Achievement>> GetAllByUserIdAsync(Guid userId)
-    {
-        if (userId == Guid.Empty)
-        {
-            throw new ArgumentException("User id cannot be empty.", nameof(userId));
-        }
-        
-        return await _achievements
-            .Where(a => !a.IsDeleted)
-            .Where(a => a.UserAchievements.Any(ua => ua.User.Id == userId))
-            .ToListAsync();
     }
 
     /// <inheritdoc />
@@ -47,6 +34,22 @@ public class AchievementRepository : IAchievementRepository
         return await _achievements
             .Where(a => !a.IsDeleted)
             .Where(a => a.GameId == gameId)
+            .Include(a => a.Game)
+            .ToListAsync();
+    }
+    
+    /// <inheritdoc />
+    public async Task<IEnumerable<Achievement>> GetAllDeletedByGameIdAsync(Guid gameId)
+    {
+        if (gameId == Guid.Empty)
+        {
+            throw new ArgumentException("Game id cannot be empty.", nameof(gameId));
+        }
+        
+        return await _achievements
+            .Where(a => a.IsDeleted)
+            .Where(a => a.GameId == gameId)
+            .Include(a => a.Game)
             .ToListAsync();
     }
 
@@ -55,6 +58,16 @@ public class AchievementRepository : IAchievementRepository
     {
         return await _achievements
             .Where(a => !a.IsDeleted)
+            .Include(a => a.Game)
+            .ToListAsync();
+    }
+    
+    /// <inheritdoc />
+    public async Task<IEnumerable<Achievement>> GetAllDeletedAsync()
+    {
+        return await _achievements
+            .Where(a => a.IsDeleted)
+            .Include(a => a.Game)
             .ToListAsync();
     }
 
@@ -89,5 +102,30 @@ public class AchievementRepository : IAchievementRepository
             achievement.IsDeleted = true;
             _achievements.Update(achievement);
         }
+    }
+
+    /// <inheritdoc />
+    public async Task<Achievement> RestoreAsync(Guid achievementId)
+    {
+        if (achievementId == Guid.Empty)
+        {
+            throw new ArgumentException("Achievement id cannot be empty.", nameof(achievementId));
+        }
+        
+        var achievement = await GetByIdAsync(achievementId);
+        if (achievement == null)
+        {
+            throw new ArgumentException("Achievement not found.", nameof(achievementId));
+        }
+        
+        if (!achievement.IsDeleted)
+        {
+            return achievement;
+        }
+        
+        achievement.IsDeleted = false;
+        _achievements.Update(achievement);
+        
+        return achievement;
     }
 }
