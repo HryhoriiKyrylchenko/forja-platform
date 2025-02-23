@@ -57,8 +57,8 @@ var keycloak = builder.AddKeycloak("keycloak", 8080, keycloakUsername, keycloakP
     .WithLifetime(ContainerLifetime.Persistent);
 
 //MinIO Configuration
-var minioRootUser = builder.AddParameter("root-user", secret: true);
-var minioRootPassword = builder.AddParameter("root-password", secret: true);
+var minioRootUser = builder.AddParameter("minio-root-user", secret: true);
+var minioRootPassword = builder.AddParameter("minio-root-password", secret: true);
 
 builder.AddContainer("minio", "minio/minio")
     .WithImage("minio/minio")
