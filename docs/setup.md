@@ -44,8 +44,8 @@ Init user secrets in Forja.AppHost
     dotnet user-secrets set Parameters:postgresql-password <password>
     dotnet user-secrets set Parameters:keycloak-admin <admin>
     dotnet user-secrets set Parameters:keycloak-password <password>
-    dotnet user-secrets set Parameters:root-user <root-user>
-    dotnet user-secrets set Parameters:root-password <password>
+    dotnet user-secrets set Parameters:minio-root-user <root-user>
+    dotnet user-secrets set Parameters:minio-root-password <password>
 ```
 
 4. **Setup Postgres**
