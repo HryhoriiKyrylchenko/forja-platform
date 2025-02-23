@@ -1,3 +1,5 @@
+using Forja.Application.DTOs.UserRegistration;
+
 namespace Forja.Application.Services;
 
 /// <summary>

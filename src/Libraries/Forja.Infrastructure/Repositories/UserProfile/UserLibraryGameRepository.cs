@@ -12,7 +12,13 @@ public class UserLibraryGameRepository : IUserLibraryGameRepository
     /// <inheritdoc />
     public async Task<UserLibraryGame?> GetByIdAsync(Guid id)
     {
+        if (id == Guid.Empty)
+        {
+            throw new ArgumentException("User library game id cannot be empty.", nameof(id));
+        }
+        
         return await _userLibraryGames
+            .Where(ulg => !ulg.IsDeleted)
             .Include(ulg => ulg.User)
             .Include(ulg => ulg.Game)
             .FirstOrDefaultAsync(ulg => ulg.Id == id);
@@ -22,6 +28,7 @@ public class UserLibraryGameRepository : IUserLibraryGameRepository
     public async Task<IEnumerable<UserLibraryGame>> GetAllAsync()
     {
         return await _userLibraryGames
+            .Where(ulg => !ulg.IsDeleted)
             .Include(ulg => ulg.User)
             .Include(ulg => ulg.Game)
             .ToListAsync();
@@ -30,12 +37,16 @@ public class UserLibraryGameRepository : IUserLibraryGameRepository
     /// <inheritdoc />
     public async Task AddAsync(UserLibraryGame userLibraryGame)
     {
+        //TODO: Validate userLibraryGame
+        
         await _userLibraryGames.AddAsync(userLibraryGame);
     }
 
     /// <inheritdoc />
     public Task UpdateAsync(UserLibraryGame userLibraryGame)
     {
+        //TODO: Validate userLibraryGame
+        
         _userLibraryGames.Update(userLibraryGame);
         return Task.CompletedTask;
     }
@@ -43,6 +54,11 @@ public class UserLibraryGameRepository : IUserLibraryGameRepository
     /// <inheritdoc />
     public async Task DeleteAsync(Guid userLibraryGameId)
     {
+        if (userLibraryGameId == Guid.Empty)
+        {
+            throw new ArgumentException("User library game id cannot be empty.", nameof(userLibraryGameId));
+        }
+        
         var userLibraryGame = await GetByIdAsync(userLibraryGameId);
         if (userLibraryGame != null)
         {

@@ -12,6 +12,11 @@ public class UserAchievementRepository : IUserAchievementRepository
     /// <inheritdoc />
     public async Task<UserAchievement?> GetByIdAsync(Guid id)
     {
+        if (id == Guid.Empty)
+        {
+            throw new ArgumentException("User achievement id cannot be empty.", nameof(id));
+        }
+        
         return await _userAchievements
             .Include(ua => ua.Achievement)
             .Include(ua => ua.User)
@@ -30,12 +35,16 @@ public class UserAchievementRepository : IUserAchievementRepository
     /// <inheritdoc />
     public async Task AddAsync(UserAchievement userAchievement)
     {
+        //TODO: Validate userAchievement
+        
         await _userAchievements.AddAsync(userAchievement);
     }
 
     /// <inheritdoc />
     public Task UpdateAsync(UserAchievement userAchievement)
     {
+        //TODO: Validate userAchievement
+        
         _userAchievements.Update(userAchievement);
         return Task.CompletedTask;
     }
@@ -43,6 +52,11 @@ public class UserAchievementRepository : IUserAchievementRepository
     /// <inheritdoc />
     public async Task DeleteAsync(Guid userAchievementId)
     {
+        if (userAchievementId == Guid.Empty)
+        {
+            throw new ArgumentException("User achievement id cannot be empty.", nameof(userAchievementId));
+        }
+        
         var userAchievement = await GetByIdAsync(userAchievementId) 
                               ?? throw new ArgumentException("User achievement not found.", nameof(userAchievementId));
 
