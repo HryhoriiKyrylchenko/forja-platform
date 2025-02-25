@@ -1,3 +1,5 @@
+using Forja.Application.Validators;
+
 namespace Forja.Application.Services;
 
 public class UserProfileService : IUserProfileService
@@ -63,8 +65,11 @@ public class UserProfileService : IUserProfileService
         {
             throw new KeyNotFoundException("User not found.");
         }
-        
-        //TODO: Add parameters validation
+
+        if (!ApplicationDtoValidator.ValidateUserProfileDto(userProfileDto))
+        {
+            throw new ArgumentException("Invalid user profile data.");
+        }
         
         user.Username = userProfileDto.Username;
         user.Firstname = userProfileDto.Firstname;
@@ -440,8 +445,11 @@ public class UserProfileService : IUserProfileService
         {
             throw new ArgumentNullException(nameof(userKeycloakId), "User Keycloak ID cannot be null or empty.");
         }
-        
-        //TODO: Validate achievementDto
+
+        if (!ApplicationDtoValidator.ValidateAchievementDto(achievementDto))
+        {
+            throw new ArgumentException("Achievement DTO is invalid.", nameof(achievementDto));
+        }
         
         var achievement = new Achievement()
         {
@@ -490,7 +498,10 @@ public class UserProfileService : IUserProfileService
             throw new ArgumentNullException(nameof(achievementDto), "Achievement cannot be null.");
         }
         
-        //TODO: Validate achievementDto
+        if (!ApplicationDtoValidator.ValidateAchievementDto(achievementDto))
+        {
+            throw new ArgumentException("Achievement DTO is invalid.", nameof(achievementDto));
+        }
 
         if (achievementDto.Id == Guid.Empty)
         {
@@ -650,12 +661,10 @@ public class UserProfileService : IUserProfileService
     /// <inheritdoc />
     public async Task AddUserAchievementAsync(UserAchievementDto userAchievementDto)
     {
-        if (userAchievementDto == null)
+        if (!ApplicationDtoValidator.ValidateUserAchievementDto(userAchievementDto))
         {
-            throw new ArgumentNullException(nameof(userAchievementDto), "User achievement cannot be null.");
+            throw new ArgumentException("User achievement DTO is invalid.", nameof(userAchievementDto));
         }
-        
-        //TODO: Validate userAchievementDto
 
         var userAchievement = new UserAchievement()
         {
@@ -695,7 +704,10 @@ public class UserProfileService : IUserProfileService
     /// <inheritdoc />
     public async Task UpdateUserAchievement(UserAchievementDto userAchievementDto)
     {
-        //TODO: Validate userAchievementDto
+        if (!ApplicationDtoValidator.ValidateUserAchievementDto(userAchievementDto))
+        {
+            throw new ArgumentException("User achievement DTO is invalid.", nameof(userAchievementDto));
+        }
         
         var userAchievement = await _unitOfWork.UserAchievements.GetByIdAsync(userAchievementDto.Id);
         if (userAchievement == null)
@@ -812,8 +824,11 @@ public class UserProfileService : IUserProfileService
         {
             throw new ArgumentNullException(nameof(userLibraryGameDto), "User library game cannot be null.");
         }
-        
-        //TODO: Validate userLibraryGameDto
+
+        if (!ApplicationDtoValidator.ValidateUserLibraryGameDto(userLibraryGameDto))
+        {
+            throw new ArgumentException("User library game DTO is invalid.", nameof(userLibraryGameDto));
+        }
         
         var userLibraryGame = new UserLibraryGame()
         {
@@ -835,7 +850,10 @@ public class UserProfileService : IUserProfileService
             throw new ArgumentNullException(nameof(userLibraryGameDto), "User library game cannot be null.");
         }
         
-        //TODO: Validate userLibraryGameDto
+        if (!ApplicationDtoValidator.ValidateUserLibraryGameDto(userLibraryGameDto))
+        {
+            throw new ArgumentException("User library game DTO is invalid.", nameof(userLibraryGameDto));
+        }
         
         var userLibraryGame = await _unitOfWork.UserLibraryGames.GetByIdAsync(userLibraryGameDto.Id);
         if (userLibraryGame == null)
@@ -1039,12 +1057,10 @@ public class UserProfileService : IUserProfileService
     /// <inheritdoc />
     public async Task AddUserLibraryAddonAsync(UserLibraryAddonDto userLibraryAddonDto)
     {
-        if (userLibraryAddonDto == null)
+        if (!ApplicationDtoValidator.ValidateUserLibraryAddonDto(userLibraryAddonDto))
         {
-            throw new ArgumentNullException(nameof(userLibraryAddonDto), "User library addon cannot be null.");
+            throw new ArgumentException("User library addon DTO is invalid.", nameof(userLibraryAddonDto));
         }
-        
-        //TODO: Validate userLibraryAddonDto
         
         var userLibraryAddon = new UserLibraryAddon()
         {
@@ -1061,12 +1077,10 @@ public class UserProfileService : IUserProfileService
     /// <inheritdoc />
     public async Task UpdateUserLibraryAddonAsync(UserLibraryAddonDto userLibraryAddonDto)
     {
-        if (userLibraryAddonDto == null)
+        if (!ApplicationDtoValidator.ValidateUserLibraryAddonDto(userLibraryAddonDto))
         {
-            throw new ArgumentNullException(nameof(userLibraryAddonDto), "User library addon cannot be null.");
+            throw new ArgumentException("User library addon DTO is invalid.", nameof(userLibraryAddonDto));
         }
-        
-        //TODO: Validate userLibraryAddonDto
 
         var userLibraryAddon = await _unitOfWork.UserLibraryAddons.GetByIdAsync(userLibraryAddonDto.Id);
         if (userLibraryAddon == null)

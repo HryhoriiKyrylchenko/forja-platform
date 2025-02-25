@@ -44,8 +44,8 @@ Init user secrets in Forja.AppHost
     dotnet user-secrets set Parameters:postgresql-password <password>
     dotnet user-secrets set Parameters:keycloak-admin <admin>
     dotnet user-secrets set Parameters:keycloak-password <password>
-    dotnet user-secrets set Parameters:root-user <root-user>
-    dotnet user-secrets set Parameters:root-password <password>
+    dotnet user-secrets set Parameters:minio-root-user <root-user>
+    dotnet user-secrets set Parameters:minio-root-password <password>
 ```
 
 Add configuration in appsettings.json file in Forja.API project
@@ -87,10 +87,55 @@ Download docker image.
     docker pull keycloak/keycloak:26.1
 ```
 
-Run Keycloak.
-- Create a Realm: Your system will operate within a specific realm `forja`
-- Create a new client in the created realm `Forja.Api` (You can get client secret in a section 'Credentials')
-- Create roles.
+***Setting up a Client in Keycloak***
+
+- Log in to the Keycloak Admin Panel
+    Open a browser and go to:http://localhost:8080/admin/
+    Enter the administrator credentials:
+    Username: keycloak-admin
+    Password: keycloak-password
+
+- Creating a Client
+    In the left menu, find Clients.
+    Click Create client (button in the upper right corner).
+
+- Configuring the Client
+    Fill in the Create Client form:
+    Client ID: forja-api-client (or any unique name)
+    Client authentication: Enabled
+    Standard flow Enabled: Enabled
+    Direct Access Grants Enabled: Enabled
+    Service accounts roles: Enabled
+    Root URL: http://localhost:3000 (or your frontend URL)
+    Click Save.
+
+- Retrieving Client Secret
+    Navigate to the Credentials tab.
+    Copy the Client Secret value – it will be needed in the backend.
+
+- Adding Configuration to Forja.API
+    Ensure the correct configuration in Forja.API\appsettings.json:
+
+    `{
+        "Keycloak": {
+            "BaseUrl": "http://localhost:8080",
+            "Realm": "my_realm",
+            "ClientId": "forja-api-client",
+            "ClientSecret": "your-secret-key"
+        }
+    }`
+    
+    Replace your-secret-key with the retrieved Client Secret.
+
+- Assigning Roles to the Client
+    Go to Users.
+    Find Service account forja-api-client.
+    Open the Role Mappings tab.
+    Click Assign role.
+    Select realm-management and assign the following role:
+    manage-users (allows user creation).
+
+Setup is complete!
 
 7. **Setup MinIO**
 

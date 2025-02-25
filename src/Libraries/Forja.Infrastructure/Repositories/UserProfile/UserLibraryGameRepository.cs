@@ -1,3 +1,5 @@
+using Forja.Infrastructure.Validators;
+
 namespace Forja.Infrastructure.Repositories.UserProfile;
 
 public class UserLibraryGameRepository : IUserLibraryGameRepository
@@ -94,12 +96,10 @@ public class UserLibraryGameRepository : IUserLibraryGameRepository
     /// <inheritdoc />
     public async Task AddAsync(UserLibraryGame userLibraryGame)
     {
-        if (userLibraryGame == null)
+        if (!ProjectModelValidator.ValidateUserLibraryGame(userLibraryGame))
         {
-            throw new ArgumentNullException(nameof(userLibraryGame));
+            throw new ArgumentException("User library game is invalid.", nameof(userLibraryGame));
         }
-        
-        //TODO: Validate userLibraryGame
         
         await _userLibraryGames.AddAsync(userLibraryGame);
     }
@@ -107,7 +107,10 @@ public class UserLibraryGameRepository : IUserLibraryGameRepository
     /// <inheritdoc />
     public Task UpdateAsync(UserLibraryGame userLibraryGame)
     {
-        //TODO: Validate userLibraryGame
+        if (!ProjectModelValidator.ValidateUserLibraryGame(userLibraryGame))
+        {
+            throw new ArgumentException("User library game is invalid.", nameof(userLibraryGame));
+        }
         
         _userLibraryGames.Update(userLibraryGame);
         return Task.CompletedTask;

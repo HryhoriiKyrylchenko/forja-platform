@@ -1,3 +1,5 @@
+using Forja.Infrastructure.Validators;
+
 namespace Forja.Infrastructure.Repositories.UserProfile;
 
 public class UserAchievementRepository : IUserAchievementRepository
@@ -64,7 +66,10 @@ public class UserAchievementRepository : IUserAchievementRepository
     /// <inheritdoc />
     public async Task AddAsync(UserAchievement userAchievement)
     {
-        //TODO: Validate userAchievement
+        if (!ProjectModelValidator.ValidateUserAchievement(userAchievement))
+        {
+            throw new ArgumentException("User achievement is invalid.", nameof(userAchievement));
+        }
         
         await _userAchievements.AddAsync(userAchievement);
     }
@@ -72,7 +77,10 @@ public class UserAchievementRepository : IUserAchievementRepository
     /// <inheritdoc />
     public Task UpdateAsync(UserAchievement userAchievement)
     {
-        //TODO: Validate userAchievement
+        if (!ProjectModelValidator.ValidateUserAchievement(userAchievement))
+        {
+            throw new ArgumentException("User achievement is invalid.", nameof(userAchievement));
+        }
         
         _userAchievements.Update(userAchievement);
         return Task.CompletedTask;

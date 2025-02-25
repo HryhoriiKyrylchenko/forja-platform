@@ -1,3 +1,5 @@
+using Forja.Infrastructure.Validators;
+
 namespace Forja.Infrastructure.Repositories.UserProfile;
 
 public class AchievementRepository : IAchievementRepository
@@ -74,7 +76,10 @@ public class AchievementRepository : IAchievementRepository
     /// <inheritdoc />
     public async Task AddAsync(Achievement achievement)
     {
-        //TODO: Validate achievement
+        if (!ProjectModelValidator.ValidateAchievement(achievement))
+        {
+            throw new ArgumentException("Achievement is not valid.", nameof(achievement));
+        }
         
         await _achievements.AddAsync(achievement);
     }
@@ -82,7 +87,10 @@ public class AchievementRepository : IAchievementRepository
     /// <inheritdoc />
     public Task UpdateAsync(Achievement achievement)
     {
-        //TODO: Validate achievement
+        if (!ProjectModelValidator.ValidateAchievement(achievement))
+        {
+            throw new ArgumentException("Achievement is not valid.", nameof(achievement));
+        }
         
         _achievements.Update(achievement);
         return Task.CompletedTask;

@@ -1,3 +1,5 @@
+using Forja.Infrastructure.Validators;
+
 namespace Forja.Infrastructure.Repositories.UserProfile;
 
 public class ReviewRepository : IReviewRepository
@@ -89,7 +91,10 @@ public class ReviewRepository : IReviewRepository
     /// <inheritdoc />
     public async Task AddAsync(Review review)
     {
-        //TODO: Validate review
+        if (!ProjectModelValidator.ValidateReview(review))
+        {
+            throw new ArgumentException("Review is not valid.", nameof(review));
+        }
         
         await _reviews.AddAsync(review);
     }
@@ -97,7 +102,10 @@ public class ReviewRepository : IReviewRepository
     /// <inheritdoc />
     public Task UpdateAsync(Review review)
     {
-        //TODO: Validate review
+        if (!ProjectModelValidator.ValidateReview(review))
+        {
+            throw new ArgumentException("Review is not valid.", nameof(review));
+        }
         
         _reviews.Update(review);
         return Task.CompletedTask;

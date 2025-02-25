@@ -1,3 +1,5 @@
+using Forja.Infrastructure.Validators;
+
 namespace Forja.Infrastructure.Repositories.UserProfile;
 
 public class UserRepository : IUserRepository
@@ -67,7 +69,10 @@ public class UserRepository : IUserRepository
     /// <inheritdoc />
     public async Task AddAsync(User user)
     {
-        //TODO: Validate user
+        if (!ProjectModelValidator.ValidateUser(user))
+        {
+            throw new ArgumentException("User is not valid.", nameof(user));
+        }
         
         await _users.AddAsync(user);
     }
@@ -75,7 +80,10 @@ public class UserRepository : IUserRepository
     /// <inheritdoc />
     public Task UpdateAsync(User user)
     {
-        //TODO: Validate user
+        if (!ProjectModelValidator.ValidateUser(user))
+        {
+            throw new ArgumentException("User is not valid.", nameof(user));
+        }
         
         _users.Update(user);
         return Task.CompletedTask;

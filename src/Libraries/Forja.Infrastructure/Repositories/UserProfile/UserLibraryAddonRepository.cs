@@ -1,3 +1,5 @@
+using Forja.Infrastructure.Validators;
+
 namespace Forja.Infrastructure.Repositories.UserProfile;
 
 public class UserLibraryAddonRepository : IUserLibraryAddonRepository
@@ -95,12 +97,10 @@ public class UserLibraryAddonRepository : IUserLibraryAddonRepository
     /// <inheritdoc />
     public async Task AddAsync(UserLibraryAddon userLibraryAddon)
     {
-        if (userLibraryAddon == null)
+        if (!ProjectModelValidator.ValidateUserLibraryAddon(userLibraryAddon))
         {
-            throw new ArgumentNullException(nameof(userLibraryAddon));
+            throw new ArgumentException("UserLibraryAddon is not valid.", nameof(userLibraryAddon));
         }
-        
-        //TODO: Validate userLibraryAddon
         
         await _userLibraryAddons.AddAsync(userLibraryAddon);
     }
@@ -108,7 +108,10 @@ public class UserLibraryAddonRepository : IUserLibraryAddonRepository
     /// <inheritdoc />
     public Task UpdateAsync(UserLibraryAddon userLibraryAddon)
     {
-        //TODO: Validate userLibraryAddon
+        if (!ProjectModelValidator.ValidateUserLibraryAddon(userLibraryAddon))
+        {
+            throw new ArgumentException("UserLibraryAddon is not valid.", nameof(userLibraryAddon));
+        }
         
         _userLibraryAddons.Update(userLibraryAddon);
         return Task.CompletedTask;

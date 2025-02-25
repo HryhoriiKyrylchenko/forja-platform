@@ -153,4 +153,5 @@ public interface IKeycloakClient
     //TODO: Add change password functionality
     //TODO: Add 2FA functionality
     //TODO: Add validate token functionality
+    //TODO: Add forget password functionality
 }
