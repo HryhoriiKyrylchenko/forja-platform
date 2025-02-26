@@ -20,8 +20,4 @@
       <ProjectReference Include="..\..\Libraries\Forja.Infrastructure\Forja.Infrastructure.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="DTOs\" />
-    </ItemGroup>
-
 </Project>

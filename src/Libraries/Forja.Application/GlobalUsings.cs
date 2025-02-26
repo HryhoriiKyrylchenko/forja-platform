@@ -11,3 +11,5 @@ global using Forja.Domain.Enums;
 global using Forja.Domain.Repositories.UserProfile;
 global using Forja.Domain.Repositories.Games;
 global using Forja.Application.DTOs.UserProfile;
+global using Forja.Application.Validators;
+global using Forja.Application.DTOs.UserRegistration;

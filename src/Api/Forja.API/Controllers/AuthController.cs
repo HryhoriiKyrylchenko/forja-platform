@@ -1,3 +1,4 @@
+using Forja.API.DTOs;
 using Forja.Application.DTOs.UserRegistration;
 
 namespace Forja.API.Controllers;
@@ -10,11 +11,11 @@ namespace Forja.API.Controllers;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly IUserRegistrationService _registrationService;
+    private readonly IUserAuthService _authService;
     
-    public AuthController(IUserRegistrationService registrationService)
+    public AuthController(IUserAuthService authService)
     {
-        _registrationService = registrationService;
+        _authService = authService;
     }
 
     /// <summary>
@@ -28,7 +29,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            await _registrationService.RegisterUserAsync(request);
+            await _authService.RegisterUserAsync(request);
             return Ok("Registration successful");
         }
         catch(Exception ex)
@@ -48,7 +49,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var tokenResponse = await _registrationService.LoginUserAsync(request);
+            var tokenResponse = await _authService.LoginUserAsync(request);
             return Ok(tokenResponse);
         }
         catch(Exception ex)
@@ -68,7 +69,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            await _registrationService.LogoutUserAsync(request);
+            await _authService.LogoutUserAsync(request);
             return Ok("Logout successful");
         }
         catch(Exception ex)
@@ -88,7 +89,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var tokenResponse = await _registrationService.RefreshTokenAsync(request);
+            var tokenResponse = await _authService.RefreshTokenAsync(request);
             return Ok(tokenResponse);
         }
         catch(Exception ex)
@@ -110,7 +111,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            await _registrationService.CreateRoleAsync(command);
+            await _authService.CreateRoleAsync(command);
             return Ok("Role created successfully");
         }
         catch(Exception ex)
@@ -129,7 +130,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var roles = await _registrationService.GetAllRolesAsync();
+            var roles = await _authService.GetAllRolesAsync();
             return Ok(roles);
         }
         catch(Exception ex)
@@ -149,7 +150,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var role = await _registrationService.GetRoleByNameAsync(roleName);
+            var role = await _authService.GetRoleByNameAsync(roleName);
             if (role == null)
                 return NotFound();
             return Ok(role);
@@ -171,7 +172,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var roles = await _registrationService.GetUserRolesAsync(userId);
+            var roles = await _authService.GetUserRolesAsync(userId);
             return Ok(roles);
         }
         catch(Exception ex)
@@ -192,7 +193,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var result = await _registrationService.CheckUserRoleAsync(userId, roleName);
+            var result = await _authService.CheckUserRoleAsync(userId, roleName);
             return Ok(result);
         }
         catch(Exception ex)
@@ -212,7 +213,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            await _registrationService.AssignRolesToUserAsync(userId, roles);
+            await _authService.AssignRolesToUserAsync(userId, roles);
             return Ok("Roles assigned successfully");
         }
         catch(Exception ex)
@@ -233,7 +234,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            await _registrationService.AssignRoleToUserAsync(userId, role);
+            await _authService.AssignRoleToUserAsync(userId, role);
             return Ok("Role assigned successfully");
         }
         catch(Exception ex)
@@ -254,7 +255,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            await _registrationService.DeleteRolesFromUserAsync(userId, roles);
+            await _authService.DeleteRolesFromUserAsync(userId, roles);
             return Ok("Roles deleted successfully");
         }
         catch(Exception ex)
@@ -275,7 +276,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            await _registrationService.DeleteRoleFromUserAsync(userId, role);
+            await _authService.DeleteRoleFromUserAsync(userId, role);
             return Ok("Role deleted successfully");
         }
         catch(Exception ex)
@@ -283,4 +284,79 @@ public class AuthController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
+
+    /// <summary>
+    /// Handles the password change request for an authenticated user.
+    /// </summary>
+    /// <param name="accessToken">The access token of the authenticated user, provided in the request header.</param>
+    /// <param name="newPassword">The new password to be set for the user.</param>
+    /// <returns>An <see cref="IActionResult"/> indicating the outcome of the password change operation.
+    /// Returns an Ok response if successful, a Bad Request response if the new password is invalid, or an Unauthorized response if the access token is invalid.</returns>
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword([FromHeader] string accessToken, [FromBody] string newPassword)
+    {
+        if (string.IsNullOrWhiteSpace(newPassword))
+        {
+            return BadRequest("New password cannot be null or empty.");
+        }
+
+        var isValid = await _authService.ValidateTokenAsync(accessToken);
+        if (!isValid)
+        {
+            return Unauthorized("Invalid access token.");
+        }
+
+        var userId = await _authService.GetKeycloakUserIdAsync(accessToken);
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized("Invalid access token.");
+        }
+
+        await _authService.ChangePasswordAsync(userId, newPassword);
+        return Ok("Password changed successfully.");
+    }
+
+    /// <summary>
+    /// Enables or disables a user account based on the provided request.
+    /// </summary>
+    /// <param name="request">The request containing the user ID and a boolean value indicating whether to enable or disable the account.</param>
+    /// <returns>An <see cref="IActionResult"/> indicating the outcome of the operation.
+    /// Returns an Ok response if the user is successfully enabled or disabled.
+    /// Returns an error response if the operation fails or if the input is invalid.</returns>
+    [HttpPost("enable-disable-user")]
+    public async Task<IActionResult> EnableDisableUser([FromBody] EnableDisableUserRequest request)
+    {
+        await _authService.EnableDisableUserAsync(request.KeycloakUserId, request.Enable);
+        var action = request.Enable ? "enabled" : "disabled";
+        return Ok($"User has been {action} successfully.");
+    }
+    
+    /// <summary>
+    /// Confirms a Keycloak user's email.
+    /// </summary>
+    /// <param name="keycloakUserId">The Keycloak user ID whose email is to be confirmed.</param>
+    /// <returns>An IActionResult representing the result of the operation.</returns>
+    [HttpPut("users/{keycloakUserId}/confirm-email")]
+    public async Task<IActionResult> ConfirmEmail(string keycloakUserId)
+    {
+        if (string.IsNullOrWhiteSpace(keycloakUserId))
+        {
+            return BadRequest("Keycloak User ID must be provided.");
+        }
+
+        try
+        {
+            await _authService.ConfirmUserEmailAsync(keycloakUserId);
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message); 
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"An error occurred while confirming the email for user {keycloakUserId}: {ex.Message}");
+        }
+    }
+
 }

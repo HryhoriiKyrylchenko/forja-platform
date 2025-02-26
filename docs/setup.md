@@ -134,6 +134,10 @@ Download docker image.
     Click Assign role.
     Select realm-management and assign the following role:
     manage-users (allows user creation).
+  
+- Go to Authentication in the left panel.
+    Locate the "Verify Profile" option.
+    Switch "Verify Profile" to Disable.
 
 Setup is complete!
 

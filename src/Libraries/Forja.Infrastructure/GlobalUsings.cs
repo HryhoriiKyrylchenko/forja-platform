@@ -21,3 +21,5 @@ global using Forja.Domain.Repositories.UserProfile;
 global using Forja.Infrastructure.Http;
 global using Forja.Domain.Repositories.Games;
 global using Forja.Infrastructure.Repositories.UserProfile;
+global using Forja.Infrastructure.Repositories.Games;
+global using System.Text.RegularExpressions;

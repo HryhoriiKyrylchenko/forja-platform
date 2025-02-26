@@ -1,14 +1,14 @@
-using Forja.Application.Validators;
-
 namespace Forja.Application.Services;
 
 public class UserProfileService : IUserProfileService
 {
     private readonly IUserProfileUnitOfWork _unitOfWork;
+    private readonly IKeycloakClient _keycloakClient;
 
-    public UserProfileService(IUserProfileUnitOfWork unitOfWork)
+    public UserProfileService(IUserProfileUnitOfWork unitOfWork, IKeycloakClient keycloakClient)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+        _keycloakClient = keycloakClient ?? throw new ArgumentNullException(nameof(keycloakClient));
     }
     
     /// <inheritdoc />
@@ -97,6 +97,8 @@ public class UserProfileService : IUserProfileService
         }
 
         await _unitOfWork.Users.DeleteAsync(user.Id);
+        //TODO: Add keycloak disable user
+        
         await _unitOfWork.SaveChangesAsync();
     }
 

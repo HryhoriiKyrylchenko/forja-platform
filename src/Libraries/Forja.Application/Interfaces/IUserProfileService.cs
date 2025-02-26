@@ -23,6 +23,8 @@ public interface IUserProfileService
     /// <param name="userKeycloakId">The Keycloak ID of the user to be deleted.</param>
     /// <returns>A task that represents the asynchronous delete operation.</returns>
     Task DeleteUserAsync(string userKeycloakId);
+    
+    //TODO: Add restore user functionality
 
     /// <summary>
     /// Retrieves a list of all user profiles.

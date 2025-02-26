@@ -1,16 +1,32 @@
 namespace Forja.API.Controllers;
 
+/// <summary>
+/// Provides API endpoints for managing user profiles and operations related to users.
+/// </summary>
+/// <remarks>
+/// This controller handles user-related operations including retrieving user profiles, updating user profiles,
+/// deleting users, retrieving all users, and retrieving deleted users. It communicates with the
+/// <see cref="IUserProfileService"/> for business logic and <see cref="IKeycloakClient"/> for operations
+/// related to Keycloak.
+/// </remarks>
 [ApiController]
 [Route("api/[controller]")]
 public class UserController : ControllerBase
 {
-    private readonly UserProfileService _userService;
+    private readonly IUserProfileService _userService;
+    private readonly IKeycloakClient _keycloakClient;
 
-    public UserController(UserProfileService userService)
+    public UserController(IUserProfileService userService, IKeycloakClient keycloakClient)
     {
         _userService = userService;
+        _keycloakClient = keycloakClient;
     }
 
+    /// <summary>
+    /// Retrieves the user profile associated with the specified Keycloak ID.
+    /// </summary>
+    /// <param name="keycloakId">The unique Keycloak ID of the user whose profile is to be retrieved.</param>
+    /// <returns>An asynchronous operation that returns the user profile as a <see cref="UserProfileDto"/>.</returns>
     [HttpGet("{keycloakId}")]
     public async Task<IActionResult> GetUserProfile(string keycloakId)
     {
@@ -18,6 +34,11 @@ public class UserController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>
+    /// Updates the user profile with the provided details.
+    /// </summary>
+    /// <param name="userProfileDto">An object containing the updated details of the user profile.</param>
+    /// <returns>An asynchronous operation.</returns>
     [HttpPut]
     public async Task<IActionResult> UpdateUserProfile([FromBody] UserProfileDto userProfileDto)
     {
@@ -25,13 +46,23 @@ public class UserController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Deletes the user associated with the specified Keycloak ID and disables the user in Keycloak.
+    /// </summary>
+    /// <param name="keycloakId">The unique Keycloak ID of the user to be deleted.</param>
+    /// <returns>A task that represents the asynchronous operation for deleting the user.</returns>
     [HttpDelete("{keycloakId}")]
     public async Task<IActionResult> DeleteUser(string keycloakId)
     {
         await _userService.DeleteUserAsync(keycloakId);
+        await _keycloakClient.EnableDisableUserAsync(keycloakId, false);
         return NoContent();
     }
 
+    /// <summary>
+    /// Retrieves a list of all user profiles from the system.
+    /// </summary>
+    /// <returns>An asynchronous operation that returns a list of all user profiles as <see cref="UserProfileDto"/> objects.</returns>
     [HttpGet("all")]
     public async Task<IActionResult> GetAllUsers()
     {
@@ -39,6 +70,10 @@ public class UserController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>
+    /// Retrieves a list of all deleted user profiles.
+    /// </summary>
+    /// <returns>An asynchronous operation that returns a list of deleted user profiles as a collection of <see cref="UserProfileDto"/>.</returns>
     [HttpGet("deleted")]
     public async Task<IActionResult> GetAllDeletedUsers()
     {
