@@ -58,6 +58,35 @@ public class UserController : ControllerBase
         await _keycloakClient.EnableDisableUserAsync(keycloakId, false);
         return NoContent();
     }
+    
+    /// <summary>
+    /// Restores a soft-deleted user identified by their Keycloak ID.
+    /// </summary>
+    /// <param name="keycloakId">The unique Keycloak ID of the user to restore.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    [HttpPost("{keycloakId}/restore")]
+    public async Task<IActionResult> RestoreUser(string keycloakId)
+    {
+        // Validate input
+        if (string.IsNullOrWhiteSpace(keycloakId))
+        {
+            return BadRequest("Keycloak ID is required.");
+        }
+
+        try
+        {
+            await _userService.RestoreUserAsync(keycloakId);
+            return NoContent();  
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
+    }
 
     /// <summary>
     /// Retrieves a list of all user profiles from the system.

@@ -1,7 +1,5 @@
 namespace Forja.Domain.Repositories;
 
-//TODO: Refactor this service
-
 /// <summary>
 /// Represents a unit of work interface specific to user profile management.
 /// Provides access to user profile-related repositories and coordinates transactional operations.

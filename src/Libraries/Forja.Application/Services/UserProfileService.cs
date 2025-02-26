@@ -97,7 +97,27 @@ public class UserProfileService : IUserProfileService
         }
 
         await _unitOfWork.Users.DeleteAsync(user.Id);
-        //TODO: Add keycloak disable user
+        await _keycloakClient.EnableDisableUserAsync(userKeycloakId, false);
+        
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task RestoreUserAsync(string userKeycloakId)
+    {
+        if (string.IsNullOrWhiteSpace(userKeycloakId))
+        {
+            throw new ArgumentNullException(nameof(userKeycloakId), "User Keycloak ID cannot be null or empty.");
+        }
+        
+        var user = await _unitOfWork.Users.GetByKeycloakIdAsync(userKeycloakId);
+        if (user == null)
+        {
+            throw new KeyNotFoundException("User not found.");
+        }
+
+        await _unitOfWork.Users.RestoreAsync(user.Id);
+        await _keycloakClient.EnableDisableUserAsync(userKeycloakId, true);
         
         await _unitOfWork.SaveChangesAsync();
     }

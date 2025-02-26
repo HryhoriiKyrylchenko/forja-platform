@@ -18,6 +18,16 @@ public interface IUserRepository
     Task<User?> GetByIdAsync(Guid id);
 
     /// <summary>
+    /// Asynchronously retrieves a deleted user by their unique identifier.
+    /// </summary>
+    /// <param name="id">The unique identifier (GUID) of the deleted user to retrieve.</param>
+    /// <returns>
+    /// A task representing the asynchronous operation, containing the deleted user entity if found,
+    /// or null if no matching deleted user exists.
+    /// </returns>
+    Task<User?> GetDeletedByIdAsync(Guid id);
+
+    /// <summary>
     /// Asynchronously retrieves a user by their Keycloak unique identifier.
     /// </summary>
     /// <param name="userKeycloakId">The Keycloak unique identifier of the user to retrieve.</param>
@@ -69,6 +79,14 @@ public interface IUserRepository
     /// <param name="userId">The unique identifier of the user to be deleted.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     Task DeleteAsync(Guid userId);
+    
+    /// <summary>
+    /// Restores a soft-deleted user by their unique identifier.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user to restore.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task RestoreAsync(Guid userId);
+
 
     /// <summary>
     /// Checks if a user with the specified username exists in the system.

@@ -25,6 +25,19 @@ public class UserRepository : IUserRepository
     }
     
     /// <inheritdoc />
+    public async Task<User?> GetDeletedByIdAsync(Guid id)
+    {
+        if (id == Guid.Empty)
+        {
+            throw new ArgumentException("User id is required", nameof(id));
+        }
+        
+        return await _users
+            .Where(u => u.IsDeleted == true)
+            .FirstOrDefaultAsync(u => u.Id == id);
+    }
+    
+    /// <inheritdoc />
     public async Task<User?> GetByKeycloakIdAsync(string userKeycloakId)
     {
         if (string.IsNullOrWhiteSpace(userKeycloakId))
@@ -105,6 +118,26 @@ public class UserRepository : IUserRepository
             user.ModifiedAt = DateTime.UtcNow;
             _users.Update(user);
         }
+    }
+    
+    /// <inheritdoc />
+    public async Task RestoreAsync(Guid userId)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User id is required", nameof(userId));
+        }
+           
+        var user = await GetDeletedByIdAsync(userId);
+        if (user == null)
+        {
+            throw new InvalidOperationException("No soft-deleted user found with the given id.");
+        }
+           
+        user.IsDeleted = false;
+        user.ModifiedAt = DateTime.UtcNow;
+
+        _users.Update(user);
     }
 
     /// <inheritdoc />
