@@ -1,3 +1,6 @@
+using System.IdentityModel.Tokens.Jwt;
+using Forja.Infrastructure.Validators;
+
 namespace Forja.Infrastructure.Keycloak;
 
 /// <summary>
@@ -26,9 +29,11 @@ public class KeycloakClient : IKeycloakClient
     public async Task<string> CreateUserAsync(KeycloakUser user)
     {
         ArgumentNullException.ThrowIfNull(user);
-        if (string.IsNullOrWhiteSpace(user.Email) || string.IsNullOrWhiteSpace(user.Password))
+        
+        var passwordValidationResult = PasswordValidator.ValidatePassword(user.Password);
+        if (!passwordValidationResult.IsValid)
         {
-            throw new ArgumentException("Email and Password must be provided.");
+            throw new ArgumentException(passwordValidationResult.ErrorMessage);
         }
         
         string accessToken;
@@ -638,5 +643,334 @@ public class KeycloakClient : IKeycloakClient
         }
 
         return tokenResponse.AccessToken;
+    }
+    
+    // /////////////////////////////
+    /// <inheritdoc />
+    public async Task ChangePasswordAsync(string keycloakUserId, string newPassword)
+    {
+        if (string.IsNullOrWhiteSpace(_baseUrl)
+            || string.IsNullOrWhiteSpace(_realm))
+        {
+            throw new InvalidOperationException("KeycloakClient is not properly initialized.");
+        }
+        
+        if (string.IsNullOrWhiteSpace(keycloakUserId))
+        {
+            throw new ArgumentException("User Id cannot be null or whitespace.", nameof(keycloakUserId));
+        }
+        
+        var passwordValidationResult = PasswordValidator.ValidatePassword(newPassword);
+        if (!passwordValidationResult.IsValid)
+        {
+            throw new ArgumentException(passwordValidationResult.ErrorMessage);
+        }
+        
+        string accessToken;
+        try
+        {
+            accessToken = await ObtainAdminToken();
+        }
+        catch (Exception ex)
+        {
+            throw new HttpRequestException("Failed to obtain admin token.", ex);
+        }
+        
+        var requestUrl = $"{_baseUrl}/admin/realms/{_realm}/users/{keycloakUserId}/reset-password";
+    
+        var requestBody = new
+        {
+            type = "password",
+            value = newPassword,
+            temporary = false 
+        };
+    
+        var request = new HttpRequestMessage(HttpMethod.Put, requestUrl)
+        {
+            Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json")
+        };
+    
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+    
+        var response = await HttpRetryHelper.ExecuteWithRetryAsync(_httpClient, request);
+        response.EnsureSuccessStatusCode();
+    }
+    
+    /// <inheritdoc />
+    [Obsolete("This method is deprecated. Waiting for proper Kaycloak configuration")]
+    public async Task EnableTwoFactorAuthenticationAsync(string keycloakUserId)
+    {
+        if (string.IsNullOrWhiteSpace(_baseUrl)
+            || string.IsNullOrWhiteSpace(_realm))
+        {
+            throw new InvalidOperationException("KeycloakClient is not properly initialized.");
+        }
+        
+        if (string.IsNullOrWhiteSpace(keycloakUserId))
+        {
+            throw new ArgumentException("User Id cannot be null or whitespace.", nameof(keycloakUserId));
+        }
+        
+        string accessToken;
+        try
+        {
+            accessToken = await ObtainAdminToken();
+        }
+        catch (Exception ex)
+        {
+            throw new HttpRequestException("Failed to obtain admin token.", ex);
+        }
+        
+        var requestUrl = $"{_baseUrl}/admin/realms/{_realm}/users/{keycloakUserId}";
+        
+        var requestBody = new
+        {
+            requiredActions = new[] { "CONFIGURE_TOTP" }
+        };
+        
+        var request = new HttpRequestMessage(HttpMethod.Put, requestUrl)
+        {
+            Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json")
+        };
+        
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        
+        var response = await HttpRetryHelper.ExecuteWithRetryAsync(_httpClient, request);
+        response.EnsureSuccessStatusCode();
+    }
+    
+    /// <inheritdoc />
+    [Obsolete("This method is deprecated. Waiting for proper Kaycloak configuration")]
+    public async Task DisableTwoFactorAuthenticationAsync(string keycloakUserId)
+    {
+        if (string.IsNullOrWhiteSpace(_baseUrl)
+            || string.IsNullOrWhiteSpace(_realm))
+        {
+            throw new InvalidOperationException("KeycloakClient is not properly initialized.");
+        }
+        
+        if (string.IsNullOrWhiteSpace(keycloakUserId))
+        {
+            throw new ArgumentException("User Id cannot be null or whitespace.", nameof(keycloakUserId));
+        }
+        
+        string accessToken;
+        try
+        {
+            accessToken = await ObtainAdminToken();
+        }
+        catch (Exception ex)
+        {
+            throw new HttpRequestException("Failed to obtain admin token.", ex);
+        }
+        
+        var url = $"{_baseUrl}/admin/realms/{_realm}/users/{keycloakUserId}/credentials";
+        
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        
+        var response = await HttpRetryHelper.ExecuteWithRetryAsync(_httpClient, request);
+        response.EnsureSuccessStatusCode();
+        
+        var credentials = JsonSerializer.Deserialize<List<dynamic>>(await response.Content.ReadAsStringAsync());
+        
+        if (credentials == null)
+        {
+            throw new Exception("Failed to deserialize credentials.");
+        }
+        
+        foreach (var credential in credentials)
+        {
+            if (credential["type"].ToString() == "otp") 
+            {
+                var deleteUrl = $"{url}/{credential["id"]}";
+                var deleteRequest = new HttpRequestMessage(HttpMethod.Delete, deleteUrl);
+                deleteRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        
+                var deleteResponse = await HttpRetryHelper.ExecuteWithRetryAsync(_httpClient, request);
+                deleteResponse.EnsureSuccessStatusCode();
+            }
+        }
+    }
+    
+    /// <inheritdoc />
+    public async Task<bool> ValidateTokenAsync(string token)
+    {
+        if (string.IsNullOrWhiteSpace(_baseUrl) 
+            || string.IsNullOrWhiteSpace(_realm)
+            || string.IsNullOrWhiteSpace(_clientId)
+            || string.IsNullOrWhiteSpace(_clientSecret))
+        {
+            throw new InvalidOperationException("KeycloakClient is not properly initialized.");
+        }
+
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            throw new ArgumentException("Token cannot be null or whitespace.", nameof(token));
+        }
+        
+        var introspectionUrl = $"{_baseUrl}/realms/{_realm}/protocol/openid-connect/token/introspect";
+    
+        var request = new HttpRequestMessage(HttpMethod.Post, introspectionUrl);
+        request.Content = new FormUrlEncodedContent(new[]
+        {
+            new KeyValuePair<string, string>("token", token),
+            new KeyValuePair<string, string>("client_id", _clientId),
+            new KeyValuePair<string, string>("client_secret", _clientSecret)
+        });
+        
+        var response = await HttpRetryHelper.ExecuteWithRetryAsync(_httpClient, request);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        
+        try
+        {
+            using var document = JsonDocument.Parse(content);
+            var root = document.RootElement;
+
+            if (root.TryGetProperty("active", out var activeElement) && activeElement.ValueKind == JsonValueKind.False)
+            {
+                return false;
+            }
+
+            return true;
+        }
+        catch (JsonException ex)
+        {
+            throw new Exception("Error parsing token validation response.", ex);
+        }
+    }
+    
+    /// <inheritdoc />
+    [Obsolete("This method is deprecated. Waiting for proper Keycloak and redirect configuration")]
+    public async Task TriggerForgotPasswordAsync(string email)
+    {
+        if (string.IsNullOrWhiteSpace(_baseUrl)
+            || string.IsNullOrWhiteSpace(_realm))
+        {
+            throw new InvalidOperationException("KeycloakClient is not properly initialized.");
+        }
+        
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            throw new ArgumentException("email cannot be null or whitespace.", nameof(email));
+        }
+        
+        string accessToken;
+        try
+        {
+            accessToken = await ObtainAdminToken();
+        }
+        catch (Exception ex)
+        {
+            throw new HttpRequestException("Failed to obtain admin token.", ex);
+        }
+        
+        var user = await GetUserByEmailAsync(email);
+        if (user == null)
+        {
+            throw new Exception("User not found!");
+        }
+        
+        var redirectUrl = "/";
+        
+        var requestUrl = $"{_baseUrl}/admin/realms/{_realm}/users/{user.Id}/execute-actions-email?lifespan=3600&redirect_uri={redirectUrl}";
+        var actions = new[] { "UPDATE_PASSWORD" };
+        
+        var request = new HttpRequestMessage(HttpMethod.Put, requestUrl)
+        {
+            Content = new StringContent(JsonSerializer.Serialize(actions), Encoding.UTF8, "application/json")
+        };
+        
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        var response = await HttpRetryHelper.ExecuteWithRetryAsync(_httpClient, request);
+        response.EnsureSuccessStatusCode();
+    }
+    
+    /// <inheritdoc />
+    public async Task EnableDisableUserAsync(string keycloakUserId, bool enable)
+    {
+        if (string.IsNullOrWhiteSpace(_baseUrl)
+            || string.IsNullOrWhiteSpace(_realm))
+        {
+            throw new InvalidOperationException("KeycloakClient is not properly initialized.");
+        }
+
+        if (string.IsNullOrWhiteSpace(keycloakUserId))
+        {
+            throw new ArgumentException("User Id cannot be null or whitespace.", nameof(keycloakUserId));
+        }
+        
+        string accessToken;
+        try
+        {
+            accessToken = await ObtainAdminToken();
+        }
+        catch (Exception ex)
+        {
+            throw new HttpRequestException("Failed to obtain admin token.", ex);
+        }
+        
+        var requestUrl = $"{_baseUrl}/admin/realms/{_realm}/users/{keycloakUserId}";
+    
+        var requestBody = new
+        {
+            enabled = enable
+        };
+
+        var request = new HttpRequestMessage(HttpMethod.Put, requestUrl)
+        {
+            Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json")
+        };
+
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        var response = await HttpRetryHelper.ExecuteWithRetryAsync(_httpClient, request);
+        response.EnsureSuccessStatusCode();
+    }
+    
+    public async Task ConfirmUserEmailAsync(string keycloakUserId)
+    {
+        if (string.IsNullOrWhiteSpace(_baseUrl)
+            || string.IsNullOrWhiteSpace(_realm))
+        {
+            throw new InvalidOperationException("KeycloakClient is not properly initialized.");
+        }
+
+        if (string.IsNullOrWhiteSpace(keycloakUserId))
+        {
+            throw new ArgumentException("User Id cannot be null or whitespace.", nameof(keycloakUserId));
+        }
+        
+        string accessToken;
+        try
+        {
+            accessToken = await ObtainAdminToken();
+        }
+        catch (Exception ex)
+        {
+            throw new HttpRequestException("Failed to obtain admin token.", ex);
+        }
+        
+        var request = new HttpRequestMessage(HttpMethod.Put, $"{_baseUrl}/admin/realms/{_realm}/users/{keycloakUserId}")
+        {
+            Content = new StringContent(JsonSerializer.Serialize(new { emailVerified = true }), Encoding.UTF8, "application/json")
+        };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        var response = await HttpRetryHelper.ExecuteWithRetryAsync(_httpClient, request);
+        response.EnsureSuccessStatusCode();
+    }
+    
+    /// <inheritdoc />
+    public string GetKeycloakUserId(string accessToken)
+    {
+        var handler = new JwtSecurityTokenHandler();
+        var jwtToken = handler.ReadJwtToken(accessToken);
+
+        var userId = jwtToken.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
+
+        return userId ?? throw new Exception("User ID (sub) not found in access token");
     }
 }

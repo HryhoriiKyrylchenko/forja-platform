@@ -1,4 +1,4 @@
-namespace Forja.Application.DTOs;
+namespace Forja.Application.DTOs.UserRegistration;
 
 /// <summary>
 /// Represents a command used to request a new set of authentication tokens by providing an existing refresh token.

@@ -149,4 +149,89 @@ public interface IKeycloakClient
     /// <exception cref="ArgumentException">Thrown when the provided refresh token is null or whitespace.</exception>
     /// <exception cref="Exception">Thrown when the request fails or the server response cannot be deserialized.</exception>
     Task<TokenResponse> RequestNewTokensAsync(string refreshToken);
+
+    /// <summary>
+    /// Changes the password of a user in Keycloak for the specified user ID.
+    /// </summary>
+    /// <param name="keycloakUserId">The unique identifier of the user in Keycloak whose password needs to be changed.</param>
+    /// <param name="newPassword">The new password to be set for the user.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the provided user ID or password is null or empty.</exception>
+    /// <exception cref="HttpRequestException">Thrown when there is an issue with the HTTP request to Keycloak.</exception>
+    /// <exception cref="Exception">Thrown when an unexpected error occurs during the operation.</exception>
+    Task ChangePasswordAsync(string keycloakUserId, string newPassword);
+
+    /// <summary>
+    /// Enables two-factor authentication (2FA) for the specified user in Keycloak by setting a required action for configuring TOTP.
+    /// </summary>
+    /// <param name="keycloakUserId">The unique ID of the user in Keycloak for whom 2FA will be enabled.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    /// <exception cref="ArgumentException">Thrown when the provided Keycloak user ID is null or empty.</exception>
+    /// <exception cref="HttpRequestException">Thrown when the HTTP request to enable 2FA fails.</exception>
+    /// <exception cref="Exception">Thrown when there is an error obtaining the access token or processing the request.</exception>
+    Task EnableTwoFactorAuthenticationAsync(string keycloakUserId);
+
+    /// <summary>
+    /// Disables two-factor authentication (2FA) for a user in Keycloak.
+    /// </summary>
+    /// <param name="keycloakUserId">The unique identifier of the user in Keycloak whose 2FA is to be disabled.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the provided Keycloak user ID is null or empty.</exception>
+    /// <exception cref="HttpRequestException">Thrown when the HTTP request to Keycloak fails or the server returns an error status code.</exception>
+    /// <exception cref="JsonException">Thrown when the response from Keycloak cannot be deserialized into the expected format.</exception>
+    /// <exception cref="Exception">Thrown for other unexpected errors during the operation.</exception>
+    Task DisableTwoFactorAuthenticationAsync(string keycloakUserId);
+
+    /// <summary>
+    /// Validates a given Keycloak authentication token.
+    /// </summary>
+    /// <param name="token">The Keycloak token to be validated.</param>
+    /// <returns>A boolean indicating whether the token is active and valid.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown if the base URL, realm, client ID, client secret, or token is null or empty.
+    /// </exception>
+    /// <exception cref="HttpRequestException">Thrown when the HTTP request to validate the token fails.</exception>
+    /// <exception cref="JsonException">Thrown when the response content cannot be successfully deserialized.</exception>
+    Task<bool> ValidateTokenAsync(string token);
+
+    /// <summary>
+    /// Triggers the forgot password workflow for a specified user in Keycloak by sending a password reset email.
+    /// </summary>
+    /// <param name="email">The email address of the user to trigger the forgot password process for.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the email parameter is null or empty.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the base URL or realm is not properly configured.</exception>
+    /// <exception cref="Exception">Thrown when the user retrieval or password reset email request fails.</exception>
+    Task TriggerForgotPasswordAsync(string email);
+
+    /// <summary>
+    /// Enables or disables a user in Keycloak based on the given user ID and enable flag.
+    /// </summary>
+    /// <param name="keycloakUserId">The unique identifier of the user in Keycloak.</param>
+    /// <param name="enable">A boolean indicating whether to enable (true) or disable (false) the user.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the user ID is null or empty.</exception>
+    /// <exception cref="HttpRequestException">Thrown when an error occurs while sending the HTTP request to Keycloak.</exception>
+    /// <exception cref="Exception">Thrown when there is an error obtaining the access token or handling the HTTP response.</exception>
+    Task EnableDisableUserAsync(string keycloakUserId, bool enable);
+
+    /// <summary>
+    /// Extracts the Keycloak user ID from the provided access token.
+    /// </summary>
+    /// <param name="accessToken">The JWT access token containing the user ID claim.</param>
+    /// <returns>The user ID extracted from the "sub" claim in the access token.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if the provided access token is null.</exception>
+    /// <exception cref="SecurityTokenException">Thrown if the access token is invalid or cannot be read as a JWT token.</exception>
+    /// <exception cref="Exception">Thrown if the user ID ("sub" claim) is not found in the access token.</exception>
+    string GetKeycloakUserId(string accessToken);
+
+    /// <summary>
+    /// Confirms a user's email in Keycloak by marking the email as verified.
+    /// </summary>
+    /// <param name="keycloakUserId">The unique ID of the user in Keycloak whose email is to be confirmed.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the provided keycloakUserId is null or whitespace.</exception>
+    /// <exception cref="HttpRequestException">Thrown when there is an error during the HTTP request to Keycloak.</exception>
+    /// <exception cref="Exception">Thrown when there is an issue obtaining the access token or with the email confirmation process.</exception>
+    Task ConfirmUserEmailAsync(string keycloakUserId);
 }

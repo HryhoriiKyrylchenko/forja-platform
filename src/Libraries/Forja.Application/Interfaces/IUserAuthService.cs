@@ -3,7 +3,7 @@ namespace Forja.Application.Interfaces;
 /// <summary>
 /// Interface defining user registration, authentication, role management, and user-related operations.
 /// </summary>
-public interface IUserRegistrationService
+public interface IUserAuthService
 {
     // User registration and authentication
     /// <summary>
@@ -111,4 +111,64 @@ public interface IUserRegistrationService
     /// <param name="email">The email address of the user to retrieve.</param>
     /// <returns>A <see cref="UserRepresentation"/> object if the user is found; otherwise, null.</returns>
     Task<UserRepresentation?> GetKeycloakUserByEmailAsync(string email);
+
+    /// <summary>
+    /// Updates the password for a user in the Keycloak identity store.
+    /// </summary>
+    /// <param name="keycloakUserId">The unique identifier of the user in the Keycloak system.</param>
+    /// <param name="newPassword">The new password to be set for the user.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    Task ChangePasswordAsync(string keycloakUserId, string newPassword);
+
+    /// <summary>
+    /// Enables two-factor authentication for the specified user in the identity provider.
+    /// The two-factor authentication process adds an additional layer of security for user accounts.
+    /// </summary>
+    /// <param name="keycloakUserId">The unique identifier of the user in the identity provider for whom two-factor authentication is to be enabled.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task EnableTwoFactorAuthenticationAsync(string keycloakUserId);
+
+    /// <summary>
+    /// Disables two-factor authentication for a specified user in the system.
+    /// </summary>
+    /// <param name="keycloakUserId">The unique identifier of the user in Keycloak whose two-factor authentication is to be disabled.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    Task DisableTwoFactorAuthenticationAsync(string keycloakUserId);
+
+    /// <summary>
+    /// Validates a given token by checking its authenticity using the associated identity provider or token service.
+    /// </summary>
+    /// <param name="token">The token to be validated.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a boolean indicating if the token is valid or not.</returns>
+    Task<bool> ValidateTokenAsync(string token);
+
+    /// <summary>
+    /// Initiates the forgot password process for a user by triggering the appropriate mechanism
+    /// (e.g., sending a password reset link or token) via the identity provider.
+    /// </summary>
+    /// <param name="email">The email address of the user requesting a password reset.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    Task TriggerForgotPasswordAsync(string email);
+
+    /// <summary>
+    /// Enables or disables a user in the system based on the provided keycloak user ID.
+    /// </summary>
+    /// <param name="keycloakUserId">The unique identifier of the user in the Keycloak identity store.</param>
+    /// <param name="enable">A boolean value indicating whether to enable (true) or disable (false) the user.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    Task EnableDisableUserAsync(string keycloakUserId, bool enable);
+
+    /// <summary>
+    /// Retrieves the Keycloak user ID associated with the specified access token.
+    /// </summary>
+    /// <param name="accessToken">The access token used to identify the user in Keycloak.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the user's Keycloak ID as a string.</returns>
+    Task<string> GetKeycloakUserIdAsync(string accessToken);
+
+    /// <summary>
+    /// Confirms the email address of a user in the system.
+    /// </summary>
+    /// <param name="keycloakUserId">The unique identifier of the user in the Keycloak identity store.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    Task ConfirmUserEmailAsync(string keycloakUserId);
 }

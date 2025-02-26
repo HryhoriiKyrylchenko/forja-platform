@@ -1,4 +1,4 @@
-namespace Forja.Application.DTOs;
+namespace Forja.Application.DTOs.UserRegistration;
 
 /// <summary>
 /// Represents a command used to create a new role in the system.

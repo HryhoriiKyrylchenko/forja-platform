@@ -6,4 +6,6 @@ global using Forja.Domain.Entities.Games;
 global using Microsoft.OpenApi.Models;
 global using System.ComponentModel.DataAnnotations;
 global using Forja.Application.DTOs;
+global using Forja.Application.DTOs.UserProfile;
+global using Forja.Application.Services;
 global using Forja.Infrastructure.Keycloak;

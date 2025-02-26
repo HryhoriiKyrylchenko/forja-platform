@@ -3,15 +3,15 @@ namespace Forja.Application.Services;
 /// <summary>
 /// Provides services for user registration, authentication, and role management operations.
 /// </summary>
-public class UserRegistrationService : IUserRegistrationService
+public class UserAuthService : IUserAuthService
 {
     private readonly IKeycloakClient _keycloakClient;
-    private readonly IUserRepository _userRepository;
+    private readonly IUserProfileUnitOfWork _userProfileUnitOfWork;
     
-    public UserRegistrationService(IKeycloakClient keycloakClient, IUserRepository userRepository)
+    public UserAuthService(IKeycloakClient keycloakClient, IUserProfileUnitOfWork userProfileUnitOfWork)
     {
         _keycloakClient = keycloakClient;
-        _userRepository = userRepository;
+        _userProfileUnitOfWork = userProfileUnitOfWork;
     }
     
     /// <inheritdoc />
@@ -35,7 +35,8 @@ public class UserRegistrationService : IUserRegistrationService
             CreatedAt = DateTime.UtcNow
         };
 
-        await _userRepository.AddAsync(appUser);
+        await _userProfileUnitOfWork.Users.AddAsync(appUser);
+        await _userProfileUnitOfWork.SaveChangesAsync();
     }
     
     /// <inheritdoc />
@@ -114,15 +115,98 @@ public class UserRegistrationService : IUserRegistrationService
     {
         return await _keycloakClient.GetUserByEmailAsync(email);
     }
-    
+
     /// <inheritdoc />
+    public async Task ChangePasswordAsync(string keycloakUserId, string newPassword)
+    {
+        if (string.IsNullOrWhiteSpace(keycloakUserId) || string.IsNullOrWhiteSpace(newPassword))
+        {
+            throw new ArgumentException("User ID and password must not be null or empty.");
+        }
+
+        await _keycloakClient.ChangePasswordAsync(keycloakUserId, newPassword);
+    }
+
+    /// <inheritdoc />
+    public async Task EnableTwoFactorAuthenticationAsync(string keycloakUserId)
+    {
+        if (string.IsNullOrWhiteSpace(keycloakUserId))
+        {
+            throw new ArgumentException("User ID must not be null or empty.");
+        }
+
+        await _keycloakClient.EnableTwoFactorAuthenticationAsync(keycloakUserId);
+    }
+
+    /// <inheritdoc />
+    public async Task DisableTwoFactorAuthenticationAsync(string keycloakUserId)
+    {
+        if (string.IsNullOrWhiteSpace(keycloakUserId))
+        {
+            throw new ArgumentException("User ID must not be null or empty.");
+        }
+
+        await _keycloakClient.DisableTwoFactorAuthenticationAsync(keycloakUserId);
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> ValidateTokenAsync(string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            throw new ArgumentException("Token must not be null or empty.");
+        }
+
+        return await _keycloakClient.ValidateTokenAsync(token);
+    }
+
+    /// <inheritdoc />
+    public async Task TriggerForgotPasswordAsync(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            throw new ArgumentException("Email must not be null or empty.");
+        }
+
+        await _keycloakClient.TriggerForgotPasswordAsync(email);
+    }
+
+    /// <inheritdoc />
+    public async Task EnableDisableUserAsync(string keycloakUserId, bool enable)
+    {
+        if (string.IsNullOrWhiteSpace(keycloakUserId))
+        {
+            throw new ArgumentException("User ID must not be null or empty.");
+        }
+
+        await _keycloakClient.EnableDisableUserAsync(keycloakUserId, enable);
+    }
+
+    /// <inheritdoc />
+    public async Task<string> GetKeycloakUserIdAsync(string accessToken)
+    {
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            throw new ArgumentException("Access token must not be null or empty.");
+        }
+
+        // Directly call the GetKeycloakUserId method from the IKeycloakClient
+        return await Task.FromResult(_keycloakClient.GetKeycloakUserId(accessToken));
+    }
+
+    /// <summary>
+    /// Generates a unique username by appending a numeric suffix to the provided base username
+    /// if it conflicts with an existing username in the system.
+    /// </summary>
+    /// <param name="baseUsername">The base username that needs to be made unique.</param>
+    /// <returns>A unique username string derived from the base username.</returns>
     private async Task<string> GenerateUniqueUsernameAsync(string baseUsername)
     {
         baseUsername = baseUsername.Trim().ToLowerInvariant();
         string username = baseUsername;
         int suffix = 0;
         
-        while (await _userRepository.ExistsByUsernameAsync(username))
+        while (await _userProfileUnitOfWork.Users.ExistsByUsernameAsync(username))
         {
             suffix++;
             username = $"{baseUsername}{suffix}";
@@ -130,4 +214,16 @@ public class UserRegistrationService : IUserRegistrationService
     
         return username;
     }
+    
+    /// <inheritdoc />
+    public async Task ConfirmUserEmailAsync(string keycloakUserId)
+    {
+        if (string.IsNullOrWhiteSpace(keycloakUserId))
+        {
+            throw new ArgumentException("Keycloak User ID cannot be null or empty.", nameof(keycloakUserId));
+        }
+
+        await _keycloakClient.ConfirmUserEmailAsync(keycloakUserId);
+    }
+
 }
