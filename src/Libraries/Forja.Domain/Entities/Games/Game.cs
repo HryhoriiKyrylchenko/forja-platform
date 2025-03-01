@@ -7,12 +7,6 @@ namespace Forja.Domain.Entities.Games;
 public class Game : Product
 {
     /// <summary>
-    /// Gets or sets the release date of the game.
-    /// </summary>
-    [Required]
-    public DateTime ReleaseDate { get; set; }
-    
-    /// <summary>
     /// Gets or sets the system requirements for the game.
     /// </summary>
     public string? SystemRequirements { get; set; }
@@ -21,12 +15,11 @@ public class Game : Product
     /// Gets or sets the storage URL for the game.
     /// </summary>
     public string? StorageUrl { get; set; }
-    
+
     /// <summary>
-    /// Gets or sets the collection of game categories associated with the game.
-    /// Virtual property for Entity Framework to handle related data.
+    /// Gets or sets the total time played for the game.
     /// </summary>
-    public virtual ICollection<GameCategory> GameCategories { get; set; } = [];
+    public TimeSpan? TimePlayed { get; set; }
     
     /// <summary>
     /// Gets or sets the collection of game addons associated with the game.
@@ -51,4 +44,9 @@ public class Game : Product
     /// Virtual property for Entity Framework to handle related data.
     /// </summary>
     public virtual ICollection<Review> Reviews { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the collection of game mechanics associated with the game.
+    /// </summary>
+    public virtual ICollection<GameMechanic> GameMechanics { get; set; } = [];
 }

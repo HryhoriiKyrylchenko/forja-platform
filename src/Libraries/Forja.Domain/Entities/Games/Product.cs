@@ -17,6 +17,11 @@ public abstract class Product : SoftDeletableEntity
     /// </summary>
     [Required]
     public string Title { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets a brief description of the product.
+    /// </summary>
+    public string ShortDescription { get; set; } = string.Empty;
     
     /// <summary>
     /// Gets or sets the description of the product.
@@ -24,9 +29,30 @@ public abstract class Product : SoftDeletableEntity
     public string Description { get; set; } = string.Empty;
     
     /// <summary>
+    /// Gets or sets the developer of the product.
+    /// </summary>
+    public string Developer { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Gets or sets the minimal age category suggested for players of this product.
+    /// </summary>
+    [Required]
+    public MinimalAge MinimalAge { get; set; }
+
+    /// <summary>
+    /// Gets or sets the platform on which the product is available.
+    /// </summary>
+    public ProductPlatform Platform { get; set; }
+    
+    /// <summary>
     /// Gets or sets the price of the product.
     /// </summary>
     public decimal Price { get; set; }
+
+    /// <summary>
+    /// Gets or sets the URL of the logo associated with the product.
+    /// </summary>
+    public string LogoUrl { get; set; } = string.Empty;
     
     /// <summary>
     /// Gets or sets the date and time when the product was created.
@@ -39,9 +65,21 @@ public abstract class Product : SoftDeletableEntity
     public DateTime? ModifiedAt { get; set; }
     
     /// <summary>
+    /// Gets or sets the release date of the product.
+    /// </summary>
+    [Required]
+    public DateTime ReleaseDate { get; set; }
+    
+    /// <summary>
     /// Gets or sets a value indicating whether the product is active.
     /// </summary>
     public bool IsActive { get; set; }
+    
+    /// <summary>
+    /// Gets or sets the collection of product genres associated with the game.
+    /// Virtual property for Entity Framework to handle related data.
+    /// </summary>
+    public virtual ICollection<ProductGenres> ProductGenres { get; set; } = [];
     
     /// <summary>
     /// Gets or sets the collection of discounts associated with the product.
@@ -66,4 +104,20 @@ public abstract class Product : SoftDeletableEntity
     /// Virtual property for Entity Framework to handle related data.
     /// </summary>
     public virtual ICollection<ProductDiscount> ProductDiscounts { get; set; } = [];
+    
+    /// <summary>
+    /// Gets or sets the collection of user white lists associated with the product.
+    /// Virtual property for Entity Framework to handle related data.
+    /// </summary>
+    public virtual ICollection<UserWhiteList> UserWhiteLists { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the collection of mature content associated with the product.
+    /// </summary>
+    public virtual ICollection<ProductMatureContent> ProductMatureContents { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the collection of images associated with the product.
+    /// </summary>
+    public virtual ICollection<ProductImages> ProductImages { get; set; } = [];
 }

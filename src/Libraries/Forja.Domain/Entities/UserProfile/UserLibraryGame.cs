@@ -46,4 +46,9 @@ public class UserLibraryGame : SoftDeletableEntity
     /// Virtual property for Entity Framework to handle related data.
     /// </summary>
     public virtual ICollection<UserLibraryAddon> PurchasedAddons { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the collection of game saves associated with the user library game.
+    /// </summary>
+    public virtual ICollection<GameSave> GameSaves { get; set; } = [];
 }
