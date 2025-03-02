@@ -30,16 +30,6 @@ var redis = builder.AddRedis("redis")
     .WithContainerName("forja-redis")
     .WithVolume("redis-data", "/data" , isReadOnly: false);
 
-//HashiCorp Vault Configuration
-builder.AddContainer("vault", "hashicorp/vault")
-    .WithImage("hashicorp/vault")
-    .WithImageTag("1.18")
-    .WithEnvironment("VAULT_LOCAL_CONFIG", "{\"storage\": {\"file\": {\"path\": \"/vault/file\"}}, \"listener\": [{\"tcp\": { \"address\": \"0.0.0.0:8200\", \"tls_disable\": true}}], \"default_lease_ttl\": \"168h\", \"max_lease_ttl\": \"720h\", \"ui\": true}")
-    .WithContainerName("forja-vault")
-    .WithHttpEndpoint(port: 8200, targetPort: 8200, name: "vault")
-    .WithVolume("vault-data", "/vault/file", isReadOnly: false)
-    .WithArgs("server");     
-
 //Keycloak Configuration
 var keycloakUsername = builder.AddParameter("keycloak-admin", secret: true);
 var keycloakPassword = builder.AddParameter("keycloak-password", secret: true);

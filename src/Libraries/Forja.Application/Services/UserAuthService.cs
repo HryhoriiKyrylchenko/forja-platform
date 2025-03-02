@@ -136,6 +136,7 @@ public class UserAuthService : IUserAuthService
         }
 
         await _keycloakClient.EnableTwoFactorAuthenticationAsync(keycloakUserId);
+        await _keycloakClient.SendRequiredActionEmailAsync(keycloakUserId, ["CONFIGURE_TOTP"]);
     }
 
     /// <inheritdoc />
@@ -161,14 +162,14 @@ public class UserAuthService : IUserAuthService
     }
 
     /// <inheritdoc />
-    public async Task TriggerForgotPasswordAsync(string email)
+    public async Task TriggerForgotPasswordAsync(string email, string? redirectUri = null)
     {
         if (string.IsNullOrWhiteSpace(email))
         {
             throw new ArgumentException("Email must not be null or empty.");
         }
 
-        await _keycloakClient.TriggerForgotPasswordAsync(email);
+        await _keycloakClient.TriggerForgotPasswordAsync(email, redirectUri);
     }
 
     /// <inheritdoc />
@@ -180,6 +181,17 @@ public class UserAuthService : IUserAuthService
         }
 
         await _keycloakClient.EnableDisableUserAsync(keycloakUserId, enable);
+    }
+
+    /// <inheritdoc />
+    public async Task ResetUserPasswordAsync(string userId, string newPassword, bool temporary = false)
+    {
+        if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(newPassword))
+        {
+            throw new ArgumentException("User ID and password must not be null or empty.");
+        }
+        
+        await _keycloakClient.ResetUserPasswordAsync(userId, newPassword, temporary);
     }
 
     /// <inheritdoc />

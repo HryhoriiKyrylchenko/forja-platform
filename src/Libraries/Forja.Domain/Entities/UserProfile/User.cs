@@ -54,6 +54,36 @@ public class User : SoftDeletableEntity
     /// Gets or sets the URL of the user's avatar.
     /// </summary>
     public string? AvatarUrl { get; set; }
+
+    /// <summary>
+    /// Gets or sets the birth date of the user.
+    /// </summary>
+    public DateTime? BirthDate { get; set; }
+
+    /// <summary>
+    /// Gets or sets the gender of the user.
+    /// </summary>
+    public string? Gender { get; set; }
+
+    /// <summary>
+    /// Gets or sets the country associated with the user.
+    /// </summary>
+    public string? Country { get; set; }
+
+    /// <summary>
+    /// Gets or sets the city associated with the user.
+    /// </summary>
+    public string? City { get; set; }
+
+    /// <summary>
+    /// Gets or sets a brief description provided by the user about themselves.
+    /// </summary>
+    public string? SelfDescription { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether personal information should be visible.
+    /// </summary>
+    public bool ShowPersonalInfo { get; set; }
     
     /// <summary>
     /// Gets or sets the date and time when the user was created.
@@ -66,10 +96,25 @@ public class User : SoftDeletableEntity
     public DateTime? ModifiedAt { get; set; }
 
     /// <summary>
+    /// Gets or sets the custom URL for the user's profile.
+    /// </summary>
+    public string? CustomUrl { get; set; }
+
+    /// <summary>
     /// Gets or sets the cart associated with the user.
     /// Virtual property for Entity Framework to handle related data.
     /// </summary>
     public virtual Cart? Cart { get; set; }
+
+    /// <summary>
+    /// Gets or sets the list of followers associated with the user.
+    /// </summary>
+    public virtual ICollection<UserFollower> Followers { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the collection of users that the current user is following.
+    /// </summary>
+    public virtual ICollection<UserFollower> Following { get; set; } = [];
     
     /// <summary>
     /// Gets or sets the collection of games in the user's library.
@@ -118,4 +163,15 @@ public class User : SoftDeletableEntity
     /// Virtual property for Entity Framework to handle related data.
     /// </summary>
     public virtual ICollection<AuditLog> AuditLogs { get; set; } = [];
+    
+    /// <summary>
+    /// Gets or sets the collection of user white lists associated with the user.
+    /// Virtual property for Entity Framework to handle related data.
+    /// </summary>
+    public virtual ICollection<UserWishList> UserWhiteLists { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the collection of game saves associated with the user.
+    /// </summary>
+    public virtual ICollection<GameSave> GameSaves { get; set; } = [];
 }

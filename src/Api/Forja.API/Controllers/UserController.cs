@@ -14,12 +14,10 @@ namespace Forja.API.Controllers;
 public class UserController : ControllerBase
 {
     private readonly IUserProfileService _userService;
-    private readonly IKeycloakClient _keycloakClient;
 
-    public UserController(IUserProfileService userService, IKeycloakClient keycloakClient)
+    public UserController(IUserProfileService userService)
     {
         _userService = userService;
-        _keycloakClient = keycloakClient;
     }
 
     /// <summary>
@@ -55,7 +53,6 @@ public class UserController : ControllerBase
     public async Task<IActionResult> DeleteUser(string keycloakId)
     {
         await _userService.DeleteUserAsync(keycloakId);
-        await _keycloakClient.EnableDisableUserAsync(keycloakId, false);
         return NoContent();
     }
     

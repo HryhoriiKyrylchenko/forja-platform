@@ -25,9 +25,8 @@ public class Review : SoftDeletableEntity
     public Guid GameId { get; set; }
         
     /// <summary>
-    /// Gets or sets the rating given in the review. The rating must be between 1 and 5.
+    /// Gets or sets the rating given in the review.
     /// </summary>
-    [Range(1, 5)]
     public int Rating { get; set; }
         
     /// <summary>

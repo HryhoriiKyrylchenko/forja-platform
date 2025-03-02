@@ -1,3 +1,4 @@
+global using System.IdentityModel.Tokens.Jwt;
 global using System.Net.Http.Headers;
 global using System.Text;
 global using System.Text.Json;
@@ -17,9 +18,12 @@ global using Microsoft.Extensions.Configuration;
 global using System.Text.Json.Serialization;
 global using Polly;
 global using System.Net;
+global using System.Net.Http.Json;
 global using Forja.Domain.Repositories.UserProfile;
 global using Forja.Infrastructure.Http;
 global using Forja.Domain.Repositories.Games;
 global using Forja.Infrastructure.Repositories.UserProfile;
 global using Forja.Infrastructure.Repositories.Games;
 global using System.Text.RegularExpressions;
+global using Forja.Domain.Repositories.Store;
+global using Forja.Infrastructure.Validators;
