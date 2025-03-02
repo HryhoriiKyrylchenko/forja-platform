@@ -60,6 +60,11 @@ public class NewsArticle
     public byte[]? FileContent { get; set; }
 
     /// <summary>
+    /// URL of the image associated with the news article.
+    /// </summary>
+    public string? ImageUrl { get; set; }
+
+    /// <summary>
     /// Represents the identifier of the author associated with the news article.
     /// This is a foreign key linking to the <see cref="User"/> entity.
     /// </summary>

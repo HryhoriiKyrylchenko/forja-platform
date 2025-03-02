@@ -74,6 +74,21 @@ public abstract class Product : SoftDeletableEntity
     /// Gets or sets a value indicating whether the product is active.
     /// </summary>
     public bool IsActive { get; set; }
+
+    /// <summary>
+    /// Gets or sets the interface languages available for the product.
+    /// </summary>
+    public string InterfaceLanguages { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the available audio languages for the product.
+    /// </summary>
+    public string AudioLanguages { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the languages available for subtitles in the product.
+    /// </summary>
+    public string SubtitlesLanguages { get; set; } = string.Empty;
     
     /// <summary>
     /// Gets or sets the collection of product genres associated with the game.
@@ -109,7 +124,7 @@ public abstract class Product : SoftDeletableEntity
     /// Gets or sets the collection of user white lists associated with the product.
     /// Virtual property for Entity Framework to handle related data.
     /// </summary>
-    public virtual ICollection<UserWhiteList> UserWhiteLists { get; set; } = [];
+    public virtual ICollection<UserWishList> UserWishLists { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the collection of mature content associated with the product.

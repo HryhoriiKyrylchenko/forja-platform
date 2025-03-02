@@ -1,5 +1,3 @@
-using Forja.Infrastructure.Validators;
-
 namespace Forja.Infrastructure.Repositories.UserProfile;
 
 public class UserAchievementRepository : IUserAchievementRepository

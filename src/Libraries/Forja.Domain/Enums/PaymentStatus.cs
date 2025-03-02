@@ -19,4 +19,9 @@ public enum PaymentStatus
     /// The payment has failed.
     /// </summary>
     Failed,
+    
+    /// <summary>
+    /// Indicates that the payment has been refunded to the payer.
+    /// </summary>
+    Refunded
 }

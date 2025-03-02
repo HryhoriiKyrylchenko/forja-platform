@@ -8,8 +8,8 @@ namespace Forja.Domain.Entities.UserProfile;
 /// where the user has special privileges or access specific to that game.
 /// It includes navigation properties to the corresponding user and game entities.
 /// </remarks>
-[Table("UserWhiteList", Schema = "user-profile")]
-public class UserWhiteList
+[Table("UserWishList", Schema = "user-profile")]
+public class UserWishList
 {
     /// <summary>
     /// Gets or sets the unique identifier for the UserWhiteList entity.

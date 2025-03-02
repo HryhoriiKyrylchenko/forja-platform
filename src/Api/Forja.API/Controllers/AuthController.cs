@@ -359,4 +359,47 @@ public class AuthController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Resets the password of a user in the system.
+    /// </summary>
+    /// <param name="request">The details of the password reset request, including the Keycloak User ID, new password, and whether the password is temporary.</param>
+    /// <returns>An <see cref="IActionResult"/> indicating the result of the operation.
+    /// Returns a NoContent response if the password is successfully reset, or a BadRequest response with an error message if the input is invalid or the reset fails.</returns>
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetUserPassword([FromBody] ResetUserPasswordRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.KeycloakUserId) 
+            || string.IsNullOrWhiteSpace(request.Password))
+        {
+            throw new ArgumentException("Keycloak User ID and password must be provided.");
+        }
+
+        try
+        {
+            await _authService.ResetUserPasswordAsync(request.KeycloakUserId, request.Password);
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message); 
+        }
+    }
+
+    /// <summary>
+    /// Initiates the forgot password process by sending a password reset email to the provided email address.
+    /// </summary>
+    /// <param name="email">The email address of the user requesting a password reset.</param>
+    /// <returns>An <see cref="IActionResult"/> indicating the outcome of the operation.
+    /// Returns an Ok response if the email is successfully sent, or a Bad Request response if the email is invalid or empty.</returns>
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> TriggerForgotPassword([FromBody] ForgotPasswordRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email))
+        {
+            return BadRequest("Email cannot be null or empty.");
+        }
+
+        await _authService.TriggerForgotPasswordAsync(request.Email, request.RedirectUrl);
+        return Ok("Password reset email sent successfully.");
+    }
 }

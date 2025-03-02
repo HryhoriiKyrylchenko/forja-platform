@@ -198,11 +198,12 @@ public interface IKeycloakClient
     /// Triggers the forgot password workflow for a specified user in Keycloak by sending a password reset email.
     /// </summary>
     /// <param name="email">The email address of the user to trigger the forgot password process for.</param>
+    /// /// <param name="redirectUri">The redirect Uri address to manage the forgot password process.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     /// <exception cref="ArgumentNullException">Thrown when the email parameter is null or empty.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the base URL or realm is not properly configured.</exception>
     /// <exception cref="Exception">Thrown when the user retrieval or password reset email request fails.</exception>
-    Task TriggerForgotPasswordAsync(string email);
+    Task TriggerForgotPasswordAsync(string email, string? redirectUri = null);
 
     /// <summary>
     /// Enables or disables a user in Keycloak based on the given user ID and enable flag.
@@ -224,6 +225,32 @@ public interface IKeycloakClient
     /// <exception cref="SecurityTokenException">Thrown if the access token is invalid or cannot be read as a JWT token.</exception>
     /// <exception cref="Exception">Thrown if the user ID ("sub" claim) is not found in the access token.</exception>
     string GetKeycloakUserId(string accessToken);
+
+    /// <summary>
+    /// Resets the password for a specified user in Keycloak.
+    /// </summary>
+    /// <param name="userId">The ID of the user whose password is to be reset.</param>
+    /// <param name="newPassword">The new password to set for the user.</param>
+    /// <param name="temporary">
+    /// Indicates whether the new password should be marked as temporary, requiring the user to change it upon their next login.
+    /// </param>
+    /// <returns>An asynchronous operation representing the password reset task.</returns>
+    /// <exception cref="ArgumentException">Thrown when the user ID or new password is null, empty, or contains only whitespaces.</exception>
+    /// <exception cref="HttpRequestException">Thrown when the request fails, such as network issues or invalid response from the server.</exception>
+    /// <exception cref="Exception">Thrown when there is a failure while obtaining the access token or processing the response.</exception>
+    Task ResetUserPasswordAsync(string userId, string newPassword, bool temporary = false);
+
+    /// <summary>
+    /// Sends an email to the specified user to perform required actions, such as updating their password or verifying their email.
+    /// </summary>
+    /// <param name="userId">The ID of the user to whom the email should be sent.</param>
+    /// <param name="actions">A collection of required actions for the user to complete (e.g., "VERIFY_EMAIL", "UPDATE_PASSWORD").</param>
+    /// <param name="lifespan">The validity period of the action link in seconds. Defaults to 3600 seconds (1 hour).</param>
+    /// <param name="redirectUri">Optional URI to redirect the user upon completing the required actions. Defaults to null.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    /// <exception cref="HttpRequestException">Thrown when the server request fails or the response indicates an HTTP error.</exception>
+    /// <exception cref="Exception">Thrown when there is an error in creating or sending the request.</exception>
+    Task SendRequiredActionEmailAsync(string userId, IEnumerable<string> actions, int lifespan = 3600, string? redirectUri = null);
 
     /// <summary>
     /// Confirms a user's email in Keycloak by marking the email as verified.

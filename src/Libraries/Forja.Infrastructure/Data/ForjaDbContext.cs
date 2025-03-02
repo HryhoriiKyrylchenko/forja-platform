@@ -57,7 +57,7 @@ public class ForjaDbContext : DbContext
     public DbSet<UserAchievement> UserAchievements { get; set; }
     public DbSet<UserLibraryAddon> UserLibraryAddons { get; set; }
     public DbSet<UserLibraryGame> UserLibraryGames { get; set; }
-    public DbSet<UserWhiteList> UserWhiteList { get; set; }
+    public DbSet<UserWishList> UserWishList { get; set; }
     public DbSet<UserFollower> UserFollowers { get; set; }
     public DbSet<GameSave> GameSaves { get; set; }
     

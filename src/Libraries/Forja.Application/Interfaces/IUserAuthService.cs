@@ -147,8 +147,9 @@ public interface IUserAuthService
     /// (e.g., sending a password reset link or token) via the identity provider.
     /// </summary>
     /// <param name="email">The email address of the user requesting a password reset.</param>
+    /// <param name="redirectUrl">The redirect URL to manage a password reset.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    Task TriggerForgotPasswordAsync(string email);
+    Task TriggerForgotPasswordAsync(string email, string? redirectUrl = null);
 
     /// <summary>
     /// Enables or disables a user in the system based on the provided keycloak user ID.
@@ -157,6 +158,15 @@ public interface IUserAuthService
     /// <param name="enable">A boolean value indicating whether to enable (true) or disable (false) the user.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     Task EnableDisableUserAsync(string keycloakUserId, bool enable);
+
+    /// <summary>
+    /// Resets the password of a specified user in the system.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user whose password is being reset.</param>
+    /// <param name="newPassword">The new password to assign to the user.</param>
+    /// <param name="temporary">A flag indicating if the new password is temporary, requiring the user to change it upon next login.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    Task ResetUserPasswordAsync(string userId, string newPassword, bool temporary = false);
 
     /// <summary>
     /// Retrieves the Keycloak user ID associated with the specified access token.

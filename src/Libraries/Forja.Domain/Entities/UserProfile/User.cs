@@ -168,7 +168,7 @@ public class User : SoftDeletableEntity
     /// Gets or sets the collection of user white lists associated with the user.
     /// Virtual property for Entity Framework to handle related data.
     /// </summary>
-    public virtual ICollection<UserWhiteList> UserWhiteLists { get; set; } = [];
+    public virtual ICollection<UserWishList> UserWhiteLists { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the collection of game saves associated with the user.

@@ -1,6 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
-using Forja.Infrastructure.Validators;
-
 namespace Forja.Infrastructure.Keycloak;
 
 /// <summary>
@@ -320,10 +317,10 @@ public class KeycloakClient : IKeycloakClient
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         request.Content = new StringContent(
             JsonSerializer.Serialize(roleRepresentations,
-            new JsonSerializerOptions 
-            { 
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase 
-            }),
+                new JsonSerializerOptions 
+                { 
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase 
+                }),
             Encoding.UTF8,
             "application/json"
         );
@@ -377,10 +374,10 @@ public class KeycloakClient : IKeycloakClient
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         request.Content = new StringContent(
             JsonSerializer.Serialize(roleRepresentations,
-            new JsonSerializerOptions 
-            { 
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase 
-            }),
+                new JsonSerializerOptions 
+                { 
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase 
+                }),
             Encoding.UTF8,
             "application/json"
         );
@@ -697,7 +694,6 @@ public class KeycloakClient : IKeycloakClient
     }
     
     /// <inheritdoc />
-    [Obsolete("This method is deprecated. Waiting for proper Kaycloak configuration")]
     public async Task EnableTwoFactorAuthenticationAsync(string keycloakUserId)
     {
         if (string.IsNullOrWhiteSpace(_baseUrl)
@@ -740,7 +736,6 @@ public class KeycloakClient : IKeycloakClient
     }
     
     /// <inheritdoc />
-    [Obsolete("This method is deprecated. Waiting for proper Kaycloak configuration")]
     public async Task DisableTwoFactorAuthenticationAsync(string keycloakUserId)
     {
         if (string.IsNullOrWhiteSpace(_baseUrl)
@@ -843,20 +838,21 @@ public class KeycloakClient : IKeycloakClient
     }
     
     /// <inheritdoc />
-    [Obsolete("This method is deprecated. Waiting for proper Keycloak and redirect configuration")]
-    public async Task TriggerForgotPasswordAsync(string email)
+    public async Task ResetUserPasswordAsync(string userId, string newPassword, bool temporary = false)
     {
-        if (string.IsNullOrWhiteSpace(_baseUrl)
-            || string.IsNullOrWhiteSpace(_realm))
+        if (string.IsNullOrWhiteSpace(_baseUrl) || string.IsNullOrWhiteSpace(_realm))
         {
             throw new InvalidOperationException("KeycloakClient is not properly initialized.");
         }
-        
-        if (string.IsNullOrWhiteSpace(email))
+        if (string.IsNullOrWhiteSpace(userId))
         {
-            throw new ArgumentException("email cannot be null or whitespace.", nameof(email));
+            throw new ArgumentException("User Id cannot be null or whitespace.", nameof(userId));
         }
-        
+        if (string.IsNullOrWhiteSpace(newPassword))
+        {
+            throw new ArgumentException("New password cannot be null or whitespace.", nameof(newPassword));
+        }
+
         string accessToken;
         try
         {
@@ -866,26 +862,46 @@ public class KeycloakClient : IKeycloakClient
         {
             throw new HttpRequestException("Failed to obtain admin token.", ex);
         }
-        
-        var user = await GetUserByEmailAsync(email);
-        if (user == null)
+    
+        var url = $"{_baseUrl}/admin/realms/{_realm}/users/{userId}/reset-password";
+    
+        var credentialPayload = new {
+            type = "password",
+            value = newPassword,
+            temporary
+        };
+    
+        var request = new HttpRequestMessage(HttpMethod.Put, url)
         {
-            throw new Exception("User not found!");
+            Content = JsonContent.Create(credentialPayload)
+        };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+    
+        var response = await _httpClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+    }
+    
+    /// <inheritdoc />
+    public async Task TriggerForgotPasswordAsync(string email, string? redirectUri = null)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            throw new ArgumentException("email cannot be null or whitespace.", nameof(email));
         }
         
-        var redirectUrl = "/";
-        
-        var requestUrl = $"{_baseUrl}/admin/realms/{_realm}/users/{user.Id}/execute-actions-email?lifespan=3600&redirect_uri={redirectUrl}";
-        var actions = new[] { "UPDATE_PASSWORD" };
-        
-        var request = new HttpRequestMessage(HttpMethod.Put, requestUrl)
+        var user = await GetUserByEmailAsync(email);
+
+        if (user == null)
         {
-            Content = new StringContent(JsonSerializer.Serialize(actions), Encoding.UTF8, "application/json")
-        };
-        
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-        var response = await HttpRetryHelper.ExecuteWithRetryAsync(_httpClient, request);
-        response.EnsureSuccessStatusCode();
+            throw new Exception($"User with email {email} not found.");
+        }
+
+        await SendRequiredActionEmailAsync(
+            user.Id,                          
+            new[] { "UPDATE_PASSWORD" },      
+            lifespan: 3600,                   
+            redirectUri: redirectUri                 
+        );
     }
     
     /// <inheritdoc />
@@ -960,6 +976,71 @@ public class KeycloakClient : IKeycloakClient
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
         var response = await HttpRetryHelper.ExecuteWithRetryAsync(_httpClient, request);
+        response.EnsureSuccessStatusCode();
+    }
+    
+    /// <inheritdoc />
+    [Obsolete("This method uses Keycloak UI to send the required action email. It is deprecated and will be removed in a future release.")]
+    public async Task SendRequiredActionEmailAsync(
+        string keycloakUserId,
+        IEnumerable<string> actions,
+        int lifespan = 3600,
+        string? redirectUri = null)
+    {
+        if (string.IsNullOrWhiteSpace(_baseUrl)
+            || string.IsNullOrWhiteSpace(_realm)
+            || string.IsNullOrWhiteSpace(_clientId))
+        {
+            throw new InvalidOperationException("KeycloakClient is not properly initialized.");
+        }
+
+        if (string.IsNullOrWhiteSpace(keycloakUserId))
+        {
+            throw new ArgumentException("User Id cannot be null or whitespace.", nameof(keycloakUserId));
+        }
+
+        var actionsList = actions.ToList();
+        if (!actionsList.Any())
+        {
+            throw new ArgumentException("Actions cannot be empty.", nameof(actions));
+        }
+        
+        string accessToken;
+        try
+        {
+            accessToken = await ObtainAdminToken();
+        }
+        catch (Exception ex)
+        {
+            throw new HttpRequestException("Failed to obtain admin token.", ex);
+        }
+        
+        var url = $"{_baseUrl}/admin/realms/{_realm}/users/{keycloakUserId}/execute-actions-email";
+
+        var queryParams = new List<string>
+        {
+            $"client_id={_clientId}",
+            $"lifespan={lifespan}"
+        };
+
+        if (!string.IsNullOrWhiteSpace(redirectUri))
+        {
+            queryParams.Add($"redirect_uri={Uri.EscapeDataString(redirectUri)}");
+        }
+
+        if (queryParams.Any())
+        {
+            url += "?" + string.Join("&", queryParams);
+        }
+
+        var request = new HttpRequestMessage(HttpMethod.Put, url)
+        {
+            Content = JsonContent.Create(actionsList)
+        };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        var response = await HttpRetryHelper.ExecuteWithRetryAsync(_httpClient, request);
+
         response.EnsureSuccessStatusCode();
     }
     
