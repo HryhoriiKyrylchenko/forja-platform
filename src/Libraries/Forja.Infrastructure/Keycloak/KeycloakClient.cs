@@ -337,7 +337,7 @@ public class KeycloakClient : IKeycloakClient
     /// <inheritdoc />
     public async Task AssignRoleAsync(string userId, RoleRepresentation role)
     {
-        await AssignRolesAsync(userId, new[] { role });
+        await AssignRolesAsync(userId, [role]);
     }
 
     /// <inheritdoc />
@@ -394,7 +394,7 @@ public class KeycloakClient : IKeycloakClient
     /// <inheritdoc />
     public async Task DeleteClientRoleAsync(string userId, RoleRepresentation role)
     {
-        await DeleteClientRolesAsync(userId, new[] { role });
+        await DeleteClientRolesAsync(userId, [role]);
     }
 
     /// <inheritdoc />
@@ -469,14 +469,13 @@ public class KeycloakClient : IKeycloakClient
         
         var request = new HttpRequestMessage(HttpMethod.Post, 
             $"{_baseUrl}/realms/{_realm}/protocol/openid-connect/token");
-        request.Content = new FormUrlEncodedContent(new[]
-        {
+        request.Content = new FormUrlEncodedContent([
             new KeyValuePair<string, string>("grant_type", "password"),
             new KeyValuePair<string, string>("client_id", _clientId),
             new KeyValuePair<string, string>("client_secret", _clientSecret),
             new KeyValuePair<string, string>("username", username),
             new KeyValuePair<string, string>("password", password)
-        });
+        ]);
         
         var response = await HttpRetryHelper.ExecuteWithRetryAsync(_httpClient, request);
 
@@ -523,12 +522,11 @@ public class KeycloakClient : IKeycloakClient
         
         var request = new HttpRequestMessage(HttpMethod.Post, 
             $"{_baseUrl}/realms/{_realm}/protocol/openid-connect/logout");
-        request.Content = new FormUrlEncodedContent(new[]
-        {
+        request.Content = new FormUrlEncodedContent([
             new KeyValuePair<string, string>("client_id", _clientId),
             new KeyValuePair<string, string>("client_secret", _clientSecret),
             new KeyValuePair<string, string>("refresh_token", refreshToken)
-        });
+        ]);
         
         var response = await HttpRetryHelper.ExecuteWithRetryAsync(_httpClient, request);
 
@@ -558,13 +556,12 @@ public class KeycloakClient : IKeycloakClient
         
         var request = new HttpRequestMessage(HttpMethod.Post, 
             $"{_baseUrl}/realms/{_realm}/protocol/openid-connect/token");
-        request.Content = new FormUrlEncodedContent(new[]
-        {
+        request.Content = new FormUrlEncodedContent([
             new KeyValuePair<string, string>("grant_type", "refresh_token"),
             new KeyValuePair<string, string>("client_id", _clientId),
             new KeyValuePair<string, string>("client_secret", _clientSecret),
             new KeyValuePair<string, string>("refresh_token", refreshToken)
-        });
+        ]);
 
         var response = await HttpRetryHelper.ExecuteWithRetryAsync(_httpClient, request);
 
@@ -609,12 +606,11 @@ public class KeycloakClient : IKeycloakClient
 
         var request = new HttpRequestMessage(HttpMethod.Post, 
             $"{_baseUrl}/realms/{_realm}/protocol/openid-connect/token");
-        request.Content = new FormUrlEncodedContent(new[]
-        {
+        request.Content = new FormUrlEncodedContent([
             new KeyValuePair<string, string>("grant_type", "client_credentials"),
             new KeyValuePair<string, string>("client_id", _clientId),
             new KeyValuePair<string, string>("client_secret", _clientSecret)
-        });
+        ]);
 
         var response = await HttpRetryHelper.ExecuteWithRetryAsync(_httpClient, request);
         
@@ -807,12 +803,11 @@ public class KeycloakClient : IKeycloakClient
         var introspectionUrl = $"{_baseUrl}/realms/{_realm}/protocol/openid-connect/token/introspect";
     
         var request = new HttpRequestMessage(HttpMethod.Post, introspectionUrl);
-        request.Content = new FormUrlEncodedContent(new[]
-        {
+        request.Content = new FormUrlEncodedContent([
             new KeyValuePair<string, string>("token", token),
             new KeyValuePair<string, string>("client_id", _clientId),
             new KeyValuePair<string, string>("client_secret", _clientSecret)
-        });
+        ]);
         
         var response = await HttpRetryHelper.ExecuteWithRetryAsync(_httpClient, request);
         response.EnsureSuccessStatusCode();
@@ -879,29 +874,6 @@ public class KeycloakClient : IKeycloakClient
     
         var response = await _httpClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
-    }
-    
-    /// <inheritdoc />
-    public async Task TriggerForgotPasswordAsync(string email, string? redirectUri = null)
-    {
-        if (string.IsNullOrWhiteSpace(email))
-        {
-            throw new ArgumentException("email cannot be null or whitespace.", nameof(email));
-        }
-        
-        var user = await GetUserByEmailAsync(email);
-
-        if (user == null)
-        {
-            throw new Exception($"User with email {email} not found.");
-        }
-
-        await SendRequiredActionEmailAsync(
-            user.Id,                          
-            new[] { "UPDATE_PASSWORD" },      
-            lifespan: 3600,                   
-            redirectUri: redirectUri                 
-        );
     }
     
     /// <inheritdoc />

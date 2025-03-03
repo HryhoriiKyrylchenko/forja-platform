@@ -63,4 +63,65 @@ public class UserProfileDto
     /// This property can be null if the user has not provided an avatar.
     /// </summary>
     public string? AvatarUrl { get; set; }
+
+    /// <summary>
+    /// Gets or sets the birth date of the user.
+    /// </summary>
+    /// <remarks>
+    /// This property represents the date of birth of the user, which is optional
+    /// and may be utilized for age verification, personalized content, or other purposes.
+    /// </remarks>
+    public DateTime? BirthDate { get; set; }
+
+    /// <summary>
+    /// Gets or sets the gender of the user.
+    /// </summary>
+    /// <remarks>
+    /// This property represents the user's gender, which can be used for demographic information or personalization.
+    /// </remarks>
+    public string? Gender { get; set; }
+
+    /// <summary>
+    /// Gets or sets the country associated with the user's profile.
+    /// </summary>
+    /// <remarks>
+    /// This property specifies the country of residence or nationality of the user.
+    /// It may be used to provide location-specific services or personalize user experiences.
+    /// </remarks>
+    public string? Country { get; set; }
+
+    /// <summary>
+    /// Gets or sets the city associated with the user profile.
+    /// </summary>
+    /// <remarks>
+    /// This property represents the city where the user resides, as part of their personal details.
+    /// It is used for location-based categorization or display purposes within the system.
+    /// </remarks>
+    public string? City { get; set; }
+
+    /// <summary>
+    /// Gets or sets the self-description provided by the user.
+    /// </summary>
+    /// <remarks>
+    /// This property allows the user to include a brief description about themselves, which can be used for personal or professional introductions within the application.
+    /// </remarks>
+    public string? SelfDescription { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether personal information should be visible to others.
+    /// </summary>
+    /// <remarks>
+    /// This property determines if details such as the user's contact information, location,
+    /// or other personal attributes are accessible to other users or entities.
+    /// </remarks>
+    public bool ShowPersonalInfo { get; set; }
+
+    /// <summary>
+    /// Gets or sets the custom URL associated with the user profile.
+    /// </summary>
+    /// <remarks>
+    /// This property allows the user to define a personalized URL for their profile,
+    /// which can be used as a unique identifier or shortcut to their profile page.
+    /// </remarks>
+    public string? CustomUrl { get; set; }
 }

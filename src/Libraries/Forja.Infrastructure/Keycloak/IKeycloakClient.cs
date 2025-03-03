@@ -195,17 +195,6 @@ public interface IKeycloakClient
     Task<bool> ValidateTokenAsync(string token);
 
     /// <summary>
-    /// Triggers the forgot password workflow for a specified user in Keycloak by sending a password reset email.
-    /// </summary>
-    /// <param name="email">The email address of the user to trigger the forgot password process for.</param>
-    /// /// <param name="redirectUri">The redirect Uri address to manage the forgot password process.</param>
-    /// <returns>A task that represents the asynchronous operation.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when the email parameter is null or empty.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when the base URL or realm is not properly configured.</exception>
-    /// <exception cref="Exception">Thrown when the user retrieval or password reset email request fails.</exception>
-    Task TriggerForgotPasswordAsync(string email, string? redirectUri = null);
-
-    /// <summary>
     /// Enables or disables a user in Keycloak based on the given user ID and enable flag.
     /// </summary>
     /// <param name="keycloakUserId">The unique identifier of the user in Keycloak.</param>
@@ -222,7 +211,6 @@ public interface IKeycloakClient
     /// <param name="accessToken">The JWT access token containing the user ID claim.</param>
     /// <returns>The user ID extracted from the "sub" claim in the access token.</returns>
     /// <exception cref="ArgumentNullException">Thrown if the provided access token is null.</exception>
-    /// <exception cref="SecurityTokenException">Thrown if the access token is invalid or cannot be read as a JWT token.</exception>
     /// <exception cref="Exception">Thrown if the user ID ("sub" claim) is not found in the access token.</exception>
     string GetKeycloakUserId(string accessToken);
 

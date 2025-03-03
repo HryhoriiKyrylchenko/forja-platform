@@ -2,10 +2,12 @@ namespace Forja.Infrastructure.Repositories.UserProfile;
 
 public class UserLibraryGameRepository : IUserLibraryGameRepository
 {
+    private readonly ForjaDbContext _context;
     private readonly DbSet<UserLibraryGame> _userLibraryGames;
     
     public UserLibraryGameRepository(ForjaDbContext context)
     {
+        _context = context;
         _userLibraryGames = context.Set<UserLibraryGame>();
     }
     
@@ -100,10 +102,11 @@ public class UserLibraryGameRepository : IUserLibraryGameRepository
         }
         
         await _userLibraryGames.AddAsync(userLibraryGame);
+        await _context.SaveChangesAsync();
     }
 
     /// <inheritdoc />
-    public Task UpdateAsync(UserLibraryGame userLibraryGame)
+    public async Task UpdateAsync(UserLibraryGame userLibraryGame)
     {
         if (!ProjectModelValidator.ValidateUserLibraryGame(userLibraryGame))
         {
@@ -111,7 +114,7 @@ public class UserLibraryGameRepository : IUserLibraryGameRepository
         }
         
         _userLibraryGames.Update(userLibraryGame);
-        return Task.CompletedTask;
+        await _context.SaveChangesAsync();
     }
 
     /// <inheritdoc />
@@ -122,12 +125,11 @@ public class UserLibraryGameRepository : IUserLibraryGameRepository
             throw new ArgumentException("User library game id cannot be empty.", nameof(userLibraryGameId));
         }
         
-        var userLibraryGame = await GetByIdAsync(userLibraryGameId);
-        if (userLibraryGame != null)
-        {
-            userLibraryGame.IsDeleted = true;
-            _userLibraryGames.Update(userLibraryGame);
-        }
+        var userLibraryGame = await GetByIdAsync(userLibraryGameId) ?? throw new ArgumentException("User library game not found.", nameof(userLibraryGameId));
+            
+        userLibraryGame.IsDeleted = true;
+        _userLibraryGames.Update(userLibraryGame);
+        await _context.SaveChangesAsync();
     }
 
     /// <inheritdoc />
@@ -138,11 +140,7 @@ public class UserLibraryGameRepository : IUserLibraryGameRepository
             throw new ArgumentException("User library game id cannot be empty.", nameof(id));
         }
         
-        var deletedUserLibraryGame = await GetDeletedByIdAsync(id);
-        if (deletedUserLibraryGame == null)
-        {
-            throw new ArgumentException("User library game not found.", nameof(id));
-        }
+        var deletedUserLibraryGame = await GetDeletedByIdAsync(id) ?? throw new ArgumentException("User library game not found.", nameof(id));
 
         if (!deletedUserLibraryGame.IsDeleted)
         {
@@ -151,6 +149,7 @@ public class UserLibraryGameRepository : IUserLibraryGameRepository
         
         deletedUserLibraryGame.IsDeleted = false;
         _userLibraryGames.Update(deletedUserLibraryGame);
+        await _context.SaveChangesAsync();
         
         return deletedUserLibraryGame;
     }

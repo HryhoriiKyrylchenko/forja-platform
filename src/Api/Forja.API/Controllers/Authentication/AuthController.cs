@@ -1,7 +1,6 @@
-using Forja.API.DTOs;
-using Forja.Application.DTOs.UserRegistration;
+using Forja.Application.Interfaces.Authentication;
 
-namespace Forja.API.Controllers;
+namespace Forja.API.Controllers.Authentication;
 
 /// <summary>
 /// Controller responsible for handling authentication, user registration, login, logout,
@@ -75,7 +74,7 @@ public class AuthController : ControllerBase
             httpContext.Response.Cookies.Append("access_token", tokenResponse.AccessToken, accessTokenOptions);
             httpContext.Response.Cookies.Append("refresh_token", tokenResponse.RefreshToken, refreshTokenOptions);
             
-            return Ok(tokenResponse);
+            return Ok("Login successful");
         }
         catch(Exception ex)
         {
@@ -115,7 +114,30 @@ public class AuthController : ControllerBase
         try
         {
             var tokenResponse = await _authService.RefreshTokenAsync(request);
-            return Ok(tokenResponse);
+            
+            var httpContext = _httpContextAccessor.HttpContext ?? throw new InvalidOperationException("HTTP Context is unavailable.");
+
+            // set `access_token` & `refresh_token` in the HttpOnly Cookies**
+            var accessTokenOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn)
+            };
+
+            var refreshTokenOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.UtcNow.AddSeconds(tokenResponse.RefreshExpiresIn)
+            };
+
+            httpContext.Response.Cookies.Append("access_token", tokenResponse.AccessToken, accessTokenOptions);
+            httpContext.Response.Cookies.Append("refresh_token", tokenResponse.RefreshToken, refreshTokenOptions);
+            
+            return Ok("Refresh successful");
         }
         catch(Exception ex)
         {
@@ -360,9 +382,10 @@ public class AuthController : ControllerBase
     /// Confirms a Keycloak user's email.
     /// </summary>
     /// <param name="keycloakUserId">The Keycloak user ID whose email is to be confirmed.</param>
+    /// <param name="token">The email confirmation token required to confirm email.</param>
     /// <returns>An IActionResult representing the result of the operation.</returns>
     [HttpPut("users/{keycloakUserId}/confirm-email")]
-    public async Task<IActionResult> ConfirmEmail(string keycloakUserId)
+    public async Task<IActionResult> ConfirmEmail(string keycloakUserId, [FromQuery] string token)
     {
         if (string.IsNullOrWhiteSpace(keycloakUserId))
         {
@@ -371,7 +394,7 @@ public class AuthController : ControllerBase
 
         try
         {
-            await _authService.ConfirmUserEmailAsync(keycloakUserId);
+            await _authService.ConfirmUserEmailAsync(token);
             return NoContent();
         }
         catch (ArgumentException ex)
@@ -411,11 +434,11 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Initiates the forgot password process by sending a password reset email to the provided email address.
+    /// Initiates the forgot password process by sending a password reset email to the user.
     /// </summary>
-    /// <param name="email">The email address of the user requesting a password reset.</param>
-    /// <returns>An <see cref="IActionResult"/> indicating the outcome of the operation.
-    /// Returns an Ok response if the email is successfully sent, or a Bad Request response if the email is invalid or empty.</returns>
+    /// <param name="request">The request containing the email address of the user who wants to reset their password.</param>
+    /// <returns>An <see cref="IActionResult"/> indicating the outcome of the forgot password request.
+    /// Returns an Ok response if the email is successfully sent, or a Bad Request response if the email is invalid.</returns>
     [HttpPost("forgot-password")]
     public async Task<IActionResult> TriggerForgotPassword([FromBody] ForgotPasswordRequest request)
     {
@@ -424,7 +447,67 @@ public class AuthController : ControllerBase
             return BadRequest("Email cannot be null or empty.");
         }
 
-        await _authService.TriggerForgotPasswordAsync(request.Email, request.RedirectUrl);
+        try
+        {
+            await _authService.TriggerForgotPasswordAsync(request.Email);
+        }
+        catch (KeyNotFoundException)
+        {
+            return Ok("Password reset email sent successfully.");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        
         return Ok("Password reset email sent successfully.");
+    }
+
+    /// <summary>
+    /// Validates a password reset token to ensure it is valid and not expired.
+    /// </summary>
+    /// <param name="token">The password reset token to be validated.</param>
+    /// <returns>An <see cref="IActionResult"/> indicating the result of the validation.
+    /// Returns an Ok response with a success message if the token is valid,
+    /// an Unauthorized response if the token is invalid or expired,
+    /// or a Server Error response if an exception occurs during validation.</returns>
+    [HttpPost("validate-reset-token")]
+    public async Task<IActionResult> ValidateResetToken([FromQuery] string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return BadRequest(new { Message = "Token must not be null or empty." });
+        }
+
+        try
+        {
+            var isValid = await _authService.ValidateResetTokenAsync(token);
+            if (isValid)
+            {
+                return Ok(new { Message = "The token is valid." });
+            }
+            else
+            {
+                return Unauthorized(new { Message = "Invalid or expired token." });
+            }
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { Message = $"An error occurred while validating the token: {ex.Message}" });
+        }
+    }
+    
+    [HttpPost("send-email-confirmation")]
+    public async Task<IActionResult> SendEmailConfirmation([FromHeader] string token)
+    {
+        var keycloakUserId = await _authService.GetKeycloakUserIdAsync(token); 
+        if (string.IsNullOrWhiteSpace(keycloakUserId))
+        {
+            return BadRequest("User ID is required.");
+        }
+
+        await _authService.SendEmailConfirmationAsync(keycloakUserId);
+
+        return Ok("Email confirmation sent successfully.");
     }
 }

@@ -2,10 +2,12 @@ namespace Forja.Infrastructure.Repositories.UserProfile;
 
 public class AchievementRepository : IAchievementRepository
 {
+    private readonly ForjaDbContext _context;
     private readonly DbSet<Achievement> _achievements;
     
     public AchievementRepository(ForjaDbContext context)
     {
+        _context = context;
         _achievements = context.Set<Achievement>();
     }
     
@@ -80,10 +82,11 @@ public class AchievementRepository : IAchievementRepository
         }
         
         await _achievements.AddAsync(achievement);
+        await _context.SaveChangesAsync();
     }
 
     /// <inheritdoc />
-    public Task UpdateAsync(Achievement achievement)
+    public async Task UpdateAsync(Achievement achievement)
     {
         if (!ProjectModelValidator.ValidateAchievement(achievement))
         {
@@ -91,7 +94,7 @@ public class AchievementRepository : IAchievementRepository
         }
         
         _achievements.Update(achievement);
-        return Task.CompletedTask;
+        await _context.SaveChangesAsync();
     }
 
     /// <inheritdoc />
@@ -102,12 +105,12 @@ public class AchievementRepository : IAchievementRepository
             throw new ArgumentException("Achievement id cannot be empty.", nameof(achievementId));
         }
         
-        var achievement = await GetByIdAsync(achievementId);
-        if (achievement != null)
-        {
-            achievement.IsDeleted = true;
-            _achievements.Update(achievement);
-        }
+        var achievement = await GetByIdAsync(achievementId) 
+                          ?? throw new ArgumentException("Achievement not found.", nameof(achievementId));
+        
+        achievement.IsDeleted = true;
+        _achievements.Update(achievement);
+        await _context.SaveChangesAsync();
     }
 
     /// <inheritdoc />
@@ -118,11 +121,7 @@ public class AchievementRepository : IAchievementRepository
             throw new ArgumentException("Achievement id cannot be empty.", nameof(achievementId));
         }
         
-        var achievement = await GetByIdAsync(achievementId);
-        if (achievement == null)
-        {
-            throw new ArgumentException("Achievement not found.", nameof(achievementId));
-        }
+        var achievement = await GetByIdAsync(achievementId) ?? throw new ArgumentException("Achievement not found.", nameof(achievementId));
         
         if (!achievement.IsDeleted)
         {
@@ -131,6 +130,7 @@ public class AchievementRepository : IAchievementRepository
         
         achievement.IsDeleted = false;
         _achievements.Update(achievement);
+        await _context.SaveChangesAsync();
         
         return achievement;
     }

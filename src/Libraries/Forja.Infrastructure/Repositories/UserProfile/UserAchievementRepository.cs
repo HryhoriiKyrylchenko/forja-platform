@@ -2,10 +2,12 @@ namespace Forja.Infrastructure.Repositories.UserProfile;
 
 public class UserAchievementRepository : IUserAchievementRepository
 {
+    private readonly ForjaDbContext _context;
     private readonly DbSet<UserAchievement> _userAchievements;
     
     public UserAchievementRepository(ForjaDbContext context)
     {
+        _context = context;
         _userAchievements = context.Set<UserAchievement>();
     }
     
@@ -70,10 +72,11 @@ public class UserAchievementRepository : IUserAchievementRepository
         }
         
         await _userAchievements.AddAsync(userAchievement);
+        await _context.SaveChangesAsync();
     }
 
     /// <inheritdoc />
-    public Task UpdateAsync(UserAchievement userAchievement)
+    public async Task UpdateAsync(UserAchievement userAchievement)
     {
         if (!ProjectModelValidator.ValidateUserAchievement(userAchievement))
         {
@@ -81,7 +84,7 @@ public class UserAchievementRepository : IUserAchievementRepository
         }
         
         _userAchievements.Update(userAchievement);
-        return Task.CompletedTask;
+        await _context.SaveChangesAsync();
     }
 
     /// <inheritdoc />
@@ -96,6 +99,6 @@ public class UserAchievementRepository : IUserAchievementRepository
                               ?? throw new ArgumentException("User achievement not found.", nameof(userAchievementId));
 
         _userAchievements.Remove(userAchievement);
-        await Task.CompletedTask;
+        await _context.SaveChangesAsync();
     }
 }

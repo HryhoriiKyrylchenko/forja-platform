@@ -1,17 +1,24 @@
-namespace Forja.Application.Services;
+namespace Forja.Application.Services.Authentication;
 
 /// <summary>
 /// Provides services for user registration, authentication, and role management operations.
 /// </summary>
 public class UserAuthService : IUserAuthService
 {
+    private readonly ITokenService _tokenService;
+    private readonly IEmailService _emailService;
     private readonly IKeycloakClient _keycloakClient;
-    private readonly IUserProfileUnitOfWork _userProfileUnitOfWork;
+    private readonly IUserRepository _userRepository;
     
-    public UserAuthService(IKeycloakClient keycloakClient, IUserProfileUnitOfWork userProfileUnitOfWork)
+    public UserAuthService(ITokenService tokenService, 
+        IEmailService emailService,
+        IKeycloakClient keycloakClient, 
+        IUserRepository userRepository)
     {
+        _tokenService = tokenService;
+        _emailService = emailService;
         _keycloakClient = keycloakClient;
-        _userProfileUnitOfWork = userProfileUnitOfWork;
+        _userRepository = userRepository;
     }
     
     /// <inheritdoc />
@@ -35,8 +42,14 @@ public class UserAuthService : IUserAuthService
             CreatedAt = DateTime.UtcNow
         };
 
-        await _userProfileUnitOfWork.Users.AddAsync(appUser);
-        await _userProfileUnitOfWork.SaveChangesAsync();
+        await _userRepository.AddAsync(appUser);
+        
+        var user = await GetKeycloakUserByEmailAsync(request.Email);
+
+        if (user != null)
+        {
+            await SendEmailConfirmationAsync(keycloakId);
+        }
     }
     
     /// <inheritdoc />
@@ -162,14 +175,24 @@ public class UserAuthService : IUserAuthService
     }
 
     /// <inheritdoc />
-    public async Task TriggerForgotPasswordAsync(string email, string? redirectUri = null)
+    public async Task TriggerForgotPasswordAsync(string email)
     {
         if (string.IsNullOrWhiteSpace(email))
         {
             throw new ArgumentException("Email must not be null or empty.");
         }
 
-        await _keycloakClient.TriggerForgotPasswordAsync(email, redirectUri);
+        var user = await _userRepository.GetByEmailAsync(email);
+        if (user == null)
+        {
+            throw new KeyNotFoundException($"User with email {email} not found.");
+        }
+        
+        string token = _tokenService.GeneratePasswordResetToken(user);
+
+        string resetLink = $"/reset-password?token={Uri.EscapeDataString(token)}";
+
+        await _emailService.SendPasswordResetEmailAsync(email, resetLink);
     }
 
     /// <inheritdoc />
@@ -206,6 +229,17 @@ public class UserAuthService : IUserAuthService
         return await Task.FromResult(_keycloakClient.GetKeycloakUserId(accessToken));
     }
 
+    /// <inheritdoc />
+    public async Task<bool> ValidateResetTokenAsync(string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            throw new ArgumentException("Token must not be null or empty.");
+        }
+        
+        return await _tokenService.ValidatePasswordResetToken(token);
+    }
+
     /// <summary>
     /// Generates a unique username by appending a numeric suffix to the provided base username
     /// if it conflicts with an existing username in the system.
@@ -218,7 +252,7 @@ public class UserAuthService : IUserAuthService
         string username = baseUsername;
         int suffix = 0;
         
-        while (await _userProfileUnitOfWork.Users.ExistsByUsernameAsync(username))
+        while (await _userRepository.ExistsByUsernameAsync(username))
         {
             suffix++;
             username = $"{baseUsername}{suffix}";
@@ -227,15 +261,52 @@ public class UserAuthService : IUserAuthService
         return username;
     }
     
-    /// <inheritdoc />
-    public async Task ConfirmUserEmailAsync(string keycloakUserId)
+    public async Task SendEmailConfirmationAsync(string keycloakUserId)
     {
         if (string.IsNullOrWhiteSpace(keycloakUserId))
         {
-            throw new ArgumentException("Keycloak User ID cannot be null or empty.", nameof(keycloakUserId));
+            throw new ArgumentException("User ID cannot be null or empty.", nameof(keycloakUserId));
+        }
+        
+        var user = await _userRepository.GetByKeycloakIdAsync(keycloakUserId);
+        if (user == null)
+        {
+            throw new KeyNotFoundException($"User with keycloak ID {keycloakUserId} not found.");
         }
 
-        await _keycloakClient.ConfirmUserEmailAsync(keycloakUserId);
-    }
+        if (string.IsNullOrWhiteSpace(user.Username))
+        {
+            throw new ArgumentException("User username cannot be null or empty.", nameof(user.Username));
+        }
+    
+        var token = _tokenService.GenerateEmailConfirmationToken(Guid.Parse(keycloakUserId), user.Email);
 
+        var confirmationLink = $"/api/Auth/users/{keycloakUserId}/confirm-email?token={token}";
+
+        await _emailService.SendEmailConfirmationAsync(user.Email, user.Username, confirmationLink);
+    }
+    
+    /// <inheritdoc />
+    public async Task ConfirmUserEmailAsync(string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            throw new ArgumentException("Token must not be null or empty.");
+        }
+        
+        var email = await _tokenService.GetEmailFromEmailConfirmationToken(token);
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            throw new ArgumentException("Invalid token.");
+        }
+
+        var user = await _userRepository.GetByEmailAsync(email);
+        if (user == null || string.IsNullOrWhiteSpace(user.KeycloakUserId))
+        {
+            throw new KeyNotFoundException($"User with email {email} not found.");
+        }
+
+        await _keycloakClient.ConfirmUserEmailAsync(user.KeycloakUserId);
+    }
 }

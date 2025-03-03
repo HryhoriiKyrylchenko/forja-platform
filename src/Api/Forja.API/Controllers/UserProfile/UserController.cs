@@ -1,4 +1,4 @@
-namespace Forja.API.Controllers;
+namespace Forja.API.Controllers.UserProfile;
 
 /// <summary>
 /// Provides API endpoints for managing user profiles and operations related to users.
@@ -6,16 +6,16 @@ namespace Forja.API.Controllers;
 /// <remarks>
 /// This controller handles user-related operations including retrieving user profiles, updating user profiles,
 /// deleting users, retrieving all users, and retrieving deleted users. It communicates with the
-/// <see cref="IUserProfileService"/> for business logic and <see cref="IKeycloakClient"/> for operations
+/// <see cref="IUserService"/> for business logic and <see cref="IKeycloakClient"/> for operations
 /// related to Keycloak.
 /// </remarks>
 [ApiController]
 [Route("api/[controller]")]
 public class UserController : ControllerBase
 {
-    private readonly IUserProfileService _userService;
+    private readonly IUserService _userService;
 
-    public UserController(IUserProfileService userService)
+    public UserController(IUserService userService)
     {
         _userService = userService;
     }

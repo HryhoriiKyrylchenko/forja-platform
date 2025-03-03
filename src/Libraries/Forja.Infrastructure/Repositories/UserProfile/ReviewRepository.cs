@@ -2,10 +2,12 @@ namespace Forja.Infrastructure.Repositories.UserProfile;
 
 public class ReviewRepository : IReviewRepository
 {
+    private readonly ForjaDbContext _context;
     private readonly DbSet<Review> _reviews;
     
     public ReviewRepository(ForjaDbContext context)
     {
+        _context = context;
         _reviews = context.Set<Review>();
     }
     
@@ -95,10 +97,11 @@ public class ReviewRepository : IReviewRepository
         }
         
         await _reviews.AddAsync(review);
+        await _context.SaveChangesAsync();
     }
 
     /// <inheritdoc />
-    public Task UpdateAsync(Review review)
+    public async Task UpdateAsync(Review review)
     {
         if (!ProjectModelValidator.ValidateReview(review))
         {
@@ -106,7 +109,7 @@ public class ReviewRepository : IReviewRepository
         }
         
         _reviews.Update(review);
-        return Task.CompletedTask;
+        await _context.SaveChangesAsync();
     }
 
     /// <inheritdoc />
@@ -117,12 +120,12 @@ public class ReviewRepository : IReviewRepository
             throw new ArgumentException("Review id cannot be empty.", nameof(reviewId));
         }
         
-        var review = await GetByIdAsync(reviewId);
-        if (review != null)
-        {
-            review.IsDeleted = true;
-            _reviews.Update(review);
-        }
+        var review = await GetByIdAsync(reviewId) 
+                     ?? throw new ArgumentException("Review not found.", nameof(reviewId));
+        
+        review.IsDeleted = true;
+        _reviews.Update(review);
+        await _context.SaveChangesAsync();
     }
 
     /// <inheritdoc />
@@ -133,11 +136,8 @@ public class ReviewRepository : IReviewRepository
             throw new ArgumentException("Review id cannot be empty.", nameof(reviewId));
         }
         
-        var review = await GetByIdAsync(reviewId);
-        if (review == null)
-        {
-            throw new ArgumentException("Review not found.", nameof(reviewId));
-        }
+        var review = await GetByIdAsync(reviewId) 
+                     ?? throw new ArgumentException("Review not found.", nameof(reviewId));
 
         if (!review.IsDeleted)
         {
@@ -146,6 +146,7 @@ public class ReviewRepository : IReviewRepository
         
         review.IsDeleted = false;
         _reviews.Update(review);
+        await _context.SaveChangesAsync();
         
         return review;
     }

@@ -2,10 +2,12 @@ namespace Forja.Infrastructure.Repositories.UserProfile;
 
 public class UserLibraryAddonRepository : IUserLibraryAddonRepository
 {
+    private readonly ForjaDbContext _context;
     private readonly DbSet<UserLibraryAddon> _userLibraryAddons;
     
     public UserLibraryAddonRepository(ForjaDbContext context)
     {
+        _context = context;
         _userLibraryAddons = context.Set<UserLibraryAddon>();
     }
     
@@ -101,10 +103,11 @@ public class UserLibraryAddonRepository : IUserLibraryAddonRepository
         }
         
         await _userLibraryAddons.AddAsync(userLibraryAddon);
+        await _context.SaveChangesAsync();
     }
 
     /// <inheritdoc />
-    public Task UpdateAsync(UserLibraryAddon userLibraryAddon)
+    public async Task UpdateAsync(UserLibraryAddon userLibraryAddon)
     {
         if (!ProjectModelValidator.ValidateUserLibraryAddon(userLibraryAddon))
         {
@@ -112,7 +115,7 @@ public class UserLibraryAddonRepository : IUserLibraryAddonRepository
         }
         
         _userLibraryAddons.Update(userLibraryAddon);
-        return Task.CompletedTask;
+        await _context.SaveChangesAsync();
     }
 
     /// <inheritdoc />
@@ -123,12 +126,12 @@ public class UserLibraryAddonRepository : IUserLibraryAddonRepository
             throw new ArgumentException("User library addon id cannot be empty.", nameof(userLibraryAddonId));
         }
         
-        var userLibraryAddon = await GetByIdAsync(userLibraryAddonId);
-        if (userLibraryAddon != null)
-        {
-            userLibraryAddon.IsDeleted = true;
-            _userLibraryAddons.Update(userLibraryAddon);
-        }
+        var userLibraryAddon = await GetByIdAsync(userLibraryAddonId) 
+                               ?? throw new ArgumentException("User library addon not found.", nameof(userLibraryAddonId));
+
+        userLibraryAddon.IsDeleted = true;
+        _userLibraryAddons.Update(userLibraryAddon);
+        await _context.SaveChangesAsync();
     }
 
     /// <inheritdoc />
@@ -139,11 +142,8 @@ public class UserLibraryAddonRepository : IUserLibraryAddonRepository
             throw new ArgumentException("User library addon id cannot be empty.", nameof(userLibraryAddonId));
         }
         
-        var deletedUserLibraryAddon = await GetDeletedByIdAsync(userLibraryAddonId);
-        if (deletedUserLibraryAddon == null)
-        {
-            throw new ArgumentException("User library game not found.", nameof(userLibraryAddonId));
-        }
+        var deletedUserLibraryAddon = await GetDeletedByIdAsync(userLibraryAddonId) 
+                                      ?? throw new ArgumentException("User library addon not found.", nameof(userLibraryAddonId));
 
         if (!deletedUserLibraryAddon.IsDeleted)
         {
@@ -152,6 +152,7 @@ public class UserLibraryAddonRepository : IUserLibraryAddonRepository
         
         deletedUserLibraryAddon.IsDeleted = false;
         _userLibraryAddons.Update(deletedUserLibraryAddon);
+        await _context.SaveChangesAsync();
         
         return deletedUserLibraryAddon;
     }

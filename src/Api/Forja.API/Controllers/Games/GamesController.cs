@@ -1,4 +1,4 @@
-namespace Forja.API.Controllers;
+namespace Forja.API.Controllers.Games;
 
 [ApiController]
 [Route("api/[controller]")]

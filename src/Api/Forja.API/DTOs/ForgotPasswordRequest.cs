@@ -16,10 +16,4 @@ public class ForgotPasswordRequest
     /// It is a required field and is set to an empty string by default.
     /// </remarks>
     public string Email { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Gets or sets the redirect URL to be used for password recovery purposes.
-    /// This property allows specifying a custom URL for the recovery process.
-    /// </summary>
-    public string? RedirectUrl { get; set; }
 }

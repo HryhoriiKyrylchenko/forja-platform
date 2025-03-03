@@ -1,4 +1,4 @@
-namespace Forja.Application.Interfaces;
+namespace Forja.Application.Interfaces.Authentication;
 
 /// <summary>
 /// Interface defining user registration, authentication, role management, and user-related operations.
@@ -147,9 +147,8 @@ public interface IUserAuthService
     /// (e.g., sending a password reset link or token) via the identity provider.
     /// </summary>
     /// <param name="email">The email address of the user requesting a password reset.</param>
-    /// <param name="redirectUrl">The redirect URL to manage a password reset.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    Task TriggerForgotPasswordAsync(string email, string? redirectUrl = null);
+    Task TriggerForgotPasswordAsync(string email);
 
     /// <summary>
     /// Enables or disables a user in the system based on the provided keycloak user ID.
@@ -176,9 +175,23 @@ public interface IUserAuthService
     Task<string> GetKeycloakUserIdAsync(string accessToken);
 
     /// <summary>
-    /// Confirms the email address of a user in the system.
+    /// Validates the provided password reset token to ensure its authenticity and usability.
     /// </summary>
-    /// <param name="keycloakUserId">The unique identifier of the user in the Keycloak identity store.</param>
+    /// <param name="token">The password reset token to validate.</param>
+    /// <returns>A task that represents the asynchronous operation, including a boolean value indicating whether the token is valid.</returns>
+    Task<bool> ValidateResetTokenAsync(string token);
+
+    /// <summary>
+    /// Sends an email confirmation to the specified user, including a confirmation link to verify their email address.
+    /// </summary>
+    /// <param name="keycloakUserId">The id associated with the user in Keycloak database.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    Task ConfirmUserEmailAsync(string keycloakUserId);
+    Task SendEmailConfirmationAsync(string keycloakUserId);
+    
+    /// <summary>
+    /// Confirms a user's email using a provided confirmation token.
+    /// </summary>
+    /// <param name="token">The email confirmation token provided to the user.</param>
+    /// <returns>A task representing the asynchronous email confirmation operation.</returns>
+    Task ConfirmUserEmailAsync(string token);
 }
