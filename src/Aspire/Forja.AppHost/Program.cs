@@ -7,7 +7,7 @@ var postgres = builder.AddPostgres("postgres", password: postgresPassword)
     .WithImage("postgres")
     .WithImageTag("17.2")
     .WithContainerName("forja-postgres")
-    .WithVolume("postgres-data", "/var/lib/postgresql/data" , isReadOnly: false)
+    .WithVolume("postgres-data", "/var/lib/postgresql/data", isReadOnly: false)
     .WithEndpoint(name: "postgresendpoint",
         scheme: "tcp",
         port: 5432,

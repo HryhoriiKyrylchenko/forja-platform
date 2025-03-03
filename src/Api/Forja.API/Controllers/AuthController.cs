@@ -12,10 +12,12 @@ namespace Forja.API.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IUserAuthService _authService;
-    
-    public AuthController(IUserAuthService authService)
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
+    public AuthController(IUserAuthService authService, IHttpContextAccessor httpContextAccessor)
     {
         _authService = authService;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     /// <summary>
@@ -50,6 +52,29 @@ public class AuthController : ControllerBase
         try
         {
             var tokenResponse = await _authService.LoginUserAsync(request);
+
+            var httpContext = _httpContextAccessor.HttpContext ?? throw new InvalidOperationException("HTTP Context is unavailable.");
+
+            // set `access_token` & `refresh_token` in the HttpOnly Cookies**
+            var accessTokenOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn)
+            };
+
+            var refreshTokenOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.UtcNow.AddSeconds(tokenResponse.RefreshExpiresIn)
+            };
+
+            httpContext.Response.Cookies.Append("access_token", tokenResponse.AccessToken, accessTokenOptions);
+            httpContext.Response.Cookies.Append("refresh_token", tokenResponse.RefreshToken, refreshTokenOptions);
+            
             return Ok(tokenResponse);
         }
         catch(Exception ex)

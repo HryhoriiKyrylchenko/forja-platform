@@ -11,6 +11,18 @@ builder.AddInfrastructureServices();
 
 // Add services to the container.
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin",
+       policy =>
+       {
+           policy.WithOrigins("http://localhost:3001") 
+                 .AllowCredentials() 
+                 .AllowAnyHeader()
+                 .AllowAnyMethod();
+       });
+});
+
 builder.Services.AddAuthentication()
     .AddKeycloakJwtBearer("keycloak", realm: "forja", options =>
     {
@@ -23,6 +35,8 @@ builder.Services.AddAuthorizationBuilder();
 builder.Services.AddApplicationServices();
 
 builder.Services.AddControllers();
+
+builder.Services.AddHttpContextAccessor(); // HttpContext
 
 builder.Services.AddSwaggerGen(options =>
 {
@@ -63,6 +77,8 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+app.UseCors("AllowSpecificOrigin"); // CORS
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
