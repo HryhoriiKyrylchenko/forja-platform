@@ -49,6 +49,19 @@ public class UserRepository : IUserRepository
             .Where(u => u.IsDeleted == false)
             .FirstOrDefaultAsync(u => u.KeycloakUserId == userKeycloakId);
     }
+    
+    /// <inheritdoc />
+    public async Task<User?> GetDeletedByKeycloakIdAsync(string userKeycloakId)
+    {
+        if (string.IsNullOrWhiteSpace(userKeycloakId))
+        {
+            throw new ArgumentException("User keycloak id is required", nameof(userKeycloakId));
+        }
+        
+        return await _users
+            .Where(u => u.IsDeleted == true)
+            .FirstOrDefaultAsync(u => u.KeycloakUserId == userKeycloakId);
+    }
 
     /// <inheritdoc />
     public async Task<User?> GetByEmailAsync(string email)

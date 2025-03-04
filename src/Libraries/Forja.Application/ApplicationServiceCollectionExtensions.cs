@@ -9,6 +9,7 @@ public static class ApplicationServiceCollectionExtensions
         // Register your application services here
         services.AddScoped<IUserAuthService, UserAuthService>();
         services.AddScoped<ITokenService, TokenService>();
+        services.AddTransient<IClaimsTransformation, KeycloakRolesClaimsTransformer>();
         
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IReviewService, ReviewService>();

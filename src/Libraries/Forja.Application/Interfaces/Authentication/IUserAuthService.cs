@@ -89,6 +89,14 @@ public interface IUserAuthService
     Task AssignRoleToUserAsync(string userId, RoleRepresentation role);
 
     /// <summary>
+    /// Assigns a specific role to a user in the system.
+    /// </summary>
+    /// <param name="userId">The identifier of the user to whom the role will be assigned.</param>
+    /// <param name="role">The role that needs to be assigned to the user.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    Task AssignRoleToUserAsync(string userId, UserRole role);
+
+    /// <summary>
     /// Deletes specified roles from a user in the Keycloak client.
     /// </summary>
     /// <param name="userId">The unique identifier of the user from whom the roles will be removed.</param>

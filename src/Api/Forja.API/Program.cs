@@ -1,3 +1,5 @@
+using System.Security.Claims;
+
 var builder = WebApplication.CreateBuilder(args);
 
 if (builder.Environment.IsDevelopment())
@@ -26,8 +28,20 @@ builder.Services.AddCors(options =>
 builder.Services.AddAuthentication()
     .AddKeycloakJwtBearer("keycloak", realm: "forja", options =>
     {
-        options.Audience = builder.Configuration["Keycloak:ClientId"];
+        options.Authority = "http://localhost:8080/realms/forja";
         options.RequireHttpsMetadata = false;
+        
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true, 
+            ValidIssuer = "http://localhost:8080/realms/forja",
+            ValidateAudience = false, 
+            ValidateLifetime = true, 
+            RoleClaimType = ClaimTypes.Role, 
+            NameClaimType = "preferred_username" 
+
+        };
+        
     });
 
 builder.Services.AddAuthorizationBuilder();
@@ -72,6 +86,17 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminPolicy", policy =>
+        policy.RequireRole("Administrator", "SystemAdministrator"));
+    options.AddPolicy("UserViewPolicy", policy =>
+        policy.RequireRole("Administrator", "SystemAdministrator", "Moderator", "SalesManager", "SupportManager", "AnalyticsManager"));
+    options.AddPolicy("UserManagePolicy", policy =>
+        policy.RequireRole("Administrator", "SystemAdministrator", "Moderator", "SupportManager"));
+});
+
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();

@@ -1,5 +1,3 @@
-using Forja.Application.Interfaces.Authentication;
-
 namespace Forja.API.Controllers.Authentication;
 
 /// <summary>
@@ -74,7 +72,7 @@ public class AuthController : ControllerBase
             httpContext.Response.Cookies.Append("access_token", tokenResponse.AccessToken, accessTokenOptions);
             httpContext.Response.Cookies.Append("refresh_token", tokenResponse.RefreshToken, refreshTokenOptions);
             
-            return Ok("Login successful");
+            return Ok(tokenResponse);
         }
         catch(Exception ex)
         {
@@ -88,6 +86,7 @@ public class AuthController : ControllerBase
     /// <param name="request">The logout details, including the refresh token to be invalidated.</param>
     /// <returns>An <see cref="IActionResult"/> indicating the outcome of the logout process.
     /// Returns an Ok response if the logout is successful, or a Bad Request response with an error message if the process fails.</returns>
+    [Authorize]
     [HttpPost("logout")]
     public async Task<IActionResult> Logout([FromBody] LogoutCommand request)
     {
@@ -137,7 +136,7 @@ public class AuthController : ControllerBase
             httpContext.Response.Cookies.Append("access_token", tokenResponse.AccessToken, accessTokenOptions);
             httpContext.Response.Cookies.Append("refresh_token", tokenResponse.RefreshToken, refreshTokenOptions);
             
-            return Ok("Refresh successful");
+            return Ok(tokenResponse);
         }
         catch(Exception ex)
         {
@@ -153,6 +152,7 @@ public class AuthController : ControllerBase
     /// <param name="command">The details of the role to be created, including role name and description.</param>
     /// <returns>An <see cref="IActionResult"/> indicating the outcome of the role creation process.
     /// Returns an Ok response if the role is successfully created, or a Bad Request response with an error message if creation fails.</returns>
+    [Authorize(Policy = "AdminPolicy")]
     [HttpPost("roles")]
     public async Task<IActionResult> CreateRole([FromBody] CreateRoleCommand command)
     {
@@ -168,10 +168,50 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
+    /// Creates all the default project roles listed in the UserRole enumeration.
+    /// </summary>
+    /// <returns>An IActionResult indicating the result of the operation.</returns>
+    [Authorize(Policy = "AdminPolicy")]
+    [HttpPost("all-default-roles")]
+    public async Task<IActionResult> CreateAllDefaultProjectRoles()
+    {
+        try
+        {
+            foreach (UserRole role in Enum.GetValues(typeof(UserRole)))
+            {
+                await _authService.CreateRoleAsync(new CreateRoleCommand
+                {
+                    RoleName = role.ToString(),
+                    Description = GetRoleDescription(role)
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        
+
+        return Ok(new { Message = "All default roles have been created successfully." });
+        
+        
+        string GetRoleDescription(UserRole role)
+        {
+            var memberInfo = typeof(UserRole).GetMember(role.ToString());
+            var descriptionAttribute = memberInfo[0]
+                .GetCustomAttributes(typeof(System.ComponentModel.DescriptionAttribute), false)
+                .FirstOrDefault() as System.ComponentModel.DescriptionAttribute;
+
+            return descriptionAttribute?.Description ?? role.ToString();
+        }
+    }
+
+    /// <summary>
     /// Retrieves all roles available in the application.
     /// </summary>
     /// <returns>An <see cref="IActionResult"/> containing a list of roles.
     /// Returns an Ok response with the roles if successful, or a Bad Request response with an error message if the operation fails.</returns>
+    [Authorize(Policy = "AdminPolicy")]
     [HttpGet("roles")]
     public async Task<IActionResult> GetAllRoles()
     {
@@ -192,6 +232,7 @@ public class AuthController : ControllerBase
     /// <param name="roleName">The name of the role to be retrieved.</param>
     /// <returns>An <see cref="IActionResult"/> containing the role details if the role is found.
     /// Returns a NotFound response if the role does not exist, or a Bad Request response in case of an error.</returns>
+    [Authorize(Policy = "AdminPolicy")]
     [HttpGet("roles/{roleName}")]
     public async Task<IActionResult> GetRoleByName(string roleName)
     {
@@ -214,6 +255,7 @@ public class AuthController : ControllerBase
     /// <param name="userId">The unique identifier of the user whose roles are to be retrieved.</param>
     /// <returns>An <see cref="IActionResult"/> containing the list of roles assigned to the user if successful.
     /// Returns a Bad Request response with an error message if the retrieval fails.</returns>
+    [Authorize(Policy = "AdminPolicy")]
     [HttpGet("{userId}/roles")]
     public async Task<IActionResult> GetUserRoles(string userId)
     {
@@ -235,6 +277,7 @@ public class AuthController : ControllerBase
     /// <param name="roleName">The name of the role to check if it is assigned to the user.</param>
     /// <returns>An <see cref="IActionResult"/> containing a boolean value indicating whether the user has the specified role.
     /// Returns an Ok response with the result if successful, or a Bad Request response with an error message if the check fails.</returns>
+    [Authorize(Policy = "AdminPolicy")]
     [HttpGet("{userId}/role-check")]
     public async Task<IActionResult> CheckUserRole(string userId, [FromQuery] string roleName)
     {
@@ -255,6 +298,7 @@ public class AuthController : ControllerBase
     /// <param name="userId">The identifier of the user to whom the roles are being assigned.</param>
     /// <param name="roles">A collection of roles to be assigned to the user. Each role is represented as a <see cref="RoleRepresentation"/>.</param>
     /// <returns>An <see cref="IActionResult"/> indicating the result of the operation. Returns an Ok response if the roles are successfully assigned, or a Bad Request response with an error message if the operation fails.</returns>
+    [Authorize(Policy = "AdminPolicy")]
     [HttpPost("{userId}/assign-roles")]
     public async Task<IActionResult> AssignRoles(string userId, [FromBody] IEnumerable<RoleRepresentation> roles)
     {
@@ -276,6 +320,7 @@ public class AuthController : ControllerBase
     /// <param name="role">The details of the role to be assigned, including its name and description.</param>
     /// <returns>An <see cref="IActionResult"/> indicating the result of the operation.
     /// Returns an Ok response if the role is successfully assigned, or a Bad Request response with an error message if the process fails.</returns>
+    [Authorize(Policy = "AdminPolicy")]
     [HttpPost("{userId}/assign-role")]
     public async Task<IActionResult> AssignRole(string userId, [FromBody] RoleRepresentation role)
     {
@@ -297,6 +342,7 @@ public class AuthController : ControllerBase
     /// <param name="roles">A collection of roles to be removed from the user.</param>
     /// <returns>An <see cref="IActionResult"/> indicating the outcome of the deletion process.
     /// Returns an Ok response if successful, or a Bad Request response with an error message if an exception occurs.</returns>
+    [Authorize(Policy = "AdminPolicy")]
     [HttpDelete("{userId}/delete-roles")]
     public async Task<IActionResult> DeleteRoles(string userId, [FromBody] IEnumerable<RoleRepresentation> roles)
     {
@@ -318,6 +364,7 @@ public class AuthController : ControllerBase
     /// <param name="role">The role to be deleted from the user's assigned roles.</param>
     /// <returns>An <see cref="IActionResult"/> indicating the outcome of the role deletion process.
     /// Returns an Ok response with a success message if successful, or a Bad Request response with an error message if the deletion fails.</returns>
+    [Authorize(Policy = "AdminPolicy")]
     [HttpDelete("{userId}/delete-role")]
     public async Task<IActionResult> DeleteRole(string userId, [FromBody] RoleRepresentation role)
     {
@@ -339,6 +386,7 @@ public class AuthController : ControllerBase
     /// <param name="newPassword">The new password to be set for the user.</param>
     /// <returns>An <see cref="IActionResult"/> indicating the outcome of the password change operation.
     /// Returns an Ok response if successful, a Bad Request response if the new password is invalid, or an Unauthorized response if the access token is invalid.</returns>
+    [Authorize]
     [HttpPost("change-password")]
     public async Task<IActionResult> ChangePassword([FromHeader] string accessToken, [FromBody] string newPassword)
     {
@@ -370,6 +418,7 @@ public class AuthController : ControllerBase
     /// <returns>An <see cref="IActionResult"/> indicating the outcome of the operation.
     /// Returns an Ok response if the user is successfully enabled or disabled.
     /// Returns an error response if the operation fails or if the input is invalid.</returns>
+    [Authorize(Policy = "AdminPolicy")]
     [HttpPost("enable-disable-user")]
     public async Task<IActionResult> EnableDisableUser([FromBody] EnableDisableUserRequest request)
     {
@@ -385,7 +434,7 @@ public class AuthController : ControllerBase
     /// <param name="token">The email confirmation token required to confirm email.</param>
     /// <returns>An IActionResult representing the result of the operation.</returns>
     [HttpPut("users/{keycloakUserId}/confirm-email")]
-    public async Task<IActionResult> ConfirmEmail(string keycloakUserId, [FromQuery] string token)
+    public async Task<IActionResult> ConfirmEmail([FromQuery]string keycloakUserId, [FromQuery] string token)
     {
         if (string.IsNullOrWhiteSpace(keycloakUserId))
         {
@@ -496,7 +545,14 @@ public class AuthController : ControllerBase
             return StatusCode(StatusCodes.Status500InternalServerError, new { Message = $"An error occurred while validating the token: {ex.Message}" });
         }
     }
-    
+
+    /// <summary>
+    /// Sends an email confirmation to the user associated with the provided access token.
+    /// </summary>
+    /// <param name="token">The access token of the user for whom the email confirmation will be sent.</param>
+    /// <returns>An <see cref="IActionResult"/> indicating the outcome of the operation.
+    /// Returns an Ok response with a success message if the email is sent successfully, or a Bad Request response with an error message if the operation fails.</returns>
+    [Authorize]
     [HttpPost("send-email-confirmation")]
     public async Task<IActionResult> SendEmailConfirmation([FromHeader] string token)
     {

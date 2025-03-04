@@ -30,6 +30,13 @@ public class UserAuthService : IUserAuthService
             Password = request.Password
         });
 
+        if (string.IsNullOrWhiteSpace(keycloakId))
+        {
+            throw new Exception("Failed to create user in Keycloak.");
+        }
+        
+        await AssignRoleToUserAsync(keycloakId, UserRole.User);
+
         var baseUsername = request.Email.Split('@')[0];
         var username = await GenerateUniqueUsernameAsync(baseUsername);
         
@@ -44,7 +51,7 @@ public class UserAuthService : IUserAuthService
 
         await _userRepository.AddAsync(appUser);
         
-        var user = await GetKeycloakUserByEmailAsync(request.Email);
+        var user = await _userRepository.GetByKeycloakIdAsync(keycloakId);
 
         if (user != null)
         {
@@ -109,6 +116,29 @@ public class UserAuthService : IUserAuthService
     public async Task AssignRoleToUserAsync(string userId, RoleRepresentation role)
     {
         await _keycloakClient.AssignRoleAsync(userId, role);
+    }
+    
+    /// <inheritdoc />
+    public async Task AssignRoleToUserAsync(string userId, UserRole role)
+    {
+        var roleRepresentation = await _keycloakClient.GetClientRoleByNameAsync(role.ToString());
+        if (roleRepresentation == null)
+        {
+            await CreateRoleAsync(new CreateRoleCommand
+            {
+                RoleName = role.ToString(),
+                Description = role.ToString()
+            });
+            
+            roleRepresentation = await _keycloakClient.GetClientRoleByNameAsync(role.ToString());
+            
+            if (roleRepresentation == null)
+            {
+                throw new Exception("Failed to create role in Keycloak.");
+            }
+        }
+        
+        await _keycloakClient.AssignRoleAsync(userId, roleRepresentation);
     }
     
     /// <inheritdoc />

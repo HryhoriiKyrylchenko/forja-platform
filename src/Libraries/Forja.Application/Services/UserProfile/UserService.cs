@@ -121,7 +121,7 @@ public class UserService : IUserService
             throw new ArgumentNullException(nameof(userKeycloakId), "User Keycloak ID cannot be null or empty.");
         }
         
-        var user = await _userRepository.GetByKeycloakIdAsync(userKeycloakId);
+        var user = await _userRepository.GetDeletedByKeycloakIdAsync(userKeycloakId);
         if (user == null)
         {
             throw new KeyNotFoundException("User not found.");
