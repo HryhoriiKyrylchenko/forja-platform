@@ -38,6 +38,16 @@ public interface IUserRepository
     Task<User?> GetByKeycloakIdAsync(string userKeycloakId);
 
     /// <summary>
+    /// Asynchronously retrieves a deleted user by their Keycloak unique identifier.
+    /// </summary>
+    /// <param name="userKeycloakId">The unique identifier associated with the user's Keycloak account.</param>
+    /// <returns>
+    /// A task representing the asynchronous operation, containing the deleted user entity if found,
+    /// or null if no matching deleted user exists.
+    /// </returns>
+    Task<User?> GetDeletedByKeycloakIdAsync(string userKeycloakId);
+
+    /// <summary>
     /// Asynchronously retrieves a user by their email address.
     /// </summary>
     /// <param name="email">The email address of the user to retrieve.</param>

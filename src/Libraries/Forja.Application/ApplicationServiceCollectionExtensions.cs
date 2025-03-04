@@ -1,3 +1,5 @@
+using Forja.Application.Services.Authentication;
+
 namespace Forja.Application;
 
 public static class ApplicationServiceCollectionExtensions
@@ -5,9 +7,17 @@ public static class ApplicationServiceCollectionExtensions
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         // Register your application services here
-        services.AddScoped<IGameService, GameService>();
         services.AddScoped<IUserAuthService, UserAuthService>();
-        services.AddScoped<IUserProfileService, UserProfileService>();
+        services.AddScoped<ITokenService, TokenService>();
+        services.AddTransient<IClaimsTransformation, KeycloakRolesClaimsTransformer>();
+        
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IReviewService, ReviewService>();
+        services.AddScoped<IAchievementService, AchievementService>();
+        services.AddScoped<IUserAchievementService, UserAchievementService>();
+        services.AddScoped<IUserLibraryService, UserLibraryService>();
+        
+        services.AddScoped<IGameService, GameService>();
 
         return services;
     }

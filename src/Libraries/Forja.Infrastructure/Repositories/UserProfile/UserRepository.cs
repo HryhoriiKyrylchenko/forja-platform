@@ -2,10 +2,12 @@ namespace Forja.Infrastructure.Repositories.UserProfile;
 
 public class UserRepository : IUserRepository
 {
+    private readonly ForjaDbContext _context;
     private readonly DbSet<User> _users;
     
     public UserRepository(ForjaDbContext context)
     {
+        _context = context;
         _users = context.Set<User>();
     }
 
@@ -47,6 +49,19 @@ public class UserRepository : IUserRepository
             .Where(u => u.IsDeleted == false)
             .FirstOrDefaultAsync(u => u.KeycloakUserId == userKeycloakId);
     }
+    
+    /// <inheritdoc />
+    public async Task<User?> GetDeletedByKeycloakIdAsync(string userKeycloakId)
+    {
+        if (string.IsNullOrWhiteSpace(userKeycloakId))
+        {
+            throw new ArgumentException("User keycloak id is required", nameof(userKeycloakId));
+        }
+        
+        return await _users
+            .Where(u => u.IsDeleted == true)
+            .FirstOrDefaultAsync(u => u.KeycloakUserId == userKeycloakId);
+    }
 
     /// <inheritdoc />
     public async Task<User?> GetByEmailAsync(string email)
@@ -86,10 +101,11 @@ public class UserRepository : IUserRepository
         }
         
         await _users.AddAsync(user);
+        await _context.SaveChangesAsync();
     }
 
     /// <inheritdoc />
-    public Task UpdateAsync(User user)
+    public async Task UpdateAsync(User user)
     {
         if (!ProjectModelValidator.ValidateUser(user))
         {
@@ -97,7 +113,7 @@ public class UserRepository : IUserRepository
         }
         
         _users.Update(user);
-        return Task.CompletedTask;
+        await _context.SaveChangesAsync();
 
     }
 
@@ -109,13 +125,12 @@ public class UserRepository : IUserRepository
             throw new ArgumentException("User id is required", nameof(userId));
         }
         
-        var user = await GetByIdAsync(userId);
-        if (user != null)
-        {
-            user.IsDeleted = true;
-            user.ModifiedAt = DateTime.UtcNow;
-            _users.Update(user);
-        }
+        var user = await GetByIdAsync(userId) ?? throw new InvalidOperationException("No user found with the given id.");
+
+        user.IsDeleted = true;
+        user.ModifiedAt = DateTime.UtcNow;
+        _users.Update(user);
+        await _context.SaveChangesAsync();
     }
     
     /// <inheritdoc />
@@ -126,16 +141,12 @@ public class UserRepository : IUserRepository
             throw new ArgumentException("User id is required", nameof(userId));
         }
            
-        var user = await GetDeletedByIdAsync(userId);
-        if (user == null)
-        {
-            throw new InvalidOperationException("No soft-deleted user found with the given id.");
-        }
+        var user = await GetDeletedByIdAsync(userId) ?? throw new InvalidOperationException("No soft-deleted user found with the given id.");
            
         user.IsDeleted = false;
         user.ModifiedAt = DateTime.UtcNow;
-
         _users.Update(user);
+        await _context.SaveChangesAsync();
     }
 
     /// <inheritdoc />

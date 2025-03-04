@@ -4,6 +4,7 @@ namespace Forja.Domain.Repositories;
 /// Defines the UnitOfWork pattern interface for managing transactions
 /// and coordinating changes across multiple repositories.
 /// </summary>
+[Obsolete]
 public interface IUnitOfWork : IDisposable
 {
     /// <summary>

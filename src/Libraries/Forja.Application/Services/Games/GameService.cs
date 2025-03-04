@@ -1,4 +1,4 @@
-namespace Forja.Application.Services;
+namespace Forja.Application.Services.Games;
 
 public class GameService : IGameService
 {
@@ -21,7 +21,6 @@ public class GameService : IGameService
         
     public async Task CreateGameAsync(Game game)
     {
-        // Here you could include business logic/validation if needed
         await _gameRepository.AddAsync(game);
     }
 }

@@ -1,7 +1,4 @@
-using Forja.API.DTOs;
-using Forja.Application.DTOs.UserRegistration;
-
-namespace Forja.API.Controllers;
+namespace Forja.API.Controllers.Authentication;
 
 /// <summary>
 /// Controller responsible for handling authentication, user registration, login, logout,
@@ -89,6 +86,7 @@ public class AuthController : ControllerBase
     /// <param name="request">The logout details, including the refresh token to be invalidated.</param>
     /// <returns>An <see cref="IActionResult"/> indicating the outcome of the logout process.
     /// Returns an Ok response if the logout is successful, or a Bad Request response with an error message if the process fails.</returns>
+    [Authorize]
     [HttpPost("logout")]
     public async Task<IActionResult> Logout([FromBody] LogoutCommand request)
     {
@@ -115,6 +113,29 @@ public class AuthController : ControllerBase
         try
         {
             var tokenResponse = await _authService.RefreshTokenAsync(request);
+            
+            var httpContext = _httpContextAccessor.HttpContext ?? throw new InvalidOperationException("HTTP Context is unavailable.");
+
+            // set `access_token` & `refresh_token` in the HttpOnly Cookies**
+            var accessTokenOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn)
+            };
+
+            var refreshTokenOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.UtcNow.AddSeconds(tokenResponse.RefreshExpiresIn)
+            };
+
+            httpContext.Response.Cookies.Append("access_token", tokenResponse.AccessToken, accessTokenOptions);
+            httpContext.Response.Cookies.Append("refresh_token", tokenResponse.RefreshToken, refreshTokenOptions);
+            
             return Ok(tokenResponse);
         }
         catch(Exception ex)
@@ -131,6 +152,7 @@ public class AuthController : ControllerBase
     /// <param name="command">The details of the role to be created, including role name and description.</param>
     /// <returns>An <see cref="IActionResult"/> indicating the outcome of the role creation process.
     /// Returns an Ok response if the role is successfully created, or a Bad Request response with an error message if creation fails.</returns>
+    [Authorize(Policy = "AdminPolicy")]
     [HttpPost("roles")]
     public async Task<IActionResult> CreateRole([FromBody] CreateRoleCommand command)
     {
@@ -146,10 +168,50 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
+    /// Creates all the default project roles listed in the UserRole enumeration.
+    /// </summary>
+    /// <returns>An IActionResult indicating the result of the operation.</returns>
+    [Authorize(Policy = "AdminPolicy")]
+    [HttpPost("all-default-roles")]
+    public async Task<IActionResult> CreateAllDefaultProjectRoles()
+    {
+        try
+        {
+            foreach (UserRole role in Enum.GetValues(typeof(UserRole)))
+            {
+                await _authService.CreateRoleAsync(new CreateRoleCommand
+                {
+                    RoleName = role.ToString(),
+                    Description = GetRoleDescription(role)
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        
+
+        return Ok(new { Message = "All default roles have been created successfully." });
+        
+        
+        string GetRoleDescription(UserRole role)
+        {
+            var memberInfo = typeof(UserRole).GetMember(role.ToString());
+            var descriptionAttribute = memberInfo[0]
+                .GetCustomAttributes(typeof(System.ComponentModel.DescriptionAttribute), false)
+                .FirstOrDefault() as System.ComponentModel.DescriptionAttribute;
+
+            return descriptionAttribute?.Description ?? role.ToString();
+        }
+    }
+
+    /// <summary>
     /// Retrieves all roles available in the application.
     /// </summary>
     /// <returns>An <see cref="IActionResult"/> containing a list of roles.
     /// Returns an Ok response with the roles if successful, or a Bad Request response with an error message if the operation fails.</returns>
+    [Authorize(Policy = "AdminPolicy")]
     [HttpGet("roles")]
     public async Task<IActionResult> GetAllRoles()
     {
@@ -170,6 +232,7 @@ public class AuthController : ControllerBase
     /// <param name="roleName">The name of the role to be retrieved.</param>
     /// <returns>An <see cref="IActionResult"/> containing the role details if the role is found.
     /// Returns a NotFound response if the role does not exist, or a Bad Request response in case of an error.</returns>
+    [Authorize(Policy = "AdminPolicy")]
     [HttpGet("roles/{roleName}")]
     public async Task<IActionResult> GetRoleByName(string roleName)
     {
@@ -192,6 +255,7 @@ public class AuthController : ControllerBase
     /// <param name="userId">The unique identifier of the user whose roles are to be retrieved.</param>
     /// <returns>An <see cref="IActionResult"/> containing the list of roles assigned to the user if successful.
     /// Returns a Bad Request response with an error message if the retrieval fails.</returns>
+    [Authorize(Policy = "AdminPolicy")]
     [HttpGet("{userId}/roles")]
     public async Task<IActionResult> GetUserRoles(string userId)
     {
@@ -213,6 +277,7 @@ public class AuthController : ControllerBase
     /// <param name="roleName">The name of the role to check if it is assigned to the user.</param>
     /// <returns>An <see cref="IActionResult"/> containing a boolean value indicating whether the user has the specified role.
     /// Returns an Ok response with the result if successful, or a Bad Request response with an error message if the check fails.</returns>
+    [Authorize(Policy = "AdminPolicy")]
     [HttpGet("{userId}/role-check")]
     public async Task<IActionResult> CheckUserRole(string userId, [FromQuery] string roleName)
     {
@@ -233,6 +298,7 @@ public class AuthController : ControllerBase
     /// <param name="userId">The identifier of the user to whom the roles are being assigned.</param>
     /// <param name="roles">A collection of roles to be assigned to the user. Each role is represented as a <see cref="RoleRepresentation"/>.</param>
     /// <returns>An <see cref="IActionResult"/> indicating the result of the operation. Returns an Ok response if the roles are successfully assigned, or a Bad Request response with an error message if the operation fails.</returns>
+    [Authorize(Policy = "AdminPolicy")]
     [HttpPost("{userId}/assign-roles")]
     public async Task<IActionResult> AssignRoles(string userId, [FromBody] IEnumerable<RoleRepresentation> roles)
     {
@@ -254,6 +320,7 @@ public class AuthController : ControllerBase
     /// <param name="role">The details of the role to be assigned, including its name and description.</param>
     /// <returns>An <see cref="IActionResult"/> indicating the result of the operation.
     /// Returns an Ok response if the role is successfully assigned, or a Bad Request response with an error message if the process fails.</returns>
+    [Authorize(Policy = "AdminPolicy")]
     [HttpPost("{userId}/assign-role")]
     public async Task<IActionResult> AssignRole(string userId, [FromBody] RoleRepresentation role)
     {
@@ -275,6 +342,7 @@ public class AuthController : ControllerBase
     /// <param name="roles">A collection of roles to be removed from the user.</param>
     /// <returns>An <see cref="IActionResult"/> indicating the outcome of the deletion process.
     /// Returns an Ok response if successful, or a Bad Request response with an error message if an exception occurs.</returns>
+    [Authorize(Policy = "AdminPolicy")]
     [HttpDelete("{userId}/delete-roles")]
     public async Task<IActionResult> DeleteRoles(string userId, [FromBody] IEnumerable<RoleRepresentation> roles)
     {
@@ -296,6 +364,7 @@ public class AuthController : ControllerBase
     /// <param name="role">The role to be deleted from the user's assigned roles.</param>
     /// <returns>An <see cref="IActionResult"/> indicating the outcome of the role deletion process.
     /// Returns an Ok response with a success message if successful, or a Bad Request response with an error message if the deletion fails.</returns>
+    [Authorize(Policy = "AdminPolicy")]
     [HttpDelete("{userId}/delete-role")]
     public async Task<IActionResult> DeleteRole(string userId, [FromBody] RoleRepresentation role)
     {
@@ -317,6 +386,7 @@ public class AuthController : ControllerBase
     /// <param name="newPassword">The new password to be set for the user.</param>
     /// <returns>An <see cref="IActionResult"/> indicating the outcome of the password change operation.
     /// Returns an Ok response if successful, a Bad Request response if the new password is invalid, or an Unauthorized response if the access token is invalid.</returns>
+    [Authorize]
     [HttpPost("change-password")]
     public async Task<IActionResult> ChangePassword([FromHeader] string accessToken, [FromBody] string newPassword)
     {
@@ -348,6 +418,7 @@ public class AuthController : ControllerBase
     /// <returns>An <see cref="IActionResult"/> indicating the outcome of the operation.
     /// Returns an Ok response if the user is successfully enabled or disabled.
     /// Returns an error response if the operation fails or if the input is invalid.</returns>
+    [Authorize(Policy = "AdminPolicy")]
     [HttpPost("enable-disable-user")]
     public async Task<IActionResult> EnableDisableUser([FromBody] EnableDisableUserRequest request)
     {
@@ -360,9 +431,10 @@ public class AuthController : ControllerBase
     /// Confirms a Keycloak user's email.
     /// </summary>
     /// <param name="keycloakUserId">The Keycloak user ID whose email is to be confirmed.</param>
+    /// <param name="token">The email confirmation token required to confirm email.</param>
     /// <returns>An IActionResult representing the result of the operation.</returns>
     [HttpPut("users/{keycloakUserId}/confirm-email")]
-    public async Task<IActionResult> ConfirmEmail(string keycloakUserId)
+    public async Task<IActionResult> ConfirmEmail([FromQuery]string keycloakUserId, [FromQuery] string token)
     {
         if (string.IsNullOrWhiteSpace(keycloakUserId))
         {
@@ -371,7 +443,7 @@ public class AuthController : ControllerBase
 
         try
         {
-            await _authService.ConfirmUserEmailAsync(keycloakUserId);
+            await _authService.ConfirmUserEmailAsync(token);
             return NoContent();
         }
         catch (ArgumentException ex)
@@ -411,11 +483,11 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Initiates the forgot password process by sending a password reset email to the provided email address.
+    /// Initiates the forgot password process by sending a password reset email to the user.
     /// </summary>
-    /// <param name="email">The email address of the user requesting a password reset.</param>
-    /// <returns>An <see cref="IActionResult"/> indicating the outcome of the operation.
-    /// Returns an Ok response if the email is successfully sent, or a Bad Request response if the email is invalid or empty.</returns>
+    /// <param name="request">The request containing the email address of the user who wants to reset their password.</param>
+    /// <returns>An <see cref="IActionResult"/> indicating the outcome of the forgot password request.
+    /// Returns an Ok response if the email is successfully sent, or a Bad Request response if the email is invalid.</returns>
     [HttpPost("forgot-password")]
     public async Task<IActionResult> TriggerForgotPassword([FromBody] ForgotPasswordRequest request)
     {
@@ -424,7 +496,74 @@ public class AuthController : ControllerBase
             return BadRequest("Email cannot be null or empty.");
         }
 
-        await _authService.TriggerForgotPasswordAsync(request.Email, request.RedirectUrl);
+        try
+        {
+            await _authService.TriggerForgotPasswordAsync(request.Email);
+        }
+        catch (KeyNotFoundException)
+        {
+            return Ok("Password reset email sent successfully.");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        
         return Ok("Password reset email sent successfully.");
+    }
+
+    /// <summary>
+    /// Validates a password reset token to ensure it is valid and not expired.
+    /// </summary>
+    /// <param name="token">The password reset token to be validated.</param>
+    /// <returns>An <see cref="IActionResult"/> indicating the result of the validation.
+    /// Returns an Ok response with a success message if the token is valid,
+    /// an Unauthorized response if the token is invalid or expired,
+    /// or a Server Error response if an exception occurs during validation.</returns>
+    [HttpPost("validate-reset-token")]
+    public async Task<IActionResult> ValidateResetToken([FromQuery] string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return BadRequest(new { Message = "Token must not be null or empty." });
+        }
+
+        try
+        {
+            var isValid = await _authService.ValidateResetTokenAsync(token);
+            if (isValid)
+            {
+                return Ok(new { Message = "The token is valid." });
+            }
+            else
+            {
+                return Unauthorized(new { Message = "Invalid or expired token." });
+            }
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { Message = $"An error occurred while validating the token: {ex.Message}" });
+        }
+    }
+
+    /// <summary>
+    /// Sends an email confirmation to the user associated with the provided access token.
+    /// </summary>
+    /// <param name="token">The access token of the user for whom the email confirmation will be sent.</param>
+    /// <returns>An <see cref="IActionResult"/> indicating the outcome of the operation.
+    /// Returns an Ok response with a success message if the email is sent successfully, or a Bad Request response with an error message if the operation fails.</returns>
+    [Authorize]
+    [HttpPost("send-email-confirmation")]
+    public async Task<IActionResult> SendEmailConfirmation([FromHeader] string token)
+    {
+        var keycloakUserId = await _authService.GetKeycloakUserIdAsync(token); 
+        if (string.IsNullOrWhiteSpace(keycloakUserId))
+        {
+            return BadRequest("User ID is required.");
+        }
+
+        await _authService.SendEmailConfirmationAsync(keycloakUserId);
+
+        return Ok("Email confirmation sent successfully.");
     }
 }

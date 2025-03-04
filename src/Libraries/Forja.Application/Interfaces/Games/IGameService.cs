@@ -1,4 +1,4 @@
-namespace Forja.Application.Interfaces;
+namespace Forja.Application.Interfaces.Games;
 
 public interface IGameService
 {
