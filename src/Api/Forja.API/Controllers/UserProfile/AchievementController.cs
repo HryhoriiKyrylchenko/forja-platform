@@ -5,14 +5,13 @@ namespace Forja.API.Controllers.UserProfile;
 public class AchievementController : ControllerBase
 {
     private readonly IAchievementService _achievementService;
-    private readonly IUserAchievementService _userAchievementService;
 
-    public AchievementController(IAchievementService achievementService, IUserAchievementService userAchievementService)
+    public AchievementController(IAchievementService achievementService)
     {
         _achievementService = achievementService;
-        _userAchievementService = userAchievementService;
     }
 
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("{keycloakId}")]
     public async Task<IActionResult> AddAchievement(string keycloakId, [FromBody] AchievementDto achievementDto)
     {
@@ -27,6 +26,7 @@ public class AchievementController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPut]
     public async Task<IActionResult> UpdateAchievement([FromBody] AchievementDto achievementDto)
     {
@@ -34,6 +34,7 @@ public class AchievementController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpDelete("{achievementId}")]
     public async Task<IActionResult> DeleteAchievement(Guid achievementId)
     {
@@ -41,6 +42,7 @@ public class AchievementController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("{achievementId}/restore")]
     public async Task<IActionResult> RestoreAchievement(Guid achievementId)
     {
@@ -55,6 +57,7 @@ public class AchievementController : ControllerBase
         return Ok(result);
     }
     
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpGet("games/{gameId}/deleted")]
     public async Task<IActionResult> GetAllGameDeletedAchievements(Guid gameId)
     {
@@ -69,6 +72,7 @@ public class AchievementController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpGet("deleted")]
     public async Task<IActionResult> GetAllDeletedAchievements()
     {
@@ -76,52 +80,55 @@ public class AchievementController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("user-achievements")]
     public async Task<IActionResult> AddUserAchievement([FromBody] UserAchievementDto userAchievementDto)
     {
-        await _userAchievementService.AddUserAchievementAsync(userAchievementDto);
+        await _achievementService.AddUserAchievementAsync(userAchievementDto);
         return NoContent();
     }
 
     [HttpGet("user-achievements/{userAchievementId}")]
     public async Task<IActionResult> GetUserAchievementById(Guid userAchievementId)
     {
-        var result = await _userAchievementService.GetUserAchievementByIdAsync(userAchievementId);
+        var result = await _achievementService.GetUserAchievementByIdAsync(userAchievementId);
         return Ok(result);
     }
 
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPut("user-achievements")]
     public async Task<IActionResult> UpdateUserAchievement([FromBody] UserAchievementDto userAchievementDto)
     {
-        await _userAchievementService.UpdateUserAchievement(userAchievementDto);
+        await _achievementService.UpdateUserAchievement(userAchievementDto);
         return NoContent();
     }
 
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpDelete("user-achievements/{userAchievementId}")]
     public async Task<IActionResult> DeleteUserAchievement(Guid userAchievementId)
     {
-        await _userAchievementService.DeleteUserAchievementAsync(userAchievementId);
+        await _achievementService.DeleteUserAchievementAsync(userAchievementId);
         return NoContent();
     }
 
     [HttpGet("user-achievements/all")]
     public async Task<IActionResult> GetAllUserAchievements()
     {
-        var result = await _userAchievementService.GetAllUserAchievementsAsync();
+        var result = await _achievementService.GetAllUserAchievementsAsync();
         return Ok(result);
     }
 
     [HttpGet("{keycloakId}/user-achievements")]
     public async Task<IActionResult> GetAllUserAchievementsByUserKeycloakId(string keycloakId)
     {
-        var result = await _userAchievementService.GetAllUserAchievementsByUserKeycloakIdAsync(keycloakId);
+        var result = await _achievementService.GetAllUserAchievementsByUserKeycloakIdAsync(keycloakId);
         return Ok(result);
     }
 
     [HttpGet("games/{gameId}/user-achievements")]
     public async Task<IActionResult> GetAllUserAchievementsByGameId(Guid gameId)
     {
-        var result = await _userAchievementService.GetAllUserAchievementsByGameIdAsync(gameId);
+        var result = await _achievementService.GetAllUserAchievementsByGameIdAsync(gameId);
         return Ok(result);
     }
 }

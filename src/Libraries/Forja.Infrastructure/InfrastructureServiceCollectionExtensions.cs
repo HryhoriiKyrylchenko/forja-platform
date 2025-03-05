@@ -11,6 +11,7 @@ public static class InfrastructureServiceCollectionExtensions
         builder.Services.AddHttpClient<IKeycloakClient, KeycloakClient>();
         
         builder.Services.AddScoped<IAchievementRepository, AchievementRepository>();
+        builder.Services.AddScoped<IGameSaveRepository, GameSaveRepository>();
         builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
         builder.Services.AddScoped<IUserAchievementRepository, UserAchievementRepository>();
         builder.Services.AddScoped<IUserLibraryAddonRepository, UserLibraryAddonRepository>();

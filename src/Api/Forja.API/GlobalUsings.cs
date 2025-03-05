@@ -14,3 +14,5 @@ global using Forja.Application.Services.UserProfile;
 global using Forja.Domain.Enums;
 global using Microsoft.IdentityModel.Tokens;
 global using Microsoft.AspNetCore.Authorization;
+global using System.ComponentModel.DataAnnotations;
+global using Forja.API.DTOs.UserProfile;

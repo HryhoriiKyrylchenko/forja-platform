@@ -11,13 +11,13 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<ITokenService, TokenService>();
         services.AddTransient<IClaimsTransformation, KeycloakRolesClaimsTransformer>();
         
+        services.AddScoped<IGameService, GameService>();
+        
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IGameSaveService, GameSaveService>();
         services.AddScoped<IReviewService, ReviewService>();
         services.AddScoped<IAchievementService, AchievementService>();
-        services.AddScoped<IUserAchievementService, UserAchievementService>();
         services.AddScoped<IUserLibraryService, UserLibraryService>();
-        
-        services.AddScoped<IGameService, GameService>();
 
         return services;
     }
