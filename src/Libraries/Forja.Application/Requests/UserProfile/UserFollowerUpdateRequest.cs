@@ -1,10 +1,16 @@
-namespace Forja.API.DTOs.UserProfile;
+namespace Forja.Application.Requests.UserProfile;
 
 /// <summary>
-/// Request model for creating a UserFollower entry.
+/// Request model for updating a UserFollower entry.
 /// </summary>
-public class FollowerCreateRequest
+public class UserFollowerUpdateRequest
 {
+    /// <summary>
+    /// The unique identifier of the user follower update request.
+    /// </summary>
+    [Required]
+    public Guid Id { get; set; }
+    
     /// <summary>
     /// The unique identifier of the user who is the follower.
     /// </summary>
@@ -16,4 +22,5 @@ public class FollowerCreateRequest
     /// </summary>
     [Required]
     public Guid FollowedId { get; set; }
+
 }

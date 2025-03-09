@@ -65,7 +65,7 @@ public interface IUserLibraryGameRepository
     /// </summary>
     /// <param name="userLibraryGame">The UserLibraryGame instance to add.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    Task AddAsync(UserLibraryGame userLibraryGame);
+    Task<UserLibraryGame?> AddAsync(UserLibraryGame userLibraryGame);
 
     /// <summary>
     /// Updates an existing UserLibraryGame entity in the data store asynchronously.
@@ -76,7 +76,7 @@ public interface IUserLibraryGameRepository
     /// <returns>
     /// A Task representing the asynchronous operation.
     /// </returns>
-    Task UpdateAsync(UserLibraryGame userLibraryGame);
+    Task<UserLibraryGame?> UpdateAsync(UserLibraryGame userLibraryGame);
 
     /// <summary>
     /// Deletes a UserLibraryGame entity from the repository by its identifier.
@@ -93,5 +93,5 @@ public interface IUserLibraryGameRepository
     /// A task that represents the asynchronous operation. The task result contains the restored
     /// <see cref="UserLibraryGame"/> object if restoration is successful.
     /// </returns>
-    Task<UserLibraryGame> RestoreAsync(Guid id);
+    Task<UserLibraryGame?> RestoreAsync(Guid id);
 }

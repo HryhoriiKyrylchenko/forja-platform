@@ -14,73 +14,79 @@ namespace Forja.Application.Services.UserProfile;
         }
 
         /// <inheritdoc />
-        public async Task<IEnumerable<UserWishListDto>> GetAllAsync()
+        public async Task<List<UserWishListDto>> GetAllAsync()
         {
             var wishLists = await _userWishListRepository.GetAllAsync();
-            return wishLists.Select(MapToUserWishListDto);
+            return wishLists.Select(UserProfileEntityToDtoMapper.MapToUserWishListDto).ToList();
         }
 
         /// <inheritdoc />
         public async Task<UserWishListDto?> GetByIdAsync(Guid id)
         {
+            if (id == Guid.Empty)
+            {
+                throw new ArgumentException("Id cannot be empty.", nameof(id));
+            }
             var wishList = await _userWishListRepository.GetByIdAsync(id);
-            return wishList == null ? null : MapToUserWishListDto(wishList);
+            return wishList == null ? null : UserProfileEntityToDtoMapper.MapToUserWishListDto(wishList);
         }
 
         /// <inheritdoc />
-        public async Task<UserWishListDto> AddAsync(Guid userId, Guid productId)
+        public async Task<UserWishListDto?> AddAsync(UserWishListCreateRequest request)
         {
+            if (!UserProfileRequestsValidator.ValidateUserWishListCreateRequest(request))
+            {
+                throw new ArgumentException("Invalid request.", nameof(request));
+            }
             var userWishList = new UserWishList
             {
                 Id = Guid.NewGuid(),
-                UserId = userId,
-                ProductId = productId
+                UserId = request.UserId,
+                ProductId = request.ProductId
             };
 
             var createdWishList = await _userWishListRepository.AddAsync(userWishList);
-            return MapToUserWishListDto(createdWishList);
+            return createdWishList == null ? null : UserProfileEntityToDtoMapper.MapToUserWishListDto(createdWishList);
         }
 
         /// <inheritdoc />
-        public async Task UpdateAsync(Guid id, Guid userId, Guid productId)
+        public async Task<UserWishListDto?> UpdateAsync(UserWishListUpdateRequest request)
         {
-            var userWishList = await _userWishListRepository.GetByIdAsync(id);
+            if (!UserProfileRequestsValidator.ValidateUserWishListUpdateRequest(request))
+            {
+                throw new ArgumentException("Invalid request.", nameof(request));
+            }
+            var userWishList = await _userWishListRepository.GetByIdAsync(request.Id);
             if (userWishList == null)
-                throw new KeyNotFoundException($"UserWishList with ID {id} not found.");
+            {
+                throw new KeyNotFoundException($"UserWishList with ID {request.Id} not found.");
+            }
 
-            userWishList.UserId = userId;
-            userWishList.ProductId = productId;
+            userWishList.UserId = request.UserId;
+            userWishList.ProductId = request.ProductId;
 
-            await _userWishListRepository.UpdateAsync(userWishList);
+            var result = await _userWishListRepository.UpdateAsync(userWishList);
+            return result == null ? null : UserProfileEntityToDtoMapper.MapToUserWishListDto(result);
         }
 
         /// <inheritdoc />
         public async Task DeleteAsync(Guid id)
         {
+            if (id == Guid.Empty)
+            {
+                throw new ArgumentException("Id cannot be empty.", nameof(id));
+            }
             await _userWishListRepository.DeleteAsync(id);
         }
 
         /// <inheritdoc />
-        public async Task<IEnumerable<UserWishListDto>> GetByUserIdAsync(Guid userId)
+        public async Task<List<UserWishListDto>> GetByUserIdAsync(Guid userId)
         {
-            var wishLists = await _userWishListRepository.GetByUserIdAsync(userId);
-            return wishLists.Select(MapToUserWishListDto);
-        }
-
-        /// <summary>
-        /// Maps a UserWishList entity to a UserWishListDTO.
-        /// </summary>
-        /// <param name="userWishList">The UserWishList entity to map.</param>
-        /// <returns>The mapped UserWishListDTO.</returns>
-        private static UserWishListDto MapToUserWishListDto(UserWishList userWishList)
-        {
-            return new UserWishListDto
+            if (userId == Guid.Empty)
             {
-                Id = userWishList.Id,
-                UserId = userWishList.UserId,
-                UserName = userWishList.User.Username,
-                ProductId = userWishList.ProductId,
-                ProductName = userWishList.Product.Title
-            };
+                throw new ArgumentException("Id cannot be empty.", nameof(userId));
+            }
+            var wishLists = await _userWishListRepository.GetByUserIdAsync(userId);
+            return wishLists.Select(UserProfileEntityToDtoMapper.MapToUserWishListDto).ToList();
         }
     }

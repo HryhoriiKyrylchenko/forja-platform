@@ -5,43 +5,37 @@ namespace Forja.Application.Interfaces.Authentication;
 /// </summary>
 public interface IUserAuthService
 {
-    // User registration and authentication
-    /// <summary>
-    /// Registers a new user in the system by creating the user in the Keycloak identity store,
-    /// generating a unique username, and saving the user details in the application database.
-    /// </summary>
-    /// <param name="request">The registration details, including the user's email and password.</param>
-    /// <returns>A task that represents the asynchronous operation.</returns>
-    Task RegisterUserAsync(RegisterUserCommand request);
+
+    Task<UserProfileDto?> RegisterUserAsync(RegisterUserRequest request);
 
     /// <summary>
     /// Authenticates a user with the provided credentials and generates a token response.
     /// </summary>
     /// <param name="request">The login request containing the user's email and password.</param>
     /// <returns>A <see cref="TokenResponse"/> containing the access token, refresh token, and other token information.</returns>
-    Task<TokenResponse> LoginUserAsync(LoginUserCommand request);
+    Task<TokenResponse> LoginUserAsync(LoginUserRequest request);
 
     /// <summary>
     /// Logs out a user and invalidates the provided refresh token.
     /// </summary>
     /// <param name="request">The logout command containing the refresh token to be invalidated.</param>
     /// <returns>A task that represents the asynchronous logout operation.</returns>
-    Task LogoutUserAsync(LogoutCommand request);
+    Task LogoutUserAsync(LogoutRequest request);
 
     /// <summary>
     /// Refreshes the authentication tokens using the provided refresh token.
     /// </summary>
     /// <param name="request">The command containing the refresh token to be used for generating new tokens.</param>
     /// <returns>A <see cref="TokenResponse"/> containing new access and refresh tokens.</returns>
-    Task<TokenResponse> RefreshTokenAsync(RefreshTokenCommand request);
+    Task<TokenResponse> RefreshTokenAsync(RefreshTokenRequest request);
     
     // Role management
     /// <summary>
     /// Asynchronously creates a new role with the specified details.
     /// </summary>
-    /// <param name="command">An instance of <see cref="CreateRoleCommand"/> containing the role name and description.</param>
+    /// <param name="request">An instance of <see cref="CreateRoleRequest"/> containing the role name and description.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task CreateRoleAsync(CreateRoleCommand command);
+    Task CreateRoleAsync(CreateRoleRequest request);
 
     /// <summary>
     /// Retrieves all roles available in the Keycloak system.
@@ -161,19 +155,16 @@ public interface IUserAuthService
     /// <summary>
     /// Enables or disables a user in the system based on the provided keycloak user ID.
     /// </summary>
-    /// <param name="keycloakUserId">The unique identifier of the user in the Keycloak identity store.</param>
-    /// <param name="enable">A boolean value indicating whether to enable (true) or disable (false) the user.</param>
+    /// <param name="request">The EnableDisableUserRequest.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    Task EnableDisableUserAsync(string keycloakUserId, bool enable);
+    Task EnableDisableUserAsync(EnableDisableUserRequest request);
 
     /// <summary>
     /// Resets the password of a specified user in the system.
     /// </summary>
-    /// <param name="userId">The unique identifier of the user whose password is being reset.</param>
-    /// <param name="newPassword">The new password to assign to the user.</param>
-    /// <param name="temporary">A flag indicating if the new password is temporary, requiring the user to change it upon next login.</param>
+    /// <param name="request">The ResetUserPasswordRequest.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    Task ResetUserPasswordAsync(string userId, string newPassword, bool temporary = false);
+    Task ResetUserPasswordAsync(ResetUserPasswordRequest request);
 
     /// <summary>
     /// Retrieves the Keycloak user ID associated with the specified access token.
@@ -185,9 +176,9 @@ public interface IUserAuthService
     /// <summary>
     /// Validates the provided password reset token to ensure its authenticity and usability.
     /// </summary>
-    /// <param name="token">The password reset token to validate.</param>
+    /// <param name="request">The ValidateResetTokenRequest to validate.</param>
     /// <returns>A task that represents the asynchronous operation, including a boolean value indicating whether the token is valid.</returns>
-    Task<bool> ValidateResetTokenAsync(string token);
+    Task<bool> ValidateResetTokenAsync(ValidateResetTokenRequest request);
 
     /// <summary>
     /// Sends an email confirmation to the specified user, including a confirmation link to verify their email address.

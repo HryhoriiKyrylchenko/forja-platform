@@ -19,7 +19,12 @@ public class UserFollowerDto
     /// <summary>
     /// The name of the user who is following.
     /// </summary>
-    public string FollowerName { get; set; } = string.Empty;
+    public string FollowerUsername { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Represents the unique tag associated with the follower, used for display or identification purposes.
+    /// </summary>
+    public string? FollowerTag { get; set; } = string.Empty;
 
     /// <summary>
     /// The unique ID of the user who is being followed.
@@ -29,5 +34,10 @@ public class UserFollowerDto
     /// <summary>
     /// The name of the user who is being followed.
     /// </summary>
-    public string FollowedName { get; set; } = string.Empty;
+    public string FollowedUsername { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Represents the unique tag associated with the followed user.
+    /// </summary>
+    public string? FollowedTag { get; set; } = string.Empty;
 }

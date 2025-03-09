@@ -1,97 +1,387 @@
 namespace Forja.API.Controllers.UserProfile;
 
+/// <summary>
+/// Provides endpoints for managing reviews, including creation, retrieval, update, deletion, restoration,
+/// and fetching reviews associated with users or products.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class ReviewController : ControllerBase
 {
+    /// <summary>
+    /// Provides access to review-related operations such as adding, updating, deleting,
+    /// restoring reviews, and retrieving reviews based on various criteria.
+    /// </summary>
+    /// <remarks>
+    /// This field represents the service abstraction for managing and interacting with user reviews.
+    /// It is used to delegate operations related to reviews to an implementation of the
+    /// <see cref="IReviewService"/> interface.
+    /// </remarks>
     private readonly IReviewService _reviewService;
 
+    /// <summary>
+    /// Represents the controller for managing reviews including CRUD operations and retrieval of various review-related data.
+    /// </summary>
+    /// <remarks>
+    /// This controller handles the creation, retrieval, updating, restoration, and deletion of reviews.
+    /// It also provides endpoints for fetching reviews specific to users, products, and different statuses (e.g., deleted or not approved).
+    /// </remarks>
+    /// <example>
+    /// Example usage includes fetching all reviews for a specific product, restoring a deleted review, or retrieving all pending reviews for approval.
+    /// </example>
     public ReviewController(ReviewService reviewService)
     {
         _reviewService = reviewService;
     }
 
-    [HttpPost("{keycloakId}")]
-    public async Task<IActionResult> AddReview(string keycloakId, [FromBody] ReviewDto reviewDto)
+    /// <summary>
+    /// Adds a new review for a product by a user.
+    /// </summary>
+    /// <param name="request">An object containing the details of the review to be created, including user ID, product ID, rating, and comment.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the newly created review as a <see cref="ReviewDto"/> object.</returns>
+    /// <response code="200">Returns the created review details.</response>
+    /// <response code="400">Returns if the input data is invalid or an error occurs during processing.</response>
+    [Authorize(Roles = "User")]
+    [HttpPost]
+    public async Task<ActionResult<ReviewDto>> AddReview([FromBody] ReviewCreateRequest request)
     {
-        await _reviewService.AddReviewAsync(keycloakId, reviewDto);
-        return NoContent();
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var result = await _reviewService.AddReviewAsync(request);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+           return BadRequest(new { error = ex.Message });
+        }
     }
 
+    /// <summary>
+    /// Retrieves a review by its unique identifier.
+    /// </summary>
+    /// <param name="reviewId">
+    /// The unique identifier of the review to retrieve. Must be a non-empty Guid.
+    /// </param>
+    /// <returns>
+    /// An <see cref="ActionResult"/> containing the review data as <see cref="ReviewDto"/> if found,
+    /// or an appropriate HTTP response if the review is not found or an error occurs.
+    /// </returns>
     [HttpGet("{reviewId}")]
-    public async Task<IActionResult> GetReviewById(Guid reviewId)
+    public async Task<ActionResult<ReviewDto>> GetReviewById([FromRoute] Guid reviewId)
     {
-        var result = await _reviewService.GetReviewByIdAsync(reviewId);
-        return Ok(result);
+        if (reviewId == Guid.Empty)
+        {
+            return BadRequest(new { error = "Invalid ID." });
+        }
+
+        try
+        {
+            var result = await _reviewService.GetReviewByIdAsync(reviewId);
+            if (result == null)
+            {
+                return NotFound(new { error = $"Review with ID {reviewId} not found." });
+            }
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
+    /// <summary>
+    /// Updates an existing review with the provided information.
+    /// </summary>
+    /// <param name="request">The review update request containing the updated details of the review.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the updated review details as a <see cref="ReviewDto"/> object, or a bad request result if the operation fails.</returns>
+    [Authorize(Policy = "ModeratePolicy")]
     [HttpPut]
-    public async Task<IActionResult> UpdateReview([FromBody] ReviewDto reviewDto)
+    public async Task<ActionResult<ReviewDto>> UpdateReview([FromBody] ReviewUpdateRequest request)
     {
-        await _reviewService.UpdateReviewAsync(reviewDto);
-        return NoContent();
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var result = await _reviewService.UpdateReviewAsync(request);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
+    /// <summary>
+    /// Approves or rejects a specified review based on the provided request data.
+    /// </summary>
+    /// <param name="request">The data required to approve or reject the review, including its identifier and approval status.</param>
+    /// <returns>
+    /// Returns the updated review as <see cref="ReviewDto"/> upon successful approval or rejection.
+    /// If the operation fails, an appropriate error response is returned.
+    /// </returns>
+    [Authorize(Policy = "ModeratePolicy")]
+    [HttpPut("approve")]
+    public async Task<ActionResult<ReviewDto>> ApproveReview([FromBody] ReviewApproveRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var result = await _reviewService.ApproveReviewAsync(request);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Deletes a review by its ID.
+    /// </summary>
+    /// <param name="reviewId">
+    /// The unique identifier of the review to be deleted.
+    /// </param>
+    /// <returns>
+    /// An IActionResult indicating the result of the operation. Returns NoContent on successful deletion or BadRequest in case of an error.
+    /// </returns>
+    [Authorize(Policy = "ModeratePolicy")]
     [HttpDelete("{reviewId}")]
-    public async Task<IActionResult> DeleteReview(Guid reviewId)
+    public async Task<IActionResult> DeleteReview([FromRoute] Guid reviewId)
     {
-        await _reviewService.DeleteReviewAsync(reviewId);
-        return NoContent();
+        if (reviewId == Guid.Empty)
+        {
+            return BadRequest(new { error = "Invalid ID." });
+        }
+
+        try
+        {
+            await _reviewService.DeleteReviewAsync(reviewId);
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
+    /// <summary>
+    /// Restores a previously deleted review based on the given review ID.
+    /// </summary>
+    /// <param name="reviewId">The unique identifier of the review to be restored.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the restored review as a <see cref="ReviewDto"/> object, or a BadRequest response if the operation fails.</returns>
+    [Authorize(Policy = "ModeratePolicy")]
     [HttpPost("{reviewId}/restore")]
-    public async Task<IActionResult> RestoreReview(Guid reviewId)
+    public async Task<ActionResult<ReviewDto>> RestoreReview([FromRoute] Guid reviewId)
     {
-        var result = await _reviewService.RestoreReviewAsync(reviewId);
-        return Ok(result);
+        if (reviewId == Guid.Empty)
+        {
+            return BadRequest(new { error = "Invalid ID." });
+        }
+
+        try
+        {
+            var result = await _reviewService.RestoreReviewAsync(reviewId);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
-    
+
+    /// <summary>
+    /// Retrieves all reviews created by a specific user identified by their Keycloak ID.
+    /// </summary>
+    /// <param name="keycloakId">The unique identifier of the user from Keycloak.</param>
+    /// <returns>A list of <see cref="ReviewDto"/> objects containing all reviews associated with the specified user, or an error response if the operation fails.</returns>
+    [Authorize(Policy = "ModeratePolicy")]
     [HttpGet("{keycloakId}/all")]
-    public async Task<IActionResult> GetAllUserReviews(string keycloakId)
+    public async Task<ActionResult<List<ReviewDto>>> GetAllUserReviews([FromRoute] string keycloakId)
     {
-        var result = await _reviewService.GetAllUserReviewsAsync(keycloakId);
-        return Ok(result);
+        if (string.IsNullOrEmpty(keycloakId))
+        {
+            return BadRequest(new { error = "Invalid ID." });
+        }
+
+        try
+        {
+            var result = await _reviewService.GetAllUserReviewsAsync(keycloakId);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
+    /// <summary>
+    /// Retrieves all deleted reviews for a specific user based on their Keycloak ID.
+    /// </summary>
+    /// <param name="keycloakId">The Keycloak ID of the user whose deleted reviews are being retrieved.</param>
+    /// <returns>A list of deleted reviews associated with the specified user, wrapped in an <see cref="ActionResult"/>.</returns>
+    [Authorize(Policy = "ModeratePolicy")]
     [HttpGet("{keycloakId}/deleted")]
-    public async Task<IActionResult> GetAllUserDeletedReviews(string keycloakId)
+    public async Task<ActionResult<List<ReviewDto>>> GetAllUserDeletedReviews([FromRoute] string keycloakId)
     {
-        var result = await _reviewService.GetAllUserDeletedReviewsAsync(keycloakId);
-        return Ok(result);
+        if (string.IsNullOrEmpty(keycloakId))
+        {
+            return BadRequest(new { error = "Invalid ID." });
+        }
+
+        try
+        {
+            var result = await _reviewService.GetAllUserDeletedReviewsAsync(keycloakId);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
-    [HttpGet("games/{gameId}")]
-    public async Task<IActionResult> GetAllGameReviews(Guid gameId)
+    /// <summary>
+    /// Retrieves all reviews associated with a specific product.
+    /// </summary>
+    /// <param name="productId">The unique identifier of the product for which to retrieve the reviews.</param>
+    /// <returns>A list of <see cref="ReviewDto"/> objects representing the reviews of the specified product.</returns>
+    [HttpGet("products/{productId}")]
+    public async Task<ActionResult<List<ReviewDto>>> GetAllProductReviews([FromRoute] Guid productId)
     {
-        var result = await _reviewService.GetAllGameReviewsAsync(gameId);
-        return Ok(result);
+        if (productId == Guid.Empty)
+        {
+            return BadRequest(new { error = "Invalid ID." });
+        }
+
+        try
+        {
+            var result = await _reviewService.GetAllProductReviewsAsync(productId);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
-    
-    [HttpGet("games/{gameId}/deleted")]
-    public async Task<IActionResult> GetAllDeletedGameReviews(Guid gameId)
+
+    /// <summary>
+    /// Retrieves all deleted reviews for a specific product.
+    /// </summary>
+    /// <param name="productId">The unique identifier of the product for which the deleted reviews are to be retrieved.</param>
+    /// <returns>A task representing an asynchronous operation that returns a list of <see cref="ReviewDto"/> objects representing the deleted reviews of the specified product.</returns>
+    [Authorize(Policy = "ModeratePolicy")]
+    [HttpGet("products/{productId}/deleted")]
+    public async Task<ActionResult<List<ReviewDto>>> GetAllDeletedProductReviews([FromRoute] Guid productId)
     {
-        var result = await _reviewService.GetAllDeletedGameReviewsAsync(gameId);
-        return Ok(result);
+        if (productId == Guid.Empty)
+        {
+            return BadRequest(new { error = "Invalid ID." });
+        }
+
+        try
+        {
+            var result = await _reviewService.GetAllDeletedProductReviewsAsync(productId);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
-    
+
+    /// <summary>
+    /// Retrieves the count of approved product reviews, categorized as positive and negative.
+    /// </summary>
+    /// <param name="productId">The unique identifier of the product for which the approved reviews are being counted.</param>
+    /// <returns>A tuple containing the count of positive and negative approved reviews for the specified product.</returns>
+    [HttpGet("count/{productId}")]
+    public async Task<ActionResult<(int positive, int negative)>> GetProductApprovedReviewsCountAsync([FromRoute] Guid productId)
+    {
+        if (productId == Guid.Empty)
+        {
+            return BadRequest(new { error = "Invalid ID." });
+        }
+
+        try
+        {
+            var result = await _reviewService.GetProductApprovedReviewsCountAsync(productId);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Retrieves a list of all reviews that are not approved.
+    /// </summary>
+    /// <returns>
+    /// A task representing the asynchronous operation, containing an ActionResult
+    /// with a list of ReviewDto objects that have not been approved.
+    /// </returns>
+    [Authorize(Policy = "ModeratePolicy")]
     [HttpGet("not-approved")]
-    public async Task<IActionResult> GetAllNotApprovedReviews()
+    public async Task<ActionResult<List<ReviewDto>>> GetAllNotApprovedReviews()
     {
-        var result = await _reviewService.GetAllNotApprovedReviewsAsync();
-        return Ok(result);
+        try
+        {
+            var result = await _reviewService.GetAllNotApprovedReviewsAsync();
+            return Ok(result);
+        }
+        catch (Exception e)
+        {
+            return BadRequest(new { error = e.Message });
+        }
     }
 
+    /// <summary>
+    /// Retrieves all reviews present in the system.
+    /// </summary>
+    /// <returns>A list of <see cref="ReviewDto"/> objects representing all reviews, or an error response if an exception occurs.</returns>
     [HttpGet("all")]
-    public async Task<IActionResult> GetAllReviews()
+    public async Task<ActionResult<List<ReviewDto>>> GetAllReviews()
     {
-        var result = await _reviewService.GetAllReviewsAsync();
-        return Ok(result);
+        try
+        {
+            var result = await _reviewService.GetAllReviewsAsync();
+            return Ok(result);
+        }
+        catch (Exception e)
+        {
+            return BadRequest(new { error = e.Message });
+        }
     }
-    
+
+    /// <summary>
+    /// Retrieves a list of all deleted reviews.
+    /// </summary>
+    /// <returns>
+    /// A task that represents the asynchronous operation. The task result contains an ActionResult of a list of ReviewDto objects representing the deleted reviews.
+    /// </returns>
+    [Authorize(Policy = "ModeratePolicy")]
     [HttpGet("deleted")]
-    public async Task<IActionResult> GetAllDeletedReviews()
+    public async Task<ActionResult<List<ReviewDto>>> GetAllDeletedReviews()
     {
-        var result = await _reviewService.GetAllDeletedReviewsAsync();
-        return Ok(result);
+        try
+        {
+            var result = await _reviewService.GetAllDeletedReviewsAsync();
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 }

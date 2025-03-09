@@ -22,8 +22,13 @@ public class UserAuthService : IUserAuthService
     }
     
     /// <inheritdoc />
-    public async Task RegisterUserAsync(RegisterUserCommand request)
+    public async Task<UserProfileDto?> RegisterUserAsync(RegisterUserRequest request)
     {
+        if (!AuthenticationRequestsValidator.ValidateRegisterUserRequest(request, out string _))
+        {
+            throw new ArgumentException("Invalid register user request.");
+        }
+        
         string keycloakId = await _keycloakClient.CreateUserAsync(new KeycloakUser
         {
             Email = request.Email,
@@ -49,7 +54,7 @@ public class UserAuthService : IUserAuthService
             CreatedAt = DateTime.UtcNow
         };
 
-        await _userRepository.AddAsync(appUser);
+        var result = await _userRepository.AddAsync(appUser);
         
         var user = await _userRepository.GetByKeycloakIdAsync(keycloakId);
 
@@ -57,30 +62,48 @@ public class UserAuthService : IUserAuthService
         {
             await SendEmailConfirmationAsync(keycloakId);
         }
+        
+        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserProfileDto(result);
     }
     
     /// <inheritdoc />
-    public async Task<TokenResponse> LoginUserAsync(LoginUserCommand request)
+    public async Task<TokenResponse> LoginUserAsync(LoginUserRequest request)
     {
+        if (!AuthenticationRequestsValidator.ValidateLoginUserRequest(request, out string _))
+        {
+            throw new ArgumentException("Invalid login user request.");
+        }
         return await _keycloakClient.LoginAsync(request.Email, request.Password);
     }
     
     /// <inheritdoc />
-    public async Task LogoutUserAsync(LogoutCommand request)
+    public async Task LogoutUserAsync(LogoutRequest request)
     {
+        if (!AuthenticationRequestsValidator.ValidateLogoutRequest(request, out string _))
+        {
+            throw new ArgumentException("Invalid logout request.");
+        }
         await _keycloakClient.LogoutAsync(request.RefreshToken);
     }
     
     /// <inheritdoc />
-    public async Task<TokenResponse> RefreshTokenAsync(RefreshTokenCommand request)
+    public async Task<TokenResponse> RefreshTokenAsync(RefreshTokenRequest request)
     {
+        if (!AuthenticationRequestsValidator.ValidateRefreshTokenRequest(request, out string _))
+        {
+            throw new ArgumentException("Invalid refresh token request.");
+        }
         return await _keycloakClient.RequestNewTokensAsync(request.RefreshToken);
     }
     
     /// <inheritdoc />
-    public async Task CreateRoleAsync(CreateRoleCommand command)
+    public async Task CreateRoleAsync(CreateRoleRequest request)
     {
-        await _keycloakClient.CreateClientRoleAsync(command.RoleName, command.Description);
+        if (!AuthenticationRequestsValidator.ValidateCreateRoleRequest(request, out string _))
+        {
+            throw new ArgumentException("Invalid create role request.");
+        }
+        await _keycloakClient.CreateClientRoleAsync(request.RoleName, request.Description);
     }
     
     /// <inheritdoc />
@@ -92,39 +115,79 @@ public class UserAuthService : IUserAuthService
     /// <inheritdoc />
     public async Task<RoleRepresentation?> GetRoleByNameAsync(string roleName)
     {
+        if (string.IsNullOrWhiteSpace(roleName))
+        {
+            throw new ArgumentException("Role name cannot be null or empty.", nameof(roleName));
+        }
         return await _keycloakClient.GetClientRoleByNameAsync(roleName);
     }
     
     /// <inheritdoc />
     public async Task<IEnumerable<RoleRepresentation>> GetUserRolesAsync(string userId)
     {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            throw new ArgumentException("User ID cannot be null or empty.", nameof(userId));
+        }
         return await _keycloakClient.GetUserRolesAsync(userId);
     }
         
     /// <inheritdoc />
     public async Task<bool> CheckUserRoleAsync(string userId, string roleName)
     {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            throw new ArgumentException("User ID cannot be null or empty.", nameof(userId));
+        }
+
+        if (string.IsNullOrWhiteSpace(roleName))
+        {
+            throw new ArgumentException("Role name cannot be null or empty.", nameof(roleName));
+        }
         return await _keycloakClient.CheckUserRoleAsync(userId, roleName);
     }
     /// <inheritdoc />
     public async Task AssignRolesToUserAsync(string userId, IEnumerable<RoleRepresentation> roles)
     {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            throw new ArgumentException("User ID cannot be null or empty.", nameof(userId));
+        }
+
+        if (roles == null)
+        {
+            throw new ArgumentNullException(nameof(roles), "Roles cannot be null.");
+        }
         await _keycloakClient.AssignRolesAsync(userId, roles);
     }
     
     /// <inheritdoc />
     public async Task AssignRoleToUserAsync(string userId, RoleRepresentation role)
     {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            throw new ArgumentException("User ID cannot be null or empty.", nameof(userId));
+        }
+
+        if (role == null)
+        {
+            throw new ArgumentNullException(nameof(role), "Role cannot be null.");
+        }
         await _keycloakClient.AssignRoleAsync(userId, role);
     }
     
     /// <inheritdoc />
     public async Task AssignRoleToUserAsync(string userId, UserRole role)
     {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            throw new ArgumentException("User ID cannot be null or empty.", nameof(userId));
+        }
+        
         var roleRepresentation = await _keycloakClient.GetClientRoleByNameAsync(role.ToString());
         if (roleRepresentation == null)
         {
-            await CreateRoleAsync(new CreateRoleCommand
+            await CreateRoleAsync(new CreateRoleRequest
             {
                 RoleName = role.ToString(),
                 Description = role.ToString()
@@ -144,6 +207,15 @@ public class UserAuthService : IUserAuthService
     /// <inheritdoc />
     public async Task DeleteRolesFromUserAsync(string userId, IEnumerable<RoleRepresentation> roles)
     {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            throw new ArgumentException("User ID cannot be null or empty.", nameof(userId));
+        }
+
+        if (roles == null)
+        {
+            throw new ArgumentNullException(nameof(roles), "Roles cannot be null.");
+        }
         await _keycloakClient.DeleteClientRolesAsync(userId, roles);
     }
         
@@ -156,6 +228,10 @@ public class UserAuthService : IUserAuthService
     /// <inheritdoc />
     public async Task<UserRepresentation?> GetKeycloakUserByEmailAsync(string email)
     {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            throw new ArgumentException("Email cannot be null or empty.", nameof(email));
+        }
         return await _keycloakClient.GetUserByEmailAsync(email);
     }
 
@@ -226,25 +302,25 @@ public class UserAuthService : IUserAuthService
     }
 
     /// <inheritdoc />
-    public async Task EnableDisableUserAsync(string keycloakUserId, bool enable)
+    public async Task EnableDisableUserAsync(EnableDisableUserRequest request)
     {
-        if (string.IsNullOrWhiteSpace(keycloakUserId))
+        if (!AuthenticationRequestsValidator.ValidateEnableDisableUserRequest(request, out string _))
         {
-            throw new ArgumentException("User ID must not be null or empty.");
+            throw new ArgumentException("Invalid enable/disable user request.");
         }
 
-        await _keycloakClient.EnableDisableUserAsync(keycloakUserId, enable);
+        await _keycloakClient.EnableDisableUserAsync(request.KeycloakUserId, request.Enable);
     }
 
     /// <inheritdoc />
-    public async Task ResetUserPasswordAsync(string userId, string newPassword, bool temporary = false)
+    public async Task ResetUserPasswordAsync(ResetUserPasswordRequest request)
     {
-        if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(newPassword))
+        if (!AuthenticationRequestsValidator.ValidateResetUserPasswordRequest(request, out string _))
         {
-            throw new ArgumentException("User ID and password must not be null or empty.");
+            throw new ArgumentException("Invalid reset user password request.");
         }
         
-        await _keycloakClient.ResetUserPasswordAsync(userId, newPassword, temporary);
+        await _keycloakClient.ResetUserPasswordAsync(request.KeycloakUserId, request.Password, request.Temporary);
     }
 
     /// <inheritdoc />
@@ -260,37 +336,17 @@ public class UserAuthService : IUserAuthService
     }
 
     /// <inheritdoc />
-    public async Task<bool> ValidateResetTokenAsync(string token)
+    public async Task<bool> ValidateResetTokenAsync(ValidateResetTokenRequest request)
     {
-        if (string.IsNullOrWhiteSpace(token))
+        if (!AuthenticationRequestsValidator.ValidateValidateResetTokenRequest(request, out string _))
         {
-            throw new ArgumentException("Token must not be null or empty.");
+            throw new ArgumentException("Invalid validate reset token request.");
         }
         
-        return await _tokenService.ValidatePasswordResetToken(token);
-    }
-
-    /// <summary>
-    /// Generates a unique username by appending a numeric suffix to the provided base username
-    /// if it conflicts with an existing username in the system.
-    /// </summary>
-    /// <param name="baseUsername">The base username that needs to be made unique.</param>
-    /// <returns>A unique username string derived from the base username.</returns>
-    private async Task<string> GenerateUniqueUsernameAsync(string baseUsername)
-    {
-        baseUsername = baseUsername.Trim().ToLowerInvariant();
-        string username = baseUsername;
-        int suffix = 0;
-        
-        while (await _userRepository.ExistsByUsernameAsync(username))
-        {
-            suffix++;
-            username = $"{baseUsername}{suffix}";
-        }
-    
-        return username;
+        return await _tokenService.ValidatePasswordResetToken(request.Token);
     }
     
+    /// <inheritdoc />
     public async Task SendEmailConfirmationAsync(string keycloakUserId)
     {
         if (string.IsNullOrWhiteSpace(keycloakUserId))
@@ -338,5 +394,21 @@ public class UserAuthService : IUserAuthService
         }
 
         await _keycloakClient.ConfirmUserEmailAsync(user.KeycloakUserId);
+    }
+    
+    /// <summary>
+    /// Generates a unique username by appending a numeric suffix to the provided base username
+    /// if it conflicts with an existing username in the system.
+    /// </summary>
+    /// <param name="baseUsername">The base username that needs to be made unique.</param>
+    /// <returns>A unique username string derived from the base username.</returns>
+    private async Task<string> GenerateUniqueUsernameAsync(string baseUsername)
+    {
+        if (string.IsNullOrWhiteSpace(baseUsername))
+        {
+            throw new ArgumentException("Base username must not be null or empty.", nameof(baseUsername));
+        }
+        
+        return await _userRepository.GenerateUniqueUsernameAsync(baseUsername);
     }
 }

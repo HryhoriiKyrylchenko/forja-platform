@@ -1,4 +1,4 @@
-namespace Forja.Application.DTOs.UserRegistration;
+namespace Forja.Application.Requests.Authentication;
 
 /// <summary>
 /// Represents a command used to request a new set of authentication tokens by providing an existing refresh token.
@@ -7,7 +7,7 @@ namespace Forja.Application.DTOs.UserRegistration;
 /// This command is used for token refresh operations, typically when the access token has expired and a new one is required.
 /// It contains the necessary refresh token required for the backend to generate new access and refresh tokens.
 /// </remarks>
-public class RefreshTokenCommand
+public class RefreshTokenRequest
 {
     /// <summary>
     /// Represents a token used to refresh an expired or invalid access token, enabling continued authentication

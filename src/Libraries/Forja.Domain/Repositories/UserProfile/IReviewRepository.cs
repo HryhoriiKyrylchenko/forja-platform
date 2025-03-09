@@ -36,19 +36,29 @@ public interface IReviewRepository
     /// <summary>
     /// Retrieves all reviews associated with a specific game.
     /// </summary>
-    /// <param name="gameId">The unique identifier of the game whose reviews are to be retrieved.</param>
+    /// <param name="productId">The unique identifier of the product whose reviews are to be retrieved.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a collection of reviews associated with the specified game.</returns>
-    Task<IEnumerable<Review>> GetAllByGameIdAsync(Guid gameId);
+    Task<IEnumerable<Review>> GetAllByProductIdAsync(Guid productId);
 
     /// <summary>
     /// Asynchronously retrieves all deleted reviews associated with a specific game.
     /// </summary>
-    /// <param name="gameId">The unique identifier of the game whose deleted reviews are to be retrieved.</param>
+    /// <param name="productId">The unique identifier of the product whose deleted reviews are to be retrieved.</param>
     /// <returns>
     /// A task that represents the asynchronous operation.
     /// The task result contains a collection of deleted <see cref="Review"/> entities associated with the specified game.
     /// </returns>
-    Task<IEnumerable<Review>> GetAllDeletedByGameIdAsync(Guid gameId);
+    Task<IEnumerable<Review>> GetAllDeletedByProductIdAsync(Guid productId);
+
+    /// <summary>
+    /// Asynchronously retrieves the total count of approved positive and negative reviews for a specific product.
+    /// </summary>
+    /// <param name="productId">The unique identifier of the product for which to retrieve the approved review counts.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation.
+    /// The task result contains a tuple with the total positive and total negative approved review counts.
+    /// </returns>
+    Task<(int positive, int negative)> GetProductApprovedReviewsCountAsync(Guid productId); 
 
     /// <summary>
     /// Retrieves all reviews from the data source.
@@ -79,14 +89,14 @@ public interface IReviewRepository
     /// </summary>
     /// <param name="review">The review object to be added. Must not be null.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task AddAsync(Review review);
+    Task<Review?> AddAsync(Review review);
 
     /// <summary>
     /// Updates an existing review in the repository.
     /// </summary>
     /// <param name="review">The updated review object to be persisted.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    Task UpdateAsync(Review review);
+    Task<Review?> UpdateAsync(Review review);
 
     /// <summary>
     /// Deletes the review corresponding to the specified identifier.
@@ -103,5 +113,5 @@ public interface IReviewRepository
     /// A task that represents the asynchronous operation.
     /// The task result contains the restored <see cref="Review"/> if successfully restored.
     /// </returns>
-    Task<Review> RestoreAsync(Guid reviewId);
+    Task<Review?> RestoreAsync(Guid reviewId);
 }

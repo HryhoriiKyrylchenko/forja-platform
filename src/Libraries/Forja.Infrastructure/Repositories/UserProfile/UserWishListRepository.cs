@@ -5,17 +5,19 @@ namespace Forja.Infrastructure.Repositories.UserProfile;
 /// </summary>
 public class UserWishListRepository : IUserWishListRepository
 {
-    private readonly DbContext _context;
+    private readonly ForjaDbContext _context;
+    private readonly DbSet<UserWishList> _userWishLists;
 
-    public UserWishListRepository(DbContext context)
+    public UserWishListRepository(ForjaDbContext context)
     {
         _context = context;
+        _userWishLists = context.Set<UserWishList>();
     }
-
+    
     /// <inheritdoc />
     public async Task<IEnumerable<UserWishList>> GetAllAsync()
     {
-        return await _context.Set<UserWishList>()
+        return await _userWishLists
             .Include(uwl => uwl.Product)
             .Include(uwl => uwl.User)
             .ToListAsync();
@@ -24,34 +26,51 @@ public class UserWishListRepository : IUserWishListRepository
     /// <inheritdoc />
     public async Task<UserWishList?> GetByIdAsync(Guid id)
     {
-        return await _context.Set<UserWishList>()
+        if (id == Guid.Empty)
+        {
+            throw new ArgumentException("User wish list id cannot be empty.", nameof(id));
+        }
+        return await _userWishLists
             .Include(uwl => uwl.Product)
             .Include(uwl => uwl.User)
             .FirstOrDefaultAsync(uwl => uwl.Id == id);
     }
 
     /// <inheritdoc />
-    public async Task<UserWishList> AddAsync(UserWishList userWishList)
+    public async Task<UserWishList?> AddAsync(UserWishList userWishList)
     {
-        await _context.Set<UserWishList>().AddAsync(userWishList);
+        if (!UserProfileModelValidator.ValidateUserWishList(userWishList))
+        {
+            throw new ArgumentException("User wish list is invalid.", nameof(userWishList));
+        }
+        await _userWishLists.AddAsync(userWishList);
         await _context.SaveChangesAsync();
         return userWishList;
     }
 
     /// <inheritdoc />
-    public async Task UpdateAsync(UserWishList userWishList)
+    public async Task<UserWishList?> UpdateAsync(UserWishList userWishList)
     {
-        _context.Set<UserWishList>().Update(userWishList);
+        if (!UserProfileModelValidator.ValidateUserWishList(userWishList))
+        {
+            throw new ArgumentException("User wish list is invalid.", nameof(userWishList));
+        }
+        _userWishLists.Update(userWishList);
         await _context.SaveChangesAsync();
+        return userWishList;
     }
 
     /// <inheritdoc />
     public async Task DeleteAsync(Guid id)
     {
+        if (id == Guid.Empty)
+        {
+            throw new ArgumentException("User wish list id cannot be empty.", nameof(id));
+        }
         var userWishList = await GetByIdAsync(id);
         if (userWishList != null)
         {
-            _context.Set<UserWishList>().Remove(userWishList);
+            _userWishLists.Remove(userWishList);
             await _context.SaveChangesAsync();
         }
     }
@@ -59,7 +78,11 @@ public class UserWishListRepository : IUserWishListRepository
     /// <inheritdoc />
     public async Task<IEnumerable<UserWishList>> GetByUserIdAsync(Guid userId)
     {
-        return await _context.Set<UserWishList>()
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User id cannot be empty.", nameof(userId));
+        }
+        return await _userWishLists
             .Where(uwl => uwl.UserId == userId)
             .Include(uwl => uwl.Product)
             .ToListAsync();

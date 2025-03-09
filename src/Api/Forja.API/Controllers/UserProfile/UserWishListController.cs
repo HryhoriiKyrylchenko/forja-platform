@@ -22,8 +22,15 @@ public class UserWishListController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<UserWishListDto>>> GetAll()
     {
-        var wishLists = await _userWishListService.GetAllAsync();
-        return Ok(wishLists);
+        try
+        {
+            var wishLists = await _userWishListService.GetAllAsync();
+            return Ok(wishLists);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     /// <summary>
@@ -32,13 +39,27 @@ public class UserWishListController : ControllerBase
     /// <param name="id">The unique identifier of the UserWishList entry.</param>
     /// <returns>A UserWishListDTO if found.</returns>
     [HttpGet("{id}")]
-    public async Task<ActionResult<UserWishListDto>> GetById(Guid id)
+    public async Task<ActionResult<UserWishListDto>> GetById([FromRoute] Guid id)
     {
-        var wishList = await _userWishListService.GetByIdAsync(id);
-        if (wishList == null)
-            return NotFound($"UserWishList entry with ID {id} not found.");
+        if (id == Guid.Empty)
+        {
+            return BadRequest("Invalid ID.");
+        }
 
-        return Ok(wishList);
+        try
+        {
+            var wishList = await _userWishListService.GetByIdAsync(id);
+            if (wishList == null)
+            {
+                return NotFound($"UserWishList entry with ID {id} not found.");
+            }
+
+            return Ok(wishList);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     /// <summary>
@@ -50,10 +71,23 @@ public class UserWishListController : ControllerBase
     public async Task<ActionResult<UserWishListDto>> Add([FromBody] UserWishListCreateRequest request)
     {
         if (!ModelState.IsValid)
+        {
             return BadRequest(ModelState);
+        }
 
-        var createdWishList = await _userWishListService.AddAsync(request.UserId, request.ProductId);
-        return CreatedAtAction(nameof(GetById), new { id = createdWishList.Id }, createdWishList);
+        try
+        {
+            var createdWishList = await _userWishListService.AddAsync(request);
+            if (createdWishList == null)
+            {
+                return BadRequest(new { error = "Failed to create wishlist." });
+            }
+            return CreatedAtAction(nameof(GetById), new { id = createdWishList.Id }, createdWishList);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     /// <summary>
@@ -63,15 +97,21 @@ public class UserWishListController : ControllerBase
     /// <param name="request">The UserWishListUpdateRequest containing updated user and product IDs.</param>
     /// <returns>No content if update is successful.</returns>
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] UserWishListUpdateRequest request)
+    public async Task<ActionResult<UserWishListDto>> Update(Guid id, [FromBody] UserWishListUpdateRequest request)
     {
         if (!ModelState.IsValid)
+        {
             return BadRequest(ModelState);
+        }
 
         try
         {
-            await _userWishListService.UpdateAsync(id, request.UserId, request.ProductId);
-            return NoContent();
+            var result = await _userWishListService.UpdateAsync(request);
+            if (result == null)
+            {
+                return BadRequest(new { error = "Failed to update wishlist." });
+            }
+            return Ok(result);
         }
         catch (KeyNotFoundException ex)
         {
@@ -87,8 +127,20 @@ public class UserWishListController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        await _userWishListService.DeleteAsync(id);
-        return NoContent();
+        if (id == Guid.Empty)
+        {
+            return BadRequest("Invalid ID.");
+        }
+
+        try
+        {
+            await _userWishListService.DeleteAsync(id);
+            return NoContent();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(new { error = e.Message });
+        }
     }
 
     /// <summary>
@@ -99,7 +151,19 @@ public class UserWishListController : ControllerBase
     [HttpGet("user/{userId}")]
     public async Task<ActionResult<IEnumerable<UserWishListDto>>> GetByUserId(Guid userId)
     {
-        var wishLists = await _userWishListService.GetByUserIdAsync(userId);
-        return Ok(wishLists);
+        if (userId == Guid.Empty)
+        {
+            return BadRequest("Invalid ID.");
+        }
+
+        try
+        {
+            var wishLists = await _userWishListService.GetByUserIdAsync(userId);
+            return Ok(wishLists);
+        }
+        catch (Exception e)
+        {
+            return BadRequest(new { error = e.Message });
+        }
     }
 }

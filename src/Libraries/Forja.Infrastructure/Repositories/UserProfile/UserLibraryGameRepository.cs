@@ -94,27 +94,31 @@ public class UserLibraryGameRepository : IUserLibraryGameRepository
     }
 
     /// <inheritdoc />
-    public async Task AddAsync(UserLibraryGame userLibraryGame)
+    public async Task<UserLibraryGame?> AddAsync(UserLibraryGame userLibraryGame)
     {
-        if (!ProjectModelValidator.ValidateUserLibraryGame(userLibraryGame))
+        if (!UserProfileModelValidator.ValidateUserLibraryGame(userLibraryGame))
         {
             throw new ArgumentException("User library game is invalid.", nameof(userLibraryGame));
         }
         
         await _userLibraryGames.AddAsync(userLibraryGame);
         await _context.SaveChangesAsync();
+
+        return userLibraryGame;
     }
 
     /// <inheritdoc />
-    public async Task UpdateAsync(UserLibraryGame userLibraryGame)
+    public async Task<UserLibraryGame?> UpdateAsync(UserLibraryGame userLibraryGame)
     {
-        if (!ProjectModelValidator.ValidateUserLibraryGame(userLibraryGame))
+        if (!UserProfileModelValidator.ValidateUserLibraryGame(userLibraryGame))
         {
             throw new ArgumentException("User library game is invalid.", nameof(userLibraryGame));
         }
         
         _userLibraryGames.Update(userLibraryGame);
         await _context.SaveChangesAsync();
+        
+        return userLibraryGame;
     }
 
     /// <inheritdoc />
@@ -133,7 +137,7 @@ public class UserLibraryGameRepository : IUserLibraryGameRepository
     }
 
     /// <inheritdoc />
-    public async Task<UserLibraryGame> RestoreAsync(Guid id)
+    public async Task<UserLibraryGame?> RestoreAsync(Guid id)
     {
         if (id == Guid.Empty)
         {

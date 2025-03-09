@@ -6,7 +6,7 @@ namespace Forja.Infrastructure.Repositories.UserProfile;
 public class GameSaveRepository : IGameSaveRepository
 {
     private readonly ForjaDbContext _context;
-    private readonly DbSet<GameSave> _dbSet;
+    private readonly DbSet<GameSave> _gameSaves;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GameSaveRepository"/> class.
@@ -15,13 +15,13 @@ public class GameSaveRepository : IGameSaveRepository
     public GameSaveRepository(ForjaDbContext context)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
-        _dbSet = _context.Set<GameSave>();
+        _gameSaves = _context.Set<GameSave>();
     }
 
     /// <inheritdoc />
     public async Task<IEnumerable<GameSave>> GetAllAsync()
     {
-        return await _dbSet.Include(gs => gs.User)
+        return await _gameSaves.Include(gs => gs.User)
                            .Include(gs => gs.UserLibraryGame)
                            .ToListAsync();
     }
@@ -29,33 +29,47 @@ public class GameSaveRepository : IGameSaveRepository
     /// <inheritdoc />
     public async Task<GameSave?> GetByIdAsync(Guid id)
     {
-        return await _dbSet.Include(gs => gs.User)
+        if (id == Guid.Empty)
+        {
+            throw new ArgumentException("GameSave id cannot be empty.", nameof(id));
+        }
+        return await _gameSaves.Include(gs => gs.User)
                            .Include(gs => gs.UserLibraryGame)
                            .FirstOrDefaultAsync(gs => gs.Id == id);
     }
 
     /// <inheritdoc />
-    public async Task<GameSave> AddAsync(GameSave gameSave)
+    public async Task<List<GameSave>> GetAllByFilterAsync(Guid? libraryGameId, Guid? userId)
     {
-        if (gameSave == null)
-        {
-            throw new ArgumentNullException(nameof(gameSave));
-        }
-
-        var result = await _dbSet.AddAsync(gameSave);
-        await _context.SaveChangesAsync();
-        return result.Entity;
+        return await _gameSaves.Include(gs => gs.User)
+                           .Include(gs => gs.UserLibraryGame)
+                           .Where(gs => (!libraryGameId.HasValue || gs.UserLibraryGameId == libraryGameId) &&
+                                        (!userId.HasValue || gs.UserId == userId))
+                           .ToListAsync();
     }
 
     /// <inheritdoc />
-    public async Task<GameSave> UpdateAsync(GameSave gameSave)
+    public async Task<GameSave?> AddAsync(GameSave gameSave)
     {
-        if (gameSave == null)
+        if (!UserProfileModelValidator.ValidateGameSave(gameSave))
         {
-            throw new ArgumentNullException(nameof(gameSave));
+            throw new ArgumentException("GameSave is invalid.", nameof(gameSave));
         }
 
-        _dbSet.Update(gameSave);
+        await _gameSaves.AddAsync(gameSave);
+        await _context.SaveChangesAsync();
+        return gameSave;
+    }
+
+    /// <inheritdoc />
+    public async Task<GameSave?> UpdateAsync(GameSave gameSave)
+    {
+        if (!UserProfileModelValidator.ValidateGameSave(gameSave))
+        {
+            throw new ArgumentException("GameSave is invalid.", nameof(gameSave));
+        }
+
+        _gameSaves.Update(gameSave);
         await _context.SaveChangesAsync();
         return gameSave;
     }
@@ -63,13 +77,17 @@ public class GameSaveRepository : IGameSaveRepository
     /// <inheritdoc />
     public async Task DeleteAsync(Guid id)
     {
+        if (id == Guid.Empty)
+        {
+            throw new ArgumentException("GameSave id cannot be empty.", nameof(id));
+        }
         var gameSave = await GetByIdAsync(id);
         if (gameSave == null)
         {
             throw new InvalidOperationException($"GameSave with id {id} not found.");
         }
 
-        _dbSet.Remove(gameSave);
+        _gameSaves.Remove(gameSave);
         await _context.SaveChangesAsync();
     }
 }

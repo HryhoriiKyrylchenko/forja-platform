@@ -23,6 +23,12 @@ public class GameSaveDto
     public string SaveFileUrl { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets the name of the game save.
+    /// This property represents a descriptive or meaningful name for the saved game entry.
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
     /// Represents the date and time when the game save was created.
     /// This property is automatically set to the current UTC datetime upon initialization.
     /// </summary>

@@ -10,7 +10,7 @@ public interface IUserFollowerService
     /// Gets all UserFollower entries.
     /// </summary>
     /// <returns>A list of UserFollowerDTO containing all entries.</returns>
-    Task<IEnumerable<UserFollowerDto>> GetAllAsync();
+    Task<List<UserFollowerDto>> GetAllAsync();
 
     /// <summary>
     /// Gets a UserFollower entry by its unique identifier.
@@ -18,22 +18,20 @@ public interface IUserFollowerService
     /// <param name="id">The unique identifier for the UserFollower entry.</param>
     /// <returns>A UserFollowerDTO corresponding to the given ID, or null if not found.</returns>
     Task<UserFollowerDto?> GetByIdAsync(Guid id);
-
+    
     /// <summary>
     /// Adds a new UserFollower entry.
     /// </summary>
-    /// <param name="followerId">The unique identifier of the follower user.</param>
-    /// <param name="followedId">The unique identifier of the followed user.</param>
-    /// <returns>The created UserFollowerDTO.</returns>
-    Task<UserFollowerDto> AddAsync(Guid followerId, Guid followedId);
+    /// <param name="request">The request object containing the FollowerId and FollowedId for the new UserFollower entry.</param>
+    /// <returns>The unique identifier of the newly created UserFollower entry.</returns>
+    Task<UserFollowerDto?> AddAsync(UserFollowerCreateRequest request);
 
     /// <summary>
-    /// Updates a UserFollower entry.
+    /// Updates an existing UserFollower entry with the provided details.
     /// </summary>
-    /// <param name="id">The unique identifier of the UserFollower entry to update.</param>
-    /// <param name="followerId">The updated follower user ID.</param>
-    /// <param name="followedId">The updated followed user ID.</param>
-    Task UpdateAsync(Guid id, Guid followerId, Guid followedId);
+    /// <param name="request">The UserFollowerUpdateRequest containing updated follower and followed user details.</param>
+    /// <returns>A Task that represents the asynchronous operation.</returns>
+    Task UpdateAsync(UserFollowerUpdateRequest request);
 
     /// <summary>
     /// Deletes a UserFollower entry by its unique identifier.
@@ -46,12 +44,12 @@ public interface IUserFollowerService
     /// </summary>
     /// <param name="userId">The unique identifier of the follower user.</param>
     /// <returns>A list of UserFollowerDTO entries where the user is the follower.</returns>
-    Task<IEnumerable<UserFollowerDto>> GetFollowersByUserIdAsync(Guid userId);
+    Task<List<UserFollowerDto>> GetFollowersByUserIdAsync(Guid userId);
 
     /// <summary>
     /// Gets all UserFollower entries where the specified user is being followed.
     /// </summary>
     /// <param name="userId">The unique identifier of the followed user.</param>
     /// <returns>A list of UserFollowerDTO entries where the user is being followed.</returns>
-    Task<IEnumerable<UserFollowerDto>> GetFollowedByUserIdAsync(Guid userId);
+    Task<List<UserFollowerDto>> GetFollowedByUserIdAsync(Guid userId);
 }

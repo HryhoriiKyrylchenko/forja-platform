@@ -1,4 +1,4 @@
-namespace Forja.API.DTOs.UserProfile;
+namespace Forja.Application.Requests.UserProfile;
 
 /// <summary>
 /// Request model for creating a UserWishList entry.

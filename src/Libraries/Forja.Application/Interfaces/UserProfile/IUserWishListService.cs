@@ -10,7 +10,7 @@ public interface IUserWishListService
     /// Retrieves all UserWishList entries.
     /// </summary>
     /// <returns>A list of UserWishListDTO containing all entries.</returns>
-    Task<IEnumerable<UserWishListDto>> GetAllAsync();
+    Task<List<UserWishListDto>> GetAllAsync();
 
     /// <summary>
     /// Retrieves a UserWishList entry by its unique identifier.
@@ -22,18 +22,15 @@ public interface IUserWishListService
     /// <summary>
     /// Adds a new entry to the UserWishList for a specific user and product.
     /// </summary>
-    /// <param name="userId">The unique identifier of the user.</param>
-    /// <param name="productId">The unique identifier of the product to add to the wishlist.</param>
+    /// <param name="request">The UserWishListCreateRequest of the user.</param>
     /// <returns>The created UserWishListDTO.</returns>
-    Task<UserWishListDto> AddAsync(Guid userId, Guid productId);
+    Task<UserWishListDto?> AddAsync(UserWishListCreateRequest request);
 
     /// <summary>
     /// Updates an existing UserWishList entry.
     /// </summary>
-    /// <param name="id">The unique identifier of the UserWishList entry to update.</param>
-    /// <param name="userId">The updated user ID.</param>
-    /// <param name="productId">The updated product ID.</param>
-    Task UpdateAsync(Guid id, Guid userId, Guid productId);
+    /// <param name="request">The UserWishListUpdateRequest to update.</param>
+    Task<UserWishListDto?> UpdateAsync(UserWishListUpdateRequest request);
 
     /// <summary>
     /// Deletes a UserWishList entry by its unique identifier.
@@ -46,5 +43,5 @@ public interface IUserWishListService
     /// </summary>
     /// <param name="userId">The unique identifier of the user.</param>
     /// <returns>A list of UserWishListDTO entries specific to the user.</returns>
-    Task<IEnumerable<UserWishListDto>> GetByUserIdAsync(Guid userId);
+    Task<List<UserWishListDto>> GetByUserIdAsync(Guid userId);
 }

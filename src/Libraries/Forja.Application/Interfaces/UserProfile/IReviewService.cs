@@ -8,24 +8,30 @@ public interface IReviewService
     /// <summary>
     /// Adds a new review for the specified user.
     /// </summary>
-    /// <param name="userKeycloakId">The unique Keycloak ID of the user adding the review.</param>
-    /// <param name="reviewDto">The ReviewDto object containing the details of the review to be added.</param>
+    /// <param name="request">The ReviewCreateRequest object containing the details of the review to be added.</param>
     /// <returns>A Task representing the asynchronous operation.</returns>
-    Task AddReviewAsync(string userKeycloakId, ReviewDto reviewDto);
+    Task<ReviewDto?> AddReviewAsync(ReviewCreateRequest request);
 
     /// <summary>
     /// Retrieves the review associated with the specified review ID.
     /// </summary>
     /// <param name="reviewId">The unique identifier of the review to retrieve.</param>
     /// <returns>A Task representing the result of the asynchronous operation. The task result contains the ReviewDto associated with the specified review ID.</returns>
-    Task<ReviewDto> GetReviewByIdAsync(Guid reviewId);
+    Task<ReviewDto?> GetReviewByIdAsync(Guid reviewId);
 
     /// <summary>
     /// Updates the review based on the provided review details.
     /// </summary>
-    /// <param name="reviewDto">The ReviewDto object containing the review details to be updated, such as rating, user ID, and game ID.</param>
+    /// <param name="request">The ReviewUpdateRequest object containing the review details to be updated, such as rating, user ID, and game ID.</param>
     /// <returns>A Task representing the asynchronous operation.</returns>
-    Task UpdateReviewAsync(ReviewDto reviewDto);
+    Task<ReviewDto?> UpdateReviewAsync(ReviewUpdateRequest request);
+
+    /// <summary>
+    /// Approves or rejects a review based on the details provided in the request.
+    /// </summary>
+    /// <param name="request">The ReviewApproveRequest object containing the ID of the review and the approval status.</param>
+    /// <returns>A Task representing the asynchronous operation that returns the updated ReviewDto.</returns>
+    Task<ReviewDto?> ApproveReviewAsync(ReviewApproveRequest request);
 
     /// <summary>
     /// Deletes the review associated with the specified review ID.
@@ -39,7 +45,7 @@ public interface IReviewService
     /// </summary>
     /// <param name="reviewId">The unique identifier of the review to restore.</param>
     /// <returns>A Task representing the result of the asynchronous operation. The task result contains the restored ReviewDto associated with the specified review ID.</returns>
-    Task<ReviewDto> RestoreReviewAsync(Guid reviewId);
+    Task<ReviewDto?> RestoreReviewAsync(Guid reviewId);
 
     /// <summary>
     /// Retrieves all reviews associated with the specified user's Keycloak ID.
@@ -58,16 +64,23 @@ public interface IReviewService
     /// <summary>
     /// Retrieves all reviews associated with a specified game.
     /// </summary>
-    /// <param name="gameId">The unique identifier of the game to retrieve reviews for.</param>
+    /// <param name="productId">The unique identifier of the product to retrieve reviews for.</param>
     /// <returns>A Task representing the result of the asynchronous operation. The task result contains a list of ReviewDto objects associated with the specified game.</returns>
-    Task<List<ReviewDto>> GetAllGameReviewsAsync(Guid gameId);
+    Task<List<ReviewDto>> GetAllProductReviewsAsync(Guid productId);
 
     /// <summary>
     /// Retrieves all deleted game reviews associated with the specified game ID.
     /// </summary>
-    /// <param name="gameId">The unique identifier of the game to retrieve deleted reviews for.</param>
+    /// <param name="productId">The unique identifier of the product to retrieve deleted reviews for.</param>
     /// <returns>A Task representing the result of the asynchronous operation. The task result contains a list of ReviewDto objects representing the deleted reviews for the specified game.</returns>
-    Task<List<ReviewDto>> GetAllDeletedGameReviewsAsync(Guid gameId);
+    Task<List<ReviewDto>> GetAllDeletedProductReviewsAsync(Guid productId);
+
+    /// <summary>
+    /// Retrieves the count of approved positive and negative reviews for a specified product.
+    /// </summary>
+    /// <param name="productId">The unique identifier of the product to retrieve approved reviews for.</param>
+    /// <returns>A Task representing the result of the asynchronous operation. The task result is a tuple containing the count of positive and negative approved reviews (int positive, int negative).</returns>
+    Task<(int positive, int negative)> GetProductApprovedReviewsCountAsync(Guid productId); 
 
     /// <summary>
     /// Retrieves all reviews present in the system.

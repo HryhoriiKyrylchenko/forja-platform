@@ -76,7 +76,7 @@ public class AchievementRepository : IAchievementRepository
     /// <inheritdoc />
     public async Task AddAsync(Achievement achievement)
     {
-        if (!ProjectModelValidator.ValidateAchievement(achievement))
+        if (!UserProfileModelValidator.ValidateAchievement(achievement))
         {
             throw new ArgumentException("Achievement is not valid.", nameof(achievement));
         }
@@ -88,7 +88,7 @@ public class AchievementRepository : IAchievementRepository
     /// <inheritdoc />
     public async Task UpdateAsync(Achievement achievement)
     {
-        if (!ProjectModelValidator.ValidateAchievement(achievement))
+        if (!UserProfileModelValidator.ValidateAchievement(achievement))
         {
             throw new ArgumentException("Achievement is not valid.", nameof(achievement));
         }

@@ -9,7 +9,7 @@ public interface IGameSaveService
     /// Retrieves all GameSaves.
     /// </summary>
     /// <returns>A collection of all GameSaves, including related User and UserLibraryGame entities.</returns>
-    Task<IEnumerable<GameSaveDto>> GetAllAsync();
+    Task<List<GameSaveDto>> GetAllAsync();
 
     /// <summary>
     /// Retrieves a specific GameSave by its ID.
@@ -19,18 +19,26 @@ public interface IGameSaveService
     Task<GameSaveDto?> GetByIdAsync(Guid id);
 
     /// <summary>
+    /// Retrieves a list of GameSaves based on the specified filters.
+    /// </summary>
+    /// <param name="libraryGameId">The ID of the library game to filter by, or null to ignore this filter.</param>
+    /// <param name="userId">The ID of the user to filter by, or null to ignore this filter.</param>
+    /// <returns>A list of GameSaves matching the provided filters.</returns>
+    Task<List<GameSaveDto>> GetAllByFilterAsync(Guid? libraryGameId, Guid? userId);
+
+    /// <summary>
     /// Adds a new GameSave.
     /// </summary>
-    /// <param name="gameSave">The GameSave entity to add.</param>
+    /// <param name="request">The GameSaveCreateRequest entity to add.</param>
     /// <returns>The added GameSave entity.</returns>
-    Task<GameSave> AddAsync(GameSaveDto gameSave);
+    Task<GameSaveDto?> AddAsync(GameSaveCreateRequest request);
 
     /// <summary>
     /// Updates an existing GameSave.
     /// </summary>
-    /// <param name="gameSave">The GameSave entity to update.</param>
+    /// <param name="request">The GameSaveUpdateRequest entity to update.</param>
     /// <returns>The updated GameSave entity.</returns>
-    Task<GameSave> UpdateAsync(GameSaveDto gameSave);
+    Task<GameSaveDto?> UpdateAsync(GameSaveUpdateRequest request);
 
     /// <summary>
     /// Deletes a GameSave by its ID.

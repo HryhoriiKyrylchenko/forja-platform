@@ -5,17 +5,19 @@ namespace Forja.Infrastructure.Repositories.UserProfile;
 /// </summary>
 public class UserFollowerRepository : IUserFollowerRepository
 {
-    private readonly DbContext _context;
+    private readonly ForjaDbContext _context;
+    private readonly DbSet<UserFollower> _userFollowers;
 
-    public UserFollowerRepository(DbContext context)
+    public UserFollowerRepository(ForjaDbContext context)
     {
         _context = context;
+        _userFollowers = context.Set<UserFollower>();
     }
 
     /// <inheritdoc />
     public async Task<IEnumerable<UserFollower>> GetAllAsync()
     {
-        return await _context.Set<UserFollower>()
+        return await _userFollowers
             .Include(uf => uf.Follower)
             .Include(uf => uf.Followed)
             .ToListAsync();
@@ -24,25 +26,40 @@ public class UserFollowerRepository : IUserFollowerRepository
     /// <inheritdoc />
     public async Task<UserFollower?> GetByIdAsync(Guid id)
     {
-        return await _context.Set<UserFollower>()
+        if (id == Guid.Empty)
+        {
+            throw new ArgumentException("User follower id cannot be empty.", nameof(id));
+        }
+        
+        return await _userFollowers
             .Include(uf => uf.Follower)
             .Include(uf => uf.Followed)
             .FirstOrDefaultAsync(uf => uf.Id == id);
     }
 
     /// <inheritdoc />
-    public async Task<UserFollower> AddAsync(UserFollower userFollower)
+    public async Task<UserFollower?> AddAsync(UserFollower userFollower)
     {
-        await _context.Set<UserFollower>().AddAsync(userFollower);
+        if (!UserProfileModelValidator.ValidateUserFollower(userFollower))
+        {
+            throw new ArgumentException("User follower is invalid.", nameof(userFollower));
+        }
+        await _userFollowers.AddAsync(userFollower);
         await _context.SaveChangesAsync();
         return userFollower;
     }
 
     /// <inheritdoc />
-    public async Task UpdateAsync(UserFollower userFollower)
+    public async Task<UserFollower?> UpdateAsync(UserFollower userFollower)
     {
-        _context.Set<UserFollower>().Update(userFollower);
+        if (!UserProfileModelValidator.ValidateUserFollower(userFollower))
+        {
+            throw new ArgumentException("User follower is invalid.", nameof(userFollower));
+        }
+        _userFollowers.Update(userFollower);
         await _context.SaveChangesAsync();
+        
+        return userFollower;
     }
 
     /// <inheritdoc />
@@ -51,7 +68,7 @@ public class UserFollowerRepository : IUserFollowerRepository
         var userFollower = await GetByIdAsync(id);
         if (userFollower != null)
         {
-            _context.Set<UserFollower>().Remove(userFollower);
+            _userFollowers.Remove(userFollower);
             await _context.SaveChangesAsync();
         }
     }
@@ -59,7 +76,11 @@ public class UserFollowerRepository : IUserFollowerRepository
     /// <inheritdoc />
     public async Task<IEnumerable<UserFollower>> GetFollowersByUserIdAsync(Guid userId)
     {
-        return await _context.Set<UserFollower>()
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User id cannot be empty.", nameof(userId));
+        }
+        return await _userFollowers
             .Where(uf => uf.FollowedId == userId)
             .Include(uf => uf.Follower)
             .ToListAsync();
@@ -68,7 +89,11 @@ public class UserFollowerRepository : IUserFollowerRepository
     /// <inheritdoc />
     public async Task<IEnumerable<UserFollower>> GetFollowedByUserIdAsync(Guid userId)
     {
-        return await _context.Set<UserFollower>()
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User id cannot be empty.", nameof(userId));
+        }
+        return await _userFollowers
             .Where(uf => uf.FollowerId == userId)
             .Include(uf => uf.Followed)
             .ToListAsync();

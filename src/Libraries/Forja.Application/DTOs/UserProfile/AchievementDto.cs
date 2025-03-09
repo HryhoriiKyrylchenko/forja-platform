@@ -1,3 +1,5 @@
+using Forja.Application.DTOs.Games;
+
 namespace Forja.Application.DTOs.UserProfile;
 
 public class AchievementDto
@@ -7,5 +9,5 @@ public class AchievementDto
     public string Description { get; set; } = string.Empty;
     public int Points { get; set; }
     public string? LogoUrl { get; set; } = string.Empty;
-    public Game Game { get; set; } = null!;
+    public GameDto Game { get; set; } = null!;
 }

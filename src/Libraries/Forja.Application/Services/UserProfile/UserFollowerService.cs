@@ -14,42 +14,67 @@ public class UserFollowerService : IUserFollowerService
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<UserFollowerDto>> GetAllAsync()
+    public async Task<List<UserFollowerDto>> GetAllAsync()
     {
         var userFollowers = await _userFollowerRepository.GetAllAsync();
-        return userFollowers.Select(MapToUserFollowerDto);
+        
+        userFollowers = userFollowers.ToList();
+        if (!userFollowers.Any())
+        {
+            return new List<UserFollowerDto>();
+        }
+        
+        return userFollowers.Select(UserProfileEntityToDtoMapper.MapToUserFollowerDto).ToList();
     }
     
     /// <inheritdoc />
     public async Task<UserFollowerDto?> GetByIdAsync(Guid id)
     {
+        if (id == Guid.Empty)
+        {
+            throw new ArgumentException("Id cannot be empty.", nameof(id));
+        }
+        
         var userFollower = await _userFollowerRepository.GetByIdAsync(id);
-        return userFollower == null ? null : MapToUserFollowerDto(userFollower);
+        
+        return userFollower == null ? null : UserProfileEntityToDtoMapper.MapToUserFollowerDto(userFollower);
     }
 
     /// <inheritdoc />
-    public async Task<UserFollowerDto> AddAsync(Guid followerId, Guid followedId)
+    public async Task<UserFollowerDto?> AddAsync(UserFollowerCreateRequest request)
     {
+        if (!UserProfileRequestsValidator.ValidateUserFollowerCreateRequest(request))
+        {
+            throw new ArgumentException("Invalid request.", nameof(request));
+        }
+        
         var userFollower = new UserFollower
         {
             Id = Guid.NewGuid(),
-            FollowerId = followerId,
-            FollowedId = followedId
+            FollowerId = request.FollowerId,
+            FollowedId = request.FollowedId
         };
 
         var createdUserFollower = await _userFollowerRepository.AddAsync(userFollower);
-        return MapToUserFollowerDto(createdUserFollower);
+        return createdUserFollower == null ? null : UserProfileEntityToDtoMapper.MapToUserFollowerDto(createdUserFollower);
     }
 
     /// <inheritdoc />
-    public async Task UpdateAsync(Guid id, Guid followerId, Guid followedId)
+    public async Task UpdateAsync(UserFollowerUpdateRequest request)
     {
-        var userFollower = await _userFollowerRepository.GetByIdAsync(id);
+        if (!UserProfileRequestsValidator.ValidateUserFollowerUpdateRequest(request))
+        {
+            throw new ArgumentException("Invalid request.", nameof(request));
+        }
+        
+        var userFollower = await _userFollowerRepository.GetByIdAsync(request.Id);
         if (userFollower == null)
-            throw new KeyNotFoundException($"UserFollower with ID {id} not found.");
-
-        userFollower.FollowerId = followerId;
-        userFollower.FollowedId = followedId;
+        {
+            throw new KeyNotFoundException($"UserFollower with ID {request.Id} not found.");
+        }
+            
+        userFollower.FollowerId = request.FollowerId;
+        userFollower.FollowedId = request.FollowedId;
 
         await _userFollowerRepository.UpdateAsync(userFollower);
     }
@@ -57,37 +82,35 @@ public class UserFollowerService : IUserFollowerService
     /// <inheritdoc />
     public async Task DeleteAsync(Guid id)
     {
+        if (id == Guid.Empty)
+        {
+            throw new ArgumentException("Id cannot be empty.", nameof(id));
+        }
+        
         await _userFollowerRepository.DeleteAsync(id);
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<UserFollowerDto>> GetFollowersByUserIdAsync(Guid userId)
+    public async Task<List<UserFollowerDto>> GetFollowersByUserIdAsync(Guid userId)
     {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("Id cannot be empty.", nameof(userId));
+        }
+        
         var followers = await _userFollowerRepository.GetFollowersByUserIdAsync(userId);
-        return followers.Select(MapToUserFollowerDto);
+        return followers.Select(UserProfileEntityToDtoMapper.MapToUserFollowerDto).ToList();
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<UserFollowerDto>> GetFollowedByUserIdAsync(Guid userId)
+    public async Task<List<UserFollowerDto>> GetFollowedByUserIdAsync(Guid userId)
     {
-        var followedUsers = await _userFollowerRepository.GetFollowedByUserIdAsync(userId);
-        return followedUsers.Select(MapToUserFollowerDto);
-    }
-
-    /// <summary>
-    /// Maps a UserFollower entity to a UserFollowerDTO.
-    /// </summary>
-    /// <param name="userFollower">The UserFollower entity to map.</param>
-    /// <returns>The mapped UserFollowerDTO.</returns>
-    private static UserFollowerDto MapToUserFollowerDto(UserFollower userFollower)
-    {
-        return new UserFollowerDto
+        if (userId == Guid.Empty)
         {
-            Id = userFollower.Id,
-            FollowerId = userFollower.FollowerId,
-            FollowerName = userFollower.Follower.Username,
-            FollowedId = userFollower.FollowedId,
-            FollowedName = userFollower.Followed.Username
-        };
+            throw new ArgumentException("Id cannot be empty.", nameof(userId));
+        }
+        
+        var followedUsers = await _userFollowerRepository.GetFollowedByUserIdAsync(userId);
+        return followedUsers.Select(UserProfileEntityToDtoMapper.MapToUserFollowerDto).ToList();
     }
 }

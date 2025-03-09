@@ -24,13 +24,13 @@ public interface IUserFollowerRepository
     /// </summary>
     /// <param name="userFollower">The UserFollower entity to add.</param>
     /// <returns>The added UserFollower entity.</returns>
-    Task<UserFollower> AddAsync(UserFollower userFollower);
+    Task<UserFollower?> AddAsync(UserFollower userFollower);
 
     /// <summary>
     /// Updates an existing UserFollower entry.
     /// </summary>
     /// <param name="userFollower">The UserFollower entity with updated values.</param>
-    Task UpdateAsync(UserFollower userFollower);
+    Task<UserFollower?> UpdateAsync(UserFollower userFollower);
 
     /// <summary>
     /// Deletes a UserFollower entry by its unique identifier.

@@ -18,24 +18,32 @@ public class ReviewService : IReviewService
     }
     
     /// <inheritdoc />
-    public async Task AddReviewAsync(string userKeycloakId, ReviewDto reviewDto)
+    public async Task<ReviewDto?> AddReviewAsync(ReviewCreateRequest request)
     {
+        if (!UserProfileRequestsValidator.ValidateReviewCreateRequest(request))
+        {
+            throw new ArgumentException("Review DTO is invalid.", nameof(request));
+        }
+        
         var review = new Review
         {
-            Id = reviewDto.Id,
-            UserId = reviewDto.UserId,
-            GameId = reviewDto.GameId,
-            Rating = reviewDto.Rating,
-            Comment = reviewDto.Comment,
-            CreatedAt = DateTime.UtcNow,
+            Id = Guid.NewGuid(),
+            UserId = request.UserId,
+            ProductId = request.ProductId,
+            PositiveRating = request.PositiveRating,
+            Comment = request.Comment,
+            CreatedAt = request.CreatedAt,
+            IsApproved = false,
             IsDeleted = false
         };
     
-        await _reviewRepository.AddAsync(review);
+        var result = await _reviewRepository.AddAsync(review);
+        
+        return result == null ? null : UserProfileEntityToDtoMapper.MapToReviewDto(result);
     }
 
     /// <inheritdoc />
-    public async Task<ReviewDto> GetReviewByIdAsync(Guid reviewId)
+    public async Task<ReviewDto?> GetReviewByIdAsync(Guid reviewId)
     {
         if (reviewId == Guid.Empty)
         {
@@ -44,49 +52,52 @@ public class ReviewService : IReviewService
 
         var review = await _reviewRepository.GetByIdAsync(reviewId);
 
-        if (review == null)
-        {
-            throw new KeyNotFoundException($"Review with ID '{reviewId}' was not found.");
-        }
-
-        return new ReviewDto
-        {
-            Id = review.Id,
-            UserId = review.UserId,
-            GameId = review.GameId,
-            Rating = review.Rating,
-            Comment = review.Comment
-        };
+        return review == null ? null : UserProfileEntityToDtoMapper.MapToReviewDto(review);
     }
 
     /// <inheritdoc />
-    public async Task UpdateReviewAsync(ReviewDto reviewDto)
+    public async Task<ReviewDto?> UpdateReviewAsync(ReviewUpdateRequest request)
     {
-        if (reviewDto == null)
+        if (!UserProfileRequestsValidator.ValidateReviewUpdateRequest(request))
         {
-            throw new ArgumentNullException(nameof(reviewDto), "Review cannot be null.");
+            throw new ArgumentException("Review DTO is invalid.", nameof(request));
         }
 
-        if (reviewDto.Id == Guid.Empty)
-        {
-            throw new ArgumentException("Review ID must be provided.", nameof(reviewDto.Id));
-        }
-
-        if (reviewDto.Rating < 1 || reviewDto.Rating > 5)
-        {
-            throw new ArgumentOutOfRangeException(nameof(reviewDto.Rating), "Review rating must be between 1 and 5.");
-        }
-
-        var existingReview = await _reviewRepository.GetByIdAsync(reviewDto.Id);
+        var existingReview = await _reviewRepository.GetByIdAsync(request.Id);
         if (existingReview == null)
         {
-            throw new InvalidOperationException($"Review with ID {reviewDto.Id} does not exist.");
+            throw new InvalidOperationException($"Review with ID {request.Id} does not exist.");
         }
 
-        existingReview.Rating = reviewDto.Rating;
-        existingReview.Comment = reviewDto.Comment;
+        existingReview.UserId = request.UserId;
+        existingReview.ProductId = request.ProductId;
+        existingReview.PositiveRating = request.PositiveRating;
+        existingReview.Comment = request.Comment;
 
         await _reviewRepository.UpdateAsync(existingReview);
+        
+        return UserProfileEntityToDtoMapper.MapToReviewDto(existingReview);
+    }
+
+    /// <inheritdoc />
+    public async Task<ReviewDto?> ApproveReviewAsync(ReviewApproveRequest request)
+    {
+        if (!UserProfileRequestsValidator.ValidateReviewApproveRequest(request))
+        {
+            throw new ArgumentException("Review DTO is invalid.", nameof(request));
+        }
+
+        var review = await _reviewRepository.GetByIdAsync(request.Id);
+        if (review == null)
+        {
+            throw new InvalidOperationException($"Review with ID {request.Id} does not exist.");
+        }
+        
+        review.IsApproved = true;
+        
+        await _reviewRepository.UpdateAsync(review);
+        
+        return UserProfileEntityToDtoMapper.MapToReviewDto(review);
     }
 
     /// <inheritdoc />
@@ -107,7 +118,7 @@ public class ReviewService : IReviewService
     }
 
     /// <inheritdoc />
-    public async Task<ReviewDto> RestoreReviewAsync(Guid reviewId)
+    public async Task<ReviewDto?> RestoreReviewAsync(Guid reviewId)
     {
         if (reviewId == Guid.Empty)
         {
@@ -116,14 +127,7 @@ public class ReviewService : IReviewService
         
         var review = await _reviewRepository.RestoreAsync(reviewId);
 
-        return new ReviewDto()
-        {
-            Id = review.Id,
-            UserId = review.UserId,
-            GameId = review.GameId,
-            Rating = review.Rating,
-            Comment = review.Comment
-        };
+        return review == null ? null : UserProfileEntityToDtoMapper.MapToReviewDto(review);
     }
 
     /// <inheritdoc />
@@ -148,14 +152,7 @@ public class ReviewService : IReviewService
             return new List<ReviewDto>();
         }
         
-        return userReviewsList.Select(review => new ReviewDto
-        {
-            Id = review.Id,
-            UserId = review.UserId,
-            GameId = review.GameId,
-            Rating = review.Rating,
-            Comment = review.Comment
-        }).ToList();
+        return userReviewsList.Select(UserProfileEntityToDtoMapper.MapToReviewDto).ToList();
     }
 
     /// <inheritdoc />
@@ -180,25 +177,18 @@ public class ReviewService : IReviewService
             return new List<ReviewDto>();
         }
         
-        return userReviewsList.Select(review => new ReviewDto
-        {
-            Id = review.Id,
-            UserId = review.UserId,
-            GameId = review.GameId,
-            Rating = review.Rating,
-            Comment = review.Comment
-        }).ToList();
+        return userReviewsList.Select(UserProfileEntityToDtoMapper.MapToReviewDto).ToList();
     }
 
     /// <inheritdoc />
-    public async Task<List<ReviewDto>> GetAllGameReviewsAsync(Guid gameId)
+    public async Task<List<ReviewDto>> GetAllProductReviewsAsync(Guid productId)
     {
-        if (gameId == Guid.Empty)
+        if (productId == Guid.Empty)
         {
-            throw new ArgumentException("Game ID cannot be an empty Guid.", nameof(gameId));
+            throw new ArgumentException("Game ID cannot be an empty Guid.", nameof(productId));
         }
         
-        var gameReviews = await _reviewRepository.GetAllByGameIdAsync(gameId);
+        var gameReviews = await _reviewRepository.GetAllByProductIdAsync(productId);
 
         var gameReviewsList = gameReviews.ToList();
         if (!gameReviewsList.Any())
@@ -206,25 +196,18 @@ public class ReviewService : IReviewService
             return new List<ReviewDto>();
         }
         
-        return gameReviewsList.Select(review => new ReviewDto
-        {
-            Id = review.Id,
-            UserId = review.UserId,
-            GameId = review.GameId,
-            Rating = review.Rating,
-            Comment = review.Comment
-        }).ToList();
+        return gameReviewsList.Select(UserProfileEntityToDtoMapper.MapToReviewDto).ToList();
     }
 
     /// <inheritdoc />
-    public async Task<List<ReviewDto>> GetAllDeletedGameReviewsAsync(Guid gameId)
+    public async Task<List<ReviewDto>> GetAllDeletedProductReviewsAsync(Guid productId)
     {
-        if (gameId == Guid.Empty)
+        if (productId == Guid.Empty)
         {
-            throw new ArgumentException("Game ID cannot be an empty Guid.", nameof(gameId));
+            throw new ArgumentException("Game ID cannot be an empty Guid.", nameof(productId));
         }
         
-        var deletedGameReviews = await _reviewRepository.GetAllDeletedByGameIdAsync(gameId);
+        var deletedGameReviews = await _reviewRepository.GetAllDeletedByProductIdAsync(productId);
 
         var deletedGameReviewsList = deletedGameReviews.ToList();
         if (!deletedGameReviewsList.Any())
@@ -232,14 +215,18 @@ public class ReviewService : IReviewService
             return new List<ReviewDto>();
         }
         
-        return deletedGameReviewsList.Select(review => new ReviewDto
+        return deletedGameReviewsList.Select(UserProfileEntityToDtoMapper.MapToReviewDto).ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<(int positive, int negative)> GetProductApprovedReviewsCountAsync(Guid productId)
+    {
+        if (productId == Guid.Empty)
         {
-            Id = review.Id,
-            UserId = review.UserId,
-            GameId = review.GameId,
-            Rating = review.Rating,
-            Comment = review.Comment
-        }).ToList();
+            throw new ArgumentException("Game ID cannot be an empty Guid.", nameof(productId));
+        }
+        
+        return await _reviewRepository.GetProductApprovedReviewsCountAsync(productId);
     }
 
     /// <inheritdoc />
@@ -253,14 +240,7 @@ public class ReviewService : IReviewService
             return new List<ReviewDto>();
         }
         
-        return allReviewsList.Select(review => new ReviewDto
-        {
-            Id = review.Id,
-            UserId = review.UserId,
-            GameId = review.GameId,
-            Rating = review.Rating,
-            Comment = review.Comment
-        }).ToList();
+        return allReviewsList.Select(UserProfileEntityToDtoMapper.MapToReviewDto).ToList();
     }
     
     /// <inheritdoc />
@@ -274,14 +254,7 @@ public class ReviewService : IReviewService
             return new List<ReviewDto>();
         }
         
-        return notApprovedReviewsList.Select(review => new ReviewDto
-        {
-            Id = review.Id,
-            UserId = review.UserId,
-            GameId = review.GameId,
-            Rating = review.Rating,
-            Comment = review.Comment
-        }).ToList();
+        return notApprovedReviewsList.Select(UserProfileEntityToDtoMapper.MapToReviewDto).ToList();
     }
 
     /// <inheritdoc />
@@ -295,13 +268,6 @@ public class ReviewService : IReviewService
             return new List<ReviewDto>();
         }
         
-        return allDeletedReviewsList.Select(review => new ReviewDto
-        {
-            Id = review.Id,
-            UserId = review.UserId,
-            GameId = review.GameId,
-            Rating = review.Rating,
-            Comment = review.Comment
-        }).ToList();
+        return allDeletedReviewsList.Select(UserProfileEntityToDtoMapper.MapToReviewDto).ToList();
     }
 }

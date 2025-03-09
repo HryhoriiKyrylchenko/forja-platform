@@ -16,34 +16,33 @@ public class AchievementService : IAchievementService
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
     }
     
+    #region Achievement Methods
+    
     /// <inheritdoc />
-    public async Task AddAchievementAsync(string userKeycloakId, AchievementDto achievementDto)
+    public async Task<AchievementDto> AddAchievementAsync(AchievementCreateRequest request)
     {
-        if (string.IsNullOrWhiteSpace(userKeycloakId))
+        if (!UserProfileRequestsValidator.ValidateAchievementCreateRequest(request))
         {
-            throw new ArgumentNullException(nameof(userKeycloakId), "User Keycloak ID cannot be null or empty.");
-        }
-
-        if (!ApplicationDtoValidator.ValidateAchievementDto(achievementDto))
-        {
-            throw new ArgumentException("Achievement DTO is invalid.", nameof(achievementDto));
+            throw new ArgumentException("Achievement request is invalid.", nameof(request));
         }
         
         var achievement = new Achievement()
         {
-            Id = achievementDto.Id,
-            GameId = achievementDto.Game.Id,
-            Name = achievementDto.Name,
-            Description = achievementDto.Description,
-            Points = achievementDto.Points,
-            LogoUrl = achievementDto.LogoUrl
+            Id = Guid.NewGuid(),
+            GameId = request.GameId,
+            Name = request.Name,
+            Description = request.Description,
+            Points = request.Points,
+            LogoUrl = request.LogoUrl
         };
     
         await _achievementRepository.AddAsync(achievement);
+        
+        return UserProfileEntityToDtoMapper.MapToAchievementDto(achievement);
     }
 
     /// <inheritdoc />
-    public async Task<AchievementDto> GetAchievementByIdAsync(Guid achievementId)
+    public async Task<AchievementDto?> GetAchievementByIdAsync(Guid achievementId)
     {
         if (achievementId == Guid.Empty)
         {
@@ -51,51 +50,34 @@ public class AchievementService : IAchievementService
         }
         
         var achievement = await _achievementRepository.GetByIdAsync(achievementId);
-        if (achievement == null)
-        {
-            throw new KeyNotFoundException($"Achievement with ID '{achievementId}' was not found.");
-        }
 
-        return new AchievementDto()
-        {
-            Id = achievement.Id,
-            Name = achievement.Name,
-            Description = achievement.Description,
-            Points = achievement.Points,
-            LogoUrl = achievement.LogoUrl,
-            Game = achievement.Game
-        };
+        return achievement == null ? null : UserProfileEntityToDtoMapper.MapToAchievementDto(achievement);
     }
 
     /// <inheritdoc />
-    public async Task UpdateAchievementAsync(AchievementDto achievementDto)
+    public async Task UpdateAchievementAsync(AchievementUpdateRequest request)
     {
-        if (achievementDto == null)
+        if (request == null)
         {
-            throw new ArgumentNullException(nameof(achievementDto), "Achievement cannot be null.");
+            throw new ArgumentNullException(nameof(request), "Achievement cannot be null.");
         }
         
-        if (!ApplicationDtoValidator.ValidateAchievementDto(achievementDto))
+        if (!UserProfileRequestsValidator.ValidateAchievementUpdateRequest(request))
         {
-            throw new ArgumentException("Achievement DTO is invalid.", nameof(achievementDto));
-        }
-
-        if (achievementDto.Id == Guid.Empty)
-        {
-            throw new ArgumentException("Achievement ID must be provided.", nameof(achievementDto.Id));
+            throw new ArgumentException("Achievement request is invalid.", nameof(request));
         }
         
-        var existingAchievement = await _achievementRepository.GetByIdAsync(achievementDto.Id);
+        var existingAchievement = await _achievementRepository.GetByIdAsync(request.Id);
         if (existingAchievement == null)
         {
-            throw new InvalidOperationException($"Achievement with ID {achievementDto.Id} does not exist.");
+            throw new InvalidOperationException($"Achievement with ID {request.Id} does not exist.");
         }
         
-        existingAchievement.Name = achievementDto.Name;
-        existingAchievement.Description = achievementDto.Description;
-        existingAchievement.Points = achievementDto.Points;
-        existingAchievement.LogoUrl = achievementDto.LogoUrl;
-        existingAchievement.GameId = achievementDto.Game.Id;
+        existingAchievement.Name = request.Name;
+        existingAchievement.Description = request.Description;
+        existingAchievement.Points = request.Points;
+        existingAchievement.LogoUrl = request.LogoUrl;
+        existingAchievement.GameId = request.GameId;
         
         await _achievementRepository.UpdateAsync(existingAchievement);
     }
@@ -127,15 +109,7 @@ public class AchievementService : IAchievementService
         
         var achievement = await _achievementRepository.RestoreAsync(achievementId);
         
-        return new AchievementDto()
-        {
-            Id = achievement.Id,
-            Name = achievement.Name,
-            Description = achievement.Description,
-            Points = achievement.Points,
-            LogoUrl = achievement.LogoUrl,
-            Game = achievement.Game
-        };
+        return UserProfileEntityToDtoMapper.MapToAchievementDto(achievement);
     }
 
     /// <inheritdoc />
@@ -154,16 +128,7 @@ public class AchievementService : IAchievementService
             return new List<AchievementDto>();
         }
         
-        return achievements.Select(achievement => new AchievementDto()
-            {
-                Id = achievement.Id,
-                Name = achievement.Name,
-                Description = achievement.Description,
-                Points = achievement.Points,
-                LogoUrl = achievement.LogoUrl,
-                Game = achievement.Game
-            }
-        ).ToList();
+        return achievements.Select(UserProfileEntityToDtoMapper.MapToAchievementDto).ToList();
     }
 
     /// <inheritdoc />
@@ -176,16 +141,7 @@ public class AchievementService : IAchievementService
         
         var deletedGameAchievements = await _achievementRepository.GetAllDeletedByGameIdAsync(gameId);
 
-        return deletedGameAchievements.Select(achievement => new AchievementDto()
-            {
-                Id = achievement.Id,
-                Name = achievement.Name,
-                Description = achievement.Description,
-                Points = achievement.Points,
-                LogoUrl = achievement.LogoUrl,
-                Game = achievement.Game
-            }
-        ).ToList();
+        return deletedGameAchievements.Select(UserProfileEntityToDtoMapper.MapToAchievementDto).ToList();
     }
 
     /// <inheritdoc />
@@ -199,15 +155,7 @@ public class AchievementService : IAchievementService
             return new List<AchievementDto>();
         }
         
-        return achievements.Select(achievement => new AchievementDto()
-        {
-            Id = achievement.Id,
-            Name = achievement.Name,
-            Description = achievement.Description,
-            Points = achievement.Points,
-            LogoUrl = achievement.LogoUrl,
-            Game = achievement.Game
-        }).ToList();
+        return achievements.Select(UserProfileEntityToDtoMapper.MapToAchievementDto).ToList();
     }
 
     /// <inheritdoc />
@@ -221,38 +169,36 @@ public class AchievementService : IAchievementService
             return new List<AchievementDto>();
         }
         
-        return achievements.Select(achievement => new AchievementDto()
-        {
-            Id = achievement.Id,
-            Name = achievement.Name,
-            Description = achievement.Description,
-            Points = achievement.Points,
-            LogoUrl = achievement.LogoUrl,
-            Game = achievement.Game
-        }).ToList();
+        return achievements.Select(UserProfileEntityToDtoMapper.MapToAchievementDto).ToList();
     }
     
+    #endregion
+
+    #region UserAchievement Methods
+    
     /// <inheritdoc />
-    public async Task AddUserAchievementAsync(UserAchievementDto userAchievementDto)
+    public async Task<UserAchievementDto> AddUserAchievementAsync(UserAchievementCreateRequest request)
     {
-        if (!ApplicationDtoValidator.ValidateUserAchievementDto(userAchievementDto))
+        if (!UserProfileRequestsValidator.ValidateUserAchievementCreateRequest(request))
         {
-            throw new ArgumentException("User achievement DTO is invalid.", nameof(userAchievementDto));
+            throw new ArgumentException("User achievement DTO is invalid.", nameof(request));
         }
 
         var userAchievement = new UserAchievement()
         {
-            Id = userAchievementDto.Id,
-            UserId = userAchievementDto.User.Id,
-            AchievementId = userAchievementDto.Achievement.Id,
-            AchievedAt = userAchievementDto.AchievedAt
+            Id = Guid.NewGuid(),
+            UserId = request.UserId,
+            AchievementId = request.AchievementId,
+            AchievedAt = request.AchievedAt
         };
         
         await _userAchievementRepository.AddAsync(userAchievement);
+        
+        return UserProfileEntityToDtoMapper.MapToUserAchievementDto(userAchievement);
     }
 
     /// <inheritdoc />
-    public async Task<UserAchievementDto> GetUserAchievementByIdAsync(Guid userAchievementId)
+    public async Task<UserAchievementDto?> GetUserAchievementByIdAsync(Guid userAchievementId)
     {
         if (userAchievementId == Guid.Empty)
         {
@@ -260,37 +206,27 @@ public class AchievementService : IAchievementService
         }
         
         var userAchievement = await _userAchievementRepository.GetByIdAsync(userAchievementId);
-        if (userAchievement == null)
-        {
-            throw new KeyNotFoundException($"User achievement with ID '{userAchievementId}' was not found.");
-        }
 
-        return new UserAchievementDto()
-        {
-            Id = userAchievement.Id,
-            User = userAchievement.User,
-            Achievement = userAchievement.Achievement,
-            AchievedAt = userAchievement.AchievedAt
-        };
+        return userAchievement == null ? null : UserProfileEntityToDtoMapper.MapToUserAchievementDto(userAchievement);
     }
 
     /// <inheritdoc />
-    public async Task UpdateUserAchievement(UserAchievementDto userAchievementDto)
+    public async Task UpdateUserAchievement(UserAchievementUpdateRequest request)
     {
-        if (!ApplicationDtoValidator.ValidateUserAchievementDto(userAchievementDto))
+        if (!UserProfileRequestsValidator.ValidateUserAchievementUpdateRequest(request))
         {
-            throw new ArgumentException("User achievement DTO is invalid.", nameof(userAchievementDto));
+            throw new ArgumentException("User achievement request is invalid.", nameof(request));
         }
         
-        var userAchievement = await _userAchievementRepository.GetByIdAsync(userAchievementDto.Id);
+        var userAchievement = await _userAchievementRepository.GetByIdAsync(request.Id);
         if (userAchievement == null)
         {
-            throw new InvalidOperationException($"User achievement with ID {userAchievementDto.Id} does not exist.");
+            throw new InvalidOperationException($"User achievement with ID {request.Id} does not exist.");
         }
         
-        userAchievement.AchievedAt = userAchievementDto.AchievedAt;
-        userAchievement.UserId = userAchievementDto.User.Id;
-        userAchievement.AchievementId = userAchievementDto.Achievement.Id;
+        userAchievement.AchievedAt = request.AchievedAt;
+        userAchievement.UserId = request.UserId;
+        userAchievement.AchievementId = request.AchievementId;
         
         await _userAchievementRepository.UpdateAsync(userAchievement);
     }
@@ -323,13 +259,7 @@ public class AchievementService : IAchievementService
             return new List<UserAchievementDto>();
         }
         
-        return userAchievements.Select(userAchievement => new UserAchievementDto()
-        {
-            Id = userAchievement.Id,
-            User = userAchievement.User,
-            Achievement = userAchievement.Achievement,
-            AchievedAt = userAchievement.AchievedAt
-        }).ToList();
+        return userAchievements.Select(UserProfileEntityToDtoMapper.MapToUserAchievementDto).ToList();
     }
 
     /// <inheritdoc />
@@ -354,13 +284,7 @@ public class AchievementService : IAchievementService
             return new List<UserAchievementDto>();
         }
         
-        return userAchievements.Select(userAchievement => new UserAchievementDto()
-        {
-            Id = userAchievement.Id,
-            User = userAchievement.User,
-            Achievement = userAchievement.Achievement,
-            AchievedAt = userAchievement.AchievedAt
-        }).ToList();
+        return userAchievements.Select(UserProfileEntityToDtoMapper.MapToUserAchievementDto).ToList();
     }
 
     /// <inheritdoc />
@@ -379,12 +303,8 @@ public class AchievementService : IAchievementService
             return new List<UserAchievementDto>();
         }
         
-        return userAchievements.Select(userAchievement => new UserAchievementDto()
-        {
-            Id = userAchievement.Id,
-            User = userAchievement.User,
-            Achievement = userAchievement.Achievement,
-            AchievedAt = userAchievement.AchievedAt
-        }).ToList();
+        return userAchievements.Select(UserProfileEntityToDtoMapper.MapToUserAchievementDto).ToList();
     }
+    
+    #endregion
 }

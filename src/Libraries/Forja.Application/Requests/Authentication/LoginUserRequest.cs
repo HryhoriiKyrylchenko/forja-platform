@@ -1,10 +1,10 @@
-namespace Forja.Application.DTOs.UserRegistration;
+namespace Forja.Application.Requests.Authentication;
 
 /// <summary>
 /// Represents a command for logging in a user by providing email and password.
 /// This command is used to authenticate users and generate authentication tokens.
 /// </summary>
-public class LoginUserCommand
+public class LoginUserRequest
 {
     /// <summary>
     /// Gets or sets the email address of the user attempting to log in.

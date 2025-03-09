@@ -24,12 +24,22 @@ public interface IGameSaveRepository
     /// <returns>A Task representing the asynchronous operation. The Task result contains the GameSave entity if found, or null if not found.</returns>
     Task<GameSave?> GetByIdAsync(Guid id);
 
+
+    /// <summary>
+    /// Asynchronously retrieves a filtered list of game saves from the repository based on the provided criteria.
+    /// </summary>
+    /// <param name="libraryGameId">Optional identifier of the library game to filter the game saves.</param>
+    /// <param name="userId">Optional identifier of the user to filter the game saves.</param>
+    /// <returns>A task that represents the asynchronous operation.
+    /// The task result contains a list of game saves matching the provided filter criteria.</returns>
+    Task<List<GameSave>> GetAllByFilterAsync(Guid? libraryGameId, Guid? userId);
+
     /// <summary>
     /// Adds a new game save entity to the data store.
     /// </summary>
     /// <param name="gameSave">The <see cref="GameSave"/> object to be added.</param>
     /// <returns>A task representing the asynchronous operation. The task result contains the added <see cref="GameSave"/> entity.</returns>
-    Task<GameSave> AddAsync(GameSave gameSave);
+    Task<GameSave?> AddAsync(GameSave gameSave);
 
     /// <summary>
     /// Updates an existing game save entry in the data store.
@@ -37,7 +47,7 @@ public interface IGameSaveRepository
     /// <param name="gameSave">The game save entity to update.</param>
     /// <returns>The updated game save entity.</returns>
     /// <exception cref="ArgumentNullException">Thrown if the provided game save entity is null.</exception>
-    Task<GameSave> UpdateAsync(GameSave gameSave);
+    Task<GameSave?> UpdateAsync(GameSave gameSave);
 
     /// <summary>
     /// Deletes a GameSave entity with the specified identifier from the data store.

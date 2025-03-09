@@ -24,13 +24,13 @@ public interface IUserWishListRepository
     /// </summary>
     /// <param name="userWishList">The UserWishList entity to add.</param>
     /// <returns>The added UserWishList entity.</returns>
-    Task<UserWishList> AddAsync(UserWishList userWishList);
+    Task<UserWishList?> AddAsync(UserWishList userWishList);
 
     /// <summary>
     /// Updates an existing UserWishList entry.
     /// </summary>
     /// <param name="userWishList">The UserWishList entity with updated values.</param>
-    Task UpdateAsync(UserWishList userWishList);
+    Task<UserWishList?> UpdateAsync(UserWishList userWishList);
 
     /// <summary>
     /// Deletes a UserWishList entry by its unique identifier.

@@ -1,4 +1,4 @@
-namespace Forja.API.DTOs;
+namespace Forja.Application.Requests.Authentication;
 
 /// <summary>
 /// Represents a request to reset a user's password.

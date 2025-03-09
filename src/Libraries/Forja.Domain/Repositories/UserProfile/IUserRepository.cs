@@ -55,6 +55,16 @@ public interface IUserRepository
     Task<User?> GetByEmailAsync(string email);
 
     /// <summary>
+    /// Asynchronously retrieves a deleted user by their email address.
+    /// </summary>
+    /// <param name="email">The email address of the deleted user to retrieve.</param>
+    /// <returns>
+    /// A task representing the asynchronous operation, containing the deleted user entity if found,
+    /// or null if no matching deleted user exists.
+    /// </returns>
+    Task<User?> GetDeletedByEmailAsync(string email);
+
+    /// <summary>
     /// Retrieves all users asynchronously from the data source.
     /// </summary>
     /// <returns>A task representing the asynchronous operation. The task result contains an enumerable of <see cref="User"/> objects.</returns>
@@ -67,20 +77,24 @@ public interface IUserRepository
     /// A task representing the asynchronous operation, containing a collection of soft-deleted user entities.
     /// </returns>
     Task<IEnumerable<User>> GetAllDeletedAsync();
+    
+    /// <summary>
+    /// Asynchronously adds a new user entity to the repository.
+    /// </summary>
+    /// <param name="user">The user entity to add.</param>
+    /// <returns>
+    /// A task representing the asynchronous operation, containing the added user entity with populated data from the repository.
+    /// </returns>
+    Task<User?> AddAsync(User user);
 
     /// <summary>
-    /// Asynchronously adds a new user to the repository.
+    /// Updates an existing user entity asynchronously.
     /// </summary>
-    /// <param name="user">The user entity to be added.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    Task AddAsync(User user);
-
-    /// <summary>
-    /// Updates the given user entity in the repository.
-    /// </summary>
-    /// <param name="user">The user entity to be updated.</param>
-    /// <returns>A task that represents the asynchronous update operation.</returns>
-    Task UpdateAsync(User user);
+    /// <param name="user">The user entity containing the updated information.</param>
+    /// <returns>
+    /// A task representing the asynchronous operation, containing the updated user entity.
+    /// </returns>
+    Task<User?> UpdateAsync(User user);
 
     /// <summary>
     /// Deletes a user asynchronously by their unique identifier.
@@ -93,10 +107,11 @@ public interface IUserRepository
     /// <summary>
     /// Restores a soft-deleted user by their unique identifier.
     /// </summary>
-    /// <param name="userId">The unique identifier of the user to restore.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    Task RestoreAsync(Guid userId);
-
+    /// <param name="userId">The unique identifier (GUID) of the user to restore.</param>
+    /// <returns>
+    /// A task representing the asynchronous operation, containing the restored user entity.
+    /// </returns>
+    Task<User?> RestoreAsync(Guid userId);
 
     /// <summary>
     /// Checks if a user with the specified username exists in the system.
@@ -104,4 +119,13 @@ public interface IUserRepository
     /// <param name="username">The username to check for existence.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a boolean indicating whether a user with the specified username exists.</returns>
     Task<bool> ExistsByUsernameAsync(string username);
+
+    /// <summary>
+    /// Asynchronously generates a unique username based on a given base username.
+    /// </summary>
+    /// <param name="baseUsername">The base username to use for generating a unique username.</param>
+    /// <returns>
+    /// A task representing the asynchronous operation, containing the generated unique username as a string.
+    /// </returns>
+    Task<string> GenerateUniqueUsernameAsync(string baseUsername);
 }

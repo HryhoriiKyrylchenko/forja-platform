@@ -17,7 +17,7 @@ public class GameSaveService : IGameSaveService
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<GameSaveDto>> GetAllAsync()
+    public async Task<List<GameSaveDto>> GetAllAsync()
     {
         var gameSaves = await _gameSaveRepository.GetAllAsync();
         if (gameSaves == null)
@@ -25,15 +25,7 @@ public class GameSaveService : IGameSaveService
             throw new InvalidOperationException("No game saves found.");
         }
 
-        return gameSaves.Select(gs => new GameSaveDto
-        {
-            Id = gs.Id,
-            SaveFileUrl = gs.SaveFileUrl,
-            CreatedAt = gs.CreatedAt,
-            LastUpdatedAt = gs.LastUpdatedAt,
-            UserId = gs.UserId,
-            UserLibraryGameId = gs.UserLibraryGameId
-        });
+        return gameSaves.Select(UserProfileEntityToDtoMapper.MapToGameSaveDto).ToList();
     }
 
     /// <inheritdoc />
@@ -46,62 +38,63 @@ public class GameSaveService : IGameSaveService
         
         var gameSave = await _gameSaveRepository.GetByIdAsync(id);
 
-        if (gameSave == null)
-        {
-            throw new InvalidOperationException("Game save not found.");
-        }
-
-        return new GameSaveDto
-        {
-            Id = gameSave.Id,
-            SaveFileUrl = gameSave.SaveFileUrl,
-            CreatedAt = gameSave.CreatedAt,
-            LastUpdatedAt = gameSave.LastUpdatedAt,
-            UserId = gameSave.UserId,
-            UserLibraryGameId = gameSave.UserLibraryGameId
-        };
+        return gameSave == null ? null : UserProfileEntityToDtoMapper.MapToGameSaveDto(gameSave);
     }
 
     /// <inheritdoc />
-    public async Task<GameSave> AddAsync(GameSaveDto gameSaveDto)
+    public async Task<List<GameSaveDto>> GetAllByFilterAsync(Guid? libraryGameId, Guid? userId)
     {
-        if (gameSaveDto == null)
+        var gameSaves = await _gameSaveRepository.GetAllByFilterAsync(libraryGameId, userId);
+        
+        return gameSaves.Select(UserProfileEntityToDtoMapper.MapToGameSaveDto).ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<GameSaveDto?> AddAsync(GameSaveCreateRequest request)
+    {
+        if (!UserProfileRequestsValidator.ValidateGameSaveCreateRequest(request))
         {
-            throw new ArgumentNullException(nameof(gameSaveDto));
+            throw new ArgumentNullException(nameof(request));
         }
 
         var gameSave = new GameSave
         {
-            Id = gameSaveDto.Id,
-            UserId = gameSaveDto.UserId,
-            UserLibraryGameId = gameSaveDto.UserLibraryGameId,
-            SaveFileUrl = gameSaveDto.SaveFileUrl,
-            CreatedAt = gameSaveDto.CreatedAt
+            Id = Guid.NewGuid(),
+            Name = request.Name,
+            UserId = request.UserId,
+            UserLibraryGameId = request.UserLibraryGameId,
+            SaveFileUrl = request.SaveFileUrl,
+            CreatedAt = request.CreatedAt
         };
 
-        return await _gameSaveRepository.AddAsync(gameSave);
+        var result = await _gameSaveRepository.AddAsync(gameSave);
+        
+        return result == null ? null : UserProfileEntityToDtoMapper.MapToGameSaveDto(result);
     }
 
     /// <inheritdoc />
-    public async Task<GameSave> UpdateAsync(GameSaveDto gameSaveDto)
+    public async Task<GameSaveDto?> UpdateAsync(GameSaveUpdateRequest request)
     {
-        if (gameSaveDto == null)
+        if (!UserProfileRequestsValidator.ValidateGameSaveUpdateRequest(request))
         {
-            throw new ArgumentNullException(nameof(gameSaveDto));
+            throw new ArgumentNullException(nameof(request));
         }
         
-        var gameSave = await _gameSaveRepository.GetByIdAsync(gameSaveDto.Id);
+        var gameSave = await _gameSaveRepository.GetByIdAsync(request.Id);
         if (gameSave == null)
         {
             throw new InvalidOperationException("Game save not found.");
         }
         
-        gameSave.UserId = gameSaveDto.UserId;
-        gameSave.UserLibraryGameId = gameSaveDto.UserLibraryGameId;
-        gameSave.SaveFileUrl = gameSaveDto.SaveFileUrl;
-        gameSave.LastUpdatedAt = gameSaveDto.LastUpdatedAt;
+        gameSave.Name = request.Name;
+        gameSave.UserId = request.UserId;
+        gameSave.UserLibraryGameId = request.UserLibraryGameId;
+        gameSave.SaveFileUrl = request.SaveFileUrl;
+        gameSave.LastUpdatedAt = request.LastUpdatedAt;
 
-        return await _gameSaveRepository.UpdateAsync(gameSave);
+        var result = await _gameSaveRepository.UpdateAsync(gameSave);
+        
+        return result == null ? null : UserProfileEntityToDtoMapper.MapToGameSaveDto(result);
     }
 
     /// <inheritdoc />
