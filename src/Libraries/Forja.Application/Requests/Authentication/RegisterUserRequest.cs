@@ -1,4 +1,4 @@
-namespace Forja.Application.DTOs.UserRegistration;
+namespace Forja.Application.Requests.Authentication;
 
 /// <summary>
 /// Represents a command for registering a new user in the application.
@@ -8,7 +8,7 @@ namespace Forja.Application.DTOs.UserRegistration;
 /// including the user's email and password. It is used as input data for
 /// user registration processes in the application.
 /// </remarks>
-public class RegisterUserCommand
+public class RegisterUserRequest
 {
     /// <summary>
     /// Represents the email address of a user in the registration process.

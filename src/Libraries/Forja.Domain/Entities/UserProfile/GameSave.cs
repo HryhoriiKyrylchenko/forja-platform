@@ -17,6 +17,16 @@ public class GameSave
     public Guid Id { get; set; }
 
     /// <summary>
+    /// Gets or sets the name of the saved game.
+    /// </summary>
+    /// <remarks>
+    /// This property represents a user-defined name for the GameSave to help identify the save or provide context within the user's library.
+    /// </remarks>
+    [Required]
+    [MaxLength(100)]
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
     /// Represents the unique identifier of the user associated with the game save.
     /// </summary>
     /// <remarks>

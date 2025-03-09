@@ -53,29 +53,48 @@ public class ReviewRepository : IReviewRepository
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<Review>> GetAllByGameIdAsync(Guid gameId)
+    public async Task<(int positive, int negative)> GetProductApprovedReviewsCountAsync(Guid productId)
     {
-        if (gameId == Guid.Empty)
+        if (productId == Guid.Empty)
         {
-            throw new ArgumentException("Game id cannot be empty.", nameof(gameId));
+            throw new ArgumentException("Product id cannot be empty.", nameof(productId));
+        }
+        
+        var positive = await _reviews
+            .Where(r => r.ProductId == productId && !r.IsDeleted && r.IsApproved && r.PositiveRating)
+            .CountAsync();
+        
+        var negative = await _reviews
+            .Where(r => r.ProductId == productId && !r.IsDeleted && r.IsApproved && !r.PositiveRating)
+            .CountAsync();
+        
+        return (positive, negative);
+    }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<Review>> GetAllByProductIdAsync(Guid productId)
+    {
+        if (productId == Guid.Empty)
+        {
+            throw new ArgumentException("Game id cannot be empty.", nameof(productId));
         }
         
         return await _reviews
-            .Where(r => r.GameId == gameId)
+            .Where(r => r.ProductId == productId)
             .Where(r => !r.IsDeleted)
             .ToListAsync();
     }
     
     /// <inheritdoc />
-    public async Task<IEnumerable<Review>> GetAllDeletedByGameIdAsync(Guid gameId)
+    public async Task<IEnumerable<Review>> GetAllDeletedByProductIdAsync(Guid productId)
     {
-        if (gameId == Guid.Empty)
+        if (productId == Guid.Empty)
         {
-            throw new ArgumentException("Game id cannot be empty.", nameof(gameId));
+            throw new ArgumentException("Game id cannot be empty.", nameof(productId));
         }
         
         return await _reviews
-            .Where(r => r.GameId == gameId)
+            .Where(r => r.ProductId == productId)
             .Where(r => r.IsDeleted)
             .ToListAsync();
     }
@@ -89,27 +108,31 @@ public class ReviewRepository : IReviewRepository
     }
 
     /// <inheritdoc />
-    public async Task AddAsync(Review review)
+    public async Task<Review?> AddAsync(Review review)
     {
-        if (!ProjectModelValidator.ValidateReview(review))
+        if (!UserProfileModelValidator.ValidateReview(review))
         {
             throw new ArgumentException("Review is not valid.", nameof(review));
         }
         
         await _reviews.AddAsync(review);
         await _context.SaveChangesAsync();
+        
+        return review;
     }
 
     /// <inheritdoc />
-    public async Task UpdateAsync(Review review)
+    public async Task<Review?> UpdateAsync(Review review)
     {
-        if (!ProjectModelValidator.ValidateReview(review))
+        if (!UserProfileModelValidator.ValidateReview(review))
         {
             throw new ArgumentException("Review is not valid.", nameof(review));
         }
         
         _reviews.Update(review);
         await _context.SaveChangesAsync();
+        
+        return review;
     }
 
     /// <inheritdoc />
@@ -129,7 +152,7 @@ public class ReviewRepository : IReviewRepository
     }
 
     /// <inheritdoc />
-    public async Task<Review> RestoreAsync(Guid reviewId)
+    public async Task<Review?> RestoreAsync(Guid reviewId)
     {
         if (reviewId == Guid.Empty)
         {

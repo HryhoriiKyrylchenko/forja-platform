@@ -95,27 +95,31 @@ public class UserLibraryAddonRepository : IUserLibraryAddonRepository
     }
 
     /// <inheritdoc />
-    public async Task AddAsync(UserLibraryAddon userLibraryAddon)
+    public async Task<UserLibraryAddon?> AddAsync(UserLibraryAddon userLibraryAddon)
     {
-        if (!ProjectModelValidator.ValidateUserLibraryAddon(userLibraryAddon))
+        if (!UserProfileModelValidator.ValidateUserLibraryAddon(userLibraryAddon))
         {
             throw new ArgumentException("UserLibraryAddon is not valid.", nameof(userLibraryAddon));
         }
         
         await _userLibraryAddons.AddAsync(userLibraryAddon);
         await _context.SaveChangesAsync();
+
+        return userLibraryAddon;
     }
 
     /// <inheritdoc />
-    public async Task UpdateAsync(UserLibraryAddon userLibraryAddon)
+    public async Task<UserLibraryAddon?> UpdateAsync(UserLibraryAddon userLibraryAddon)
     {
-        if (!ProjectModelValidator.ValidateUserLibraryAddon(userLibraryAddon))
+        if (!UserProfileModelValidator.ValidateUserLibraryAddon(userLibraryAddon))
         {
             throw new ArgumentException("UserLibraryAddon is not valid.", nameof(userLibraryAddon));
         }
         
         _userLibraryAddons.Update(userLibraryAddon);
         await _context.SaveChangesAsync();
+        
+        return userLibraryAddon;
     }
 
     /// <inheritdoc />
@@ -135,7 +139,7 @@ public class UserLibraryAddonRepository : IUserLibraryAddonRepository
     }
 
     /// <inheritdoc />
-    public async Task<UserLibraryAddon> RestoreAsync(Guid userLibraryAddonId)
+    public async Task<UserLibraryAddon?> RestoreAsync(Guid userLibraryAddonId)
     {
         if (userLibraryAddonId == Guid.Empty)
         {

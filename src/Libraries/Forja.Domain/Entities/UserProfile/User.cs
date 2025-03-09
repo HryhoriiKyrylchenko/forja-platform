@@ -61,21 +61,25 @@ public class User : SoftDeletableEntity
     /// <summary>
     /// Gets or sets the gender of the user.
     /// </summary>
+    [MaxLength(10)]
     public string? Gender { get; set; }
 
     /// <summary>
     /// Gets or sets the country associated with the user.
     /// </summary>
+    [MaxLength(30)]
     public string? Country { get; set; }
 
     /// <summary>
     /// Gets or sets the city associated with the user.
     /// </summary>
+    [MaxLength(30)]
     public string? City { get; set; }
 
     /// <summary>
     /// Gets or sets a brief description provided by the user about themselves.
     /// </summary>
+    [MaxLength(500)]
     public string? SelfDescription { get; set; }
 
     /// <summary>
@@ -166,7 +170,7 @@ public class User : SoftDeletableEntity
     /// Gets or sets the collection of user white lists associated with the user.
     /// Virtual property for Entity Framework to handle related data.
     /// </summary>
-    public virtual ICollection<UserWishList> UserWhiteLists { get; set; } = [];
+    public virtual ICollection<UserWishList> UserWishLists { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the collection of game saves associated with the user.

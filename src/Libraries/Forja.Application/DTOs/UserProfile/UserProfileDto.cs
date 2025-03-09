@@ -117,6 +117,15 @@ public class UserProfileDto
     public bool ShowPersonalInfo { get; set; }
 
     /// <summary>
+    /// Gets or sets the date and time when the user profile was created.
+    /// </summary>
+    /// <remarks>
+    /// This property indicates the creation timestamp of the user profile, which can be used for tracking
+    /// and auditing purposes within the application.
+    /// </remarks>
+    public DateTime CreatedAt { get; set; }
+
+    /// <summary>
     /// Gets or sets the custom URL associated with the user profile.
     /// </summary>
     /// <remarks>

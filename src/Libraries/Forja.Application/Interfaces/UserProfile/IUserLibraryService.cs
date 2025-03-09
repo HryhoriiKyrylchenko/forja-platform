@@ -9,16 +9,16 @@ public interface IUserLibraryService
     /// <summary>
     /// Adds a game to the user's library.
     /// </summary>
-    /// <param name="userLibraryGameDto">The data transfer object that represents the game to be added to the user's library.</param>
+    /// <param name="request">The UserLibraryGameCreateRequest object that represents the game to be added to the user's library.</param>
     /// <returns>A Task representing the asynchronous operation.</returns>
-    Task AddUserLibraryGameAsync(UserLibraryGameDto userLibraryGameDto);
+    Task<UserLibraryGameDto?> AddUserLibraryGameAsync(UserLibraryGameCreateRequest request);
 
     /// <summary>
     /// Updates the details of a user's library game entry.
     /// </summary>
-    /// <param name="userLibraryGameDto">The data transfer object containing updated information for the user library game entry.</param>
+    /// <param name="request">The UserLibraryGameUpdateRequest object containing updated information for the user library game entry.</param>
     /// <returns>A Task representing the result of the asynchronous operation.</returns>
-    Task UpdateUserLibraryGameAsync(UserLibraryGameDto userLibraryGameDto);
+    Task<UserLibraryGameDto?> UpdateUserLibraryGameAsync(UserLibraryGameUpdateRequest request);
 
     /// <summary>
     /// Deletes the user library game associated with the specified ID.
@@ -32,21 +32,21 @@ public interface IUserLibraryService
     /// </summary>
     /// <param name="userLibraryGameId">The unique identifier of the user library game to restore.</param>
     /// <returns>A Task representing the result of the asynchronous operation. The task result contains the restored UserLibraryGameDto.</returns>
-    Task<UserLibraryGameDto> RestoreUserLibraryGameAsync(Guid userLibraryGameId);
+    Task<UserLibraryGameDto?> RestoreUserLibraryGameAsync(Guid userLibraryGameId);
 
     /// <summary>
     /// Retrieves the user library game associated with the specified ID.
     /// </summary>
     /// <param name="userLibraryGameId">The unique identifier of the user library game to retrieve.</param>
     /// <returns>A Task representing the result of the asynchronous operation. The task result contains the UserLibraryGameDto for the user library game associated with the specified ID.</returns>
-    Task<UserLibraryGameDto> GetUserLibraryGameByIdAsync(Guid userLibraryGameId);
+    Task<UserLibraryGameDto?> GetUserLibraryGameByIdAsync(Guid userLibraryGameId);
 
     /// <summary>
     /// Retrieves the deleted user library game associated with the specified ID.
     /// </summary>
     /// <param name="userLibraryGameId">The unique identifier of the deleted user library game to retrieve.</param>
     /// <returns>A Task representing the result of the asynchronous operation. The task result contains the UserLibraryGameDto for the deleted user library game associated with the specified ID.</returns>
-    Task<UserLibraryGameDto> GetDeletedUserLibraryGameByIdAsync(Guid userLibraryGameId);
+    Task<UserLibraryGameDto?> GetDeletedUserLibraryGameByIdAsync(Guid userLibraryGameId);
 
     /// <summary>
     /// Retrieves a list of all user library games.
@@ -63,31 +63,31 @@ public interface IUserLibraryService
     /// <summary>
     /// Retrieves all library games associated with the specified user's Keycloak ID.
     /// </summary>
-    /// <param name="userKeycloakId">The unique Keycloak ID of the user whose library games are to be retrieved.</param>
+    /// <param name="userId">The unique  ID of the user whose library games are to be retrieved.</param>
     /// <returns>A Task representing the result of the asynchronous operation. The task result contains a list of UserLibraryGameDto objects for the library games associated with the specified user's Keycloak ID.</returns>
-    Task<List<UserLibraryGameDto>> GetAllUserLibraryGamesByUserKeycloakIdAsync(string userKeycloakId);
+    Task<List<UserLibraryGameDto>> GetAllUserLibraryGamesByUserIdAsync(Guid userId);
 
     /// <summary>
     /// Retrieves all deleted user library games associated with the specified Keycloak ID.
     /// </summary>
-    /// <param name="userKeycloakId">The unique Keycloak ID of the user whose deleted library games are to be retrieved.</param>
+    /// <param name="userId">The unique ID of the user whose deleted library games are to be retrieved.</param>
     /// <returns>A Task representing the result of the asynchronous operation. The task result contains a list of UserLibraryGameDto objects for the deleted library games associated with the specified Keycloak ID.</returns>
-    Task<List<UserLibraryGameDto>> GetAllDeletedUserLibraryGamesByUserKeycloakIdAsync(string userKeycloakId);
+    Task<List<UserLibraryGameDto>> GetAllDeletedUserLibraryGamesByUserIdAsync(Guid userId);
     
     // UserLibraryAddonRepository
     /// <summary>
     /// Adds a new library addon to the user's library.
     /// </summary>
-    /// <param name="userLibraryAddonDto">The data transfer object representing the library addon to be added to the user's library.</param>
+    /// <param name="request">The UserLibraryAddonCreateRequest object representing the library addon to be added to the user's library.</param>
     /// <returns>A Task representing the asynchronous operation.</returns>
-    Task AddUserLibraryAddonAsync(UserLibraryAddonDto userLibraryAddonDto);
+    Task<UserLibraryAddonDto?> AddUserLibraryAddonAsync(UserLibraryAddonCreateRequest request);
 
     /// <summary>
     /// Updates the information of a user library addon with the provided details.
     /// </summary>
-    /// <param name="userLibraryAddonDto">The data transfer object containing the updated details of the user library addon.</param>
+    /// <param name="request">The UserLibraryAddonUpdateRequest object containing the updated details of the user library addon.</param>
     /// <returns>A Task representing the completion of the asynchronous operation.</returns>
-    Task UpdateUserLibraryAddonAsync(UserLibraryAddonDto userLibraryAddonDto);
+    Task<UserLibraryAddonDto?> UpdateUserLibraryAddonAsync(UserLibraryAddonUpdateRequest request);
 
     /// <summary>
     /// Deletes the library addon associated with the specified library addon ID.
@@ -101,21 +101,21 @@ public interface IUserLibraryService
     /// </summary>
     /// <param name="userLibraryAddonId">The unique identifier of the user library addon to restore.</param>
     /// <returns>A Task representing the asynchronous operation. The task result contains the restored UserLibraryAddonDto.</returns>
-    Task<UserLibraryAddonDto> RestoreUserLibraryAddonAsync(Guid userLibraryAddonId);
+    Task<UserLibraryAddonDto?> RestoreUserLibraryAddonAsync(Guid userLibraryAddonId);
 
     /// <summary>
     /// Retrieves the user library addon associated with the specified addon ID.
     /// </summary>
     /// <param name="userLibraryAddonId">The unique identifier of the user library addon to retrieve.</param>
     /// <returns>A Task representing the result of the asynchronous operation. The task result contains the UserLibraryAddonDto object associated with the specified addon ID.</returns>
-    Task<UserLibraryAddonDto> GetUserLibraryAddonByIdAsync(Guid userLibraryAddonId);
+    Task<UserLibraryAddonDto?> GetUserLibraryAddonByIdAsync(Guid userLibraryAddonId);
 
     /// <summary>
     /// Retrieves the deleted user library addon associated with the specified ID.
     /// </summary>
     /// <param name="userLibraryAddonId">The unique identifier of the deleted user library addon to retrieve.</param>
     /// <returns>A Task representing the result of the asynchronous operation. The task result contains the UserLibraryAddonDto for the deleted addon associated with the specified ID.</returns>
-    Task<UserLibraryAddonDto> GetDeletedUserLibraryAddonByIdAsync(Guid userLibraryAddonId);
+    Task<UserLibraryAddonDto?> GetDeletedUserLibraryAddonByIdAsync(Guid userLibraryAddonId);
 
     /// <summary>
     /// Retrieves a list of all user library addons.

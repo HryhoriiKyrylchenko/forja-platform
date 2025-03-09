@@ -7,63 +7,59 @@ public class UserLibraryService : IUserLibraryService
 {
     private readonly IUserLibraryGameRepository _userLibraryGameRepository;
     private readonly IUserLibraryAddonRepository _userLibraryAddonRepository;
-    private readonly IUserRepository _userRepository;
 
-    public UserLibraryService(IUserLibraryGameRepository userLibraryGameRepository, IUserLibraryAddonRepository userLibraryAddonRepository, IUserRepository userRepository)
+    public UserLibraryService(IUserLibraryGameRepository userLibraryGameRepository, IUserLibraryAddonRepository userLibraryAddonRepository)
     {
         _userLibraryGameRepository = userLibraryGameRepository ?? throw new ArgumentNullException(nameof(userLibraryGameRepository));
         _userLibraryAddonRepository = userLibraryAddonRepository ?? throw new ArgumentNullException(nameof(userLibraryAddonRepository));
-        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
     }
     
-    /// <inheritdoc />
-    public async Task AddUserLibraryGameAsync(UserLibraryGameDto userLibraryGameDto)
-    {
-        if (userLibraryGameDto == null)
-        {
-            throw new ArgumentNullException(nameof(userLibraryGameDto), "User library game cannot be null.");
-        }
+    #region Games Methods
 
-        if (!ApplicationDtoValidator.ValidateUserLibraryGameDto(userLibraryGameDto))
+    /// <inheritdoc />
+    public async Task<UserLibraryGameDto?> AddUserLibraryGameAsync(UserLibraryGameCreateRequest request)
+    {
+        if (!UserProfileRequestsValidator.ValidateUserLibraryGameCreateRequest(request))
         {
-            throw new ArgumentException("User library game DTO is invalid.", nameof(userLibraryGameDto));
+            throw new ArgumentException("User library game create request is invalid.", nameof(request));
         }
         
         var userLibraryGame = new UserLibraryGame()
         {
-            Id = userLibraryGameDto.Id,
-            UserId = userLibraryGameDto.User.Id,
-            GameId = userLibraryGameDto.Game.Id,
-            PurchaseDate = userLibraryGameDto.PurchaseDate
+            Id = Guid.NewGuid(),
+            UserId = request.UserId,
+            GameId = request.GameId,
+            PurchaseDate = DateTime.UtcNow
         };
         
-        await _userLibraryGameRepository.AddAsync(userLibraryGame);
+        var result = await _userLibraryGameRepository.AddAsync(userLibraryGame);
+        
+        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(result);
     }
 
     /// <inheritdoc />
-    public async Task UpdateUserLibraryGameAsync(UserLibraryGameDto userLibraryGameDto)
+    public async Task<UserLibraryGameDto?> UpdateUserLibraryGameAsync(UserLibraryGameUpdateRequest request)
     {
-        if (userLibraryGameDto == null)
+       
+        if (!UserProfileRequestsValidator.ValidateUserLibraryGameUpdateRequest(request))
         {
-            throw new ArgumentNullException(nameof(userLibraryGameDto), "User library game cannot be null.");
+            throw new ArgumentException("User library game update request is invalid.", nameof(request));
         }
         
-        if (!ApplicationDtoValidator.ValidateUserLibraryGameDto(userLibraryGameDto))
-        {
-            throw new ArgumentException("User library game DTO is invalid.", nameof(userLibraryGameDto));
-        }
-        
-        var userLibraryGame = await _userLibraryGameRepository.GetByIdAsync(userLibraryGameDto.Id);
+        var userLibraryGame = await _userLibraryGameRepository.GetByIdAsync(request.Id);
         if (userLibraryGame == null)
         {
-            throw new InvalidOperationException($"User library game with ID {userLibraryGameDto.Id} does not exist.");
+            throw new InvalidOperationException($"User library game with ID {request.Id} does not exist.");
         }
         
-        userLibraryGame.PurchaseDate = userLibraryGameDto.PurchaseDate;
-        userLibraryGame.UserId = userLibraryGameDto.User.Id;
-        userLibraryGame.GameId = userLibraryGameDto.Game.Id;
+        userLibraryGame.UserId = request.UserId;
+        userLibraryGame.GameId = request.GameId;
+        userLibraryGame.TimePlayed = request.TimePlayed;
+        userLibraryGame.PurchaseDate = request.PurchaseDate;
         
-        await _userLibraryGameRepository.UpdateAsync(userLibraryGame);
+        var result = await _userLibraryGameRepository.UpdateAsync(userLibraryGame);
+        
+        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(result);
     }
 
     /// <inheritdoc />
@@ -84,25 +80,20 @@ public class UserLibraryService : IUserLibraryService
     }
 
     /// <inheritdoc />
-    public async Task<UserLibraryGameDto> RestoreUserLibraryGameAsync(Guid userLibraryGameId)
+    public async Task<UserLibraryGameDto?> RestoreUserLibraryGameAsync(Guid userLibraryGameId)
     {
         if (userLibraryGameId == Guid.Empty)
         {
             throw new ArgumentException("User library game ID cannot be an empty Guid.", nameof(userLibraryGameId));
         }
         
-        var userLibraryGame = await _userLibraryGameRepository.RestoreAsync(userLibraryGameId);
+        var result = await _userLibraryGameRepository.RestoreAsync(userLibraryGameId);
 
-        return new UserLibraryGameDto()
-        {
-            Id = userLibraryGame.Id,
-            User = userLibraryGame.User,
-            Game = userLibraryGame.Game,
-        };
+        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(result);
     }
 
     /// <inheritdoc />
-    public async Task<UserLibraryGameDto> GetUserLibraryGameByIdAsync(Guid userLibraryGameId)
+    public async Task<UserLibraryGameDto?> GetUserLibraryGameByIdAsync(Guid userLibraryGameId)
     {
         if (userLibraryGameId == Guid.Empty)
         {
@@ -110,22 +101,12 @@ public class UserLibraryService : IUserLibraryService
         }
         
         var userLibraryGame = await _userLibraryGameRepository.GetByIdAsync(userLibraryGameId);
-        if (userLibraryGame == null)
-        {
-            throw new KeyNotFoundException($"User library game with ID '{userLibraryGameId}' was not found.");
-        }
         
-        return new UserLibraryGameDto()
-        {
-            Id = userLibraryGame.Id,
-            User = userLibraryGame.User,
-            Game = userLibraryGame.Game,
-            PurchaseDate = userLibraryGame.PurchaseDate
-        };
+        return userLibraryGame == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(userLibraryGame);
     }
 
     /// <inheritdoc />
-    public async Task<UserLibraryGameDto> GetDeletedUserLibraryGameByIdAsync(Guid userLibraryGameId)
+    public async Task<UserLibraryGameDto?> GetDeletedUserLibraryGameByIdAsync(Guid userLibraryGameId)
     {
         if (userLibraryGameId == Guid.Empty)
         {
@@ -133,18 +114,8 @@ public class UserLibraryService : IUserLibraryService
         }
         
         var deletedUserLibraryGame = await _userLibraryGameRepository.GetDeletedByIdAsync(userLibraryGameId);
-        if (deletedUserLibraryGame == null)
-        {
-            throw new KeyNotFoundException($"User library game with ID '{userLibraryGameId}' was not found.");
-        }
         
-        return new UserLibraryGameDto()
-        {
-            Id = deletedUserLibraryGame.Id,
-            User = deletedUserLibraryGame.User,
-            Game = deletedUserLibraryGame.Game,
-            PurchaseDate = deletedUserLibraryGame.PurchaseDate
-        };
+        return deletedUserLibraryGame == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(deletedUserLibraryGame);
     }
 
     /// <inheritdoc />
@@ -158,13 +129,7 @@ public class UserLibraryService : IUserLibraryService
             throw new KeyNotFoundException("No user library games were found.");
         }
         
-        return userLibraryGames.Select(userLibraryGame => new UserLibraryGameDto()
-        {
-            Id = userLibraryGame.Id,
-            User = userLibraryGame.User,
-            Game = userLibraryGame.Game,
-            PurchaseDate = userLibraryGame.PurchaseDate
-        }).ToList();
+        return userLibraryGames.Select(UserProfileEntityToDtoMapper.MapToUserLibraryGameDto).ToList();
     }
 
     /// <inheritdoc />
@@ -178,30 +143,18 @@ public class UserLibraryService : IUserLibraryService
             throw new KeyNotFoundException("No user library games were found.");
         }
         
-        return userLibraryGames.Select(userLibraryGame => new UserLibraryGameDto()
-        {
-            Id = userLibraryGame.Id,
-            User = userLibraryGame.User,
-            Game = userLibraryGame.Game,
-            PurchaseDate = userLibraryGame.PurchaseDate
-        }).ToList();
+        return userLibraryGames.Select(UserProfileEntityToDtoMapper.MapToUserLibraryGameDto).ToList();
     }
 
     /// <inheritdoc />
-    public async Task<List<UserLibraryGameDto>> GetAllUserLibraryGamesByUserKeycloakIdAsync(string userKeycloakId)
+    public async Task<List<UserLibraryGameDto>> GetAllUserLibraryGamesByUserIdAsync(Guid userId)
     {
-        if (string.IsNullOrWhiteSpace(userKeycloakId))
+        if (userId == Guid.Empty)
         {
-            throw new ArgumentNullException(nameof(userKeycloakId), "User Keycloak ID cannot be null or empty.");
+            throw new ArgumentException("User ID cannot be an empty Guid.", nameof(userId));
         }
         
-        var user = await _userRepository.GetByKeycloakIdAsync(userKeycloakId);
-        if (user == null)
-        {
-            throw new KeyNotFoundException("User not found.");
-        }
-        
-        var allUserLibraryGames = await _userLibraryGameRepository.GetAllByUserIdAsync(user.Id);
+        var allUserLibraryGames = await _userLibraryGameRepository.GetAllByUserIdAsync(userId);
         
         var userLibraryGames = allUserLibraryGames.ToList();
         if (!userLibraryGames.Any())
@@ -209,30 +162,18 @@ public class UserLibraryService : IUserLibraryService
             throw new KeyNotFoundException("No user library games were found.");
         }
         
-        return userLibraryGames.Select(userLibraryGame => new UserLibraryGameDto()
-        {
-            Id = userLibraryGame.Id,
-            User = userLibraryGame.User,
-            Game = userLibraryGame.Game,
-            PurchaseDate = userLibraryGame.PurchaseDate
-        }).ToList();
+        return userLibraryGames.Select(UserProfileEntityToDtoMapper.MapToUserLibraryGameDto).ToList();
     }
 
     /// <inheritdoc />
-    public async Task<List<UserLibraryGameDto>> GetAllDeletedUserLibraryGamesByUserKeycloakIdAsync(string userKeycloakId)
+    public async Task<List<UserLibraryGameDto>> GetAllDeletedUserLibraryGamesByUserIdAsync(Guid userId)
     {
-        if (string.IsNullOrWhiteSpace(userKeycloakId))
+        if (userId == Guid.Empty)
         {
-            throw new ArgumentNullException(nameof(userKeycloakId), "User Keycloak ID cannot be null or empty.");
+            throw new ArgumentException("User ID cannot be an empty Guid.", nameof(userId));
         }
         
-        var user = await _userRepository.GetByKeycloakIdAsync(userKeycloakId);
-        if (user == null)
-        {
-            throw new KeyNotFoundException("User not found.");
-        }
-        
-        var allDeletedUserLibraryGames = await _userLibraryGameRepository.GetAllDeletedByUserIdAsync(user.Id);
+        var allDeletedUserLibraryGames = await _userLibraryGameRepository.GetAllDeletedByUserIdAsync(userId);
         
         var userLibraryGames = allDeletedUserLibraryGames.ToList();
         if (!userLibraryGames.Any())
@@ -240,53 +181,55 @@ public class UserLibraryService : IUserLibraryService
             throw new KeyNotFoundException("No user library games were found.");
         }
         
-        return userLibraryGames.Select(userLibraryGame => new UserLibraryGameDto()
-        {
-            Id = userLibraryGame.Id,
-            User = userLibraryGame.User,
-            Game = userLibraryGame.Game,
-            PurchaseDate = userLibraryGame.PurchaseDate
-        }).ToList();
+        return userLibraryGames.Select(UserProfileEntityToDtoMapper.MapToUserLibraryGameDto).ToList();
     }
+    
+    #endregion
+    
+    #region Addons Methods
 
     /// <inheritdoc />
-    public async Task AddUserLibraryAddonAsync(UserLibraryAddonDto userLibraryAddonDto)
+    public async Task<UserLibraryAddonDto?> AddUserLibraryAddonAsync(UserLibraryAddonCreateRequest request)
     {
-        if (!ApplicationDtoValidator.ValidateUserLibraryAddonDto(userLibraryAddonDto))
+        if (!UserProfileRequestsValidator.ValidateUserLibraryAddonCreateRequest(request))
         {
-            throw new ArgumentException("User library addon DTO is invalid.", nameof(userLibraryAddonDto));
+            throw new ArgumentException("User library addon create request is invalid.", nameof(request));
         }
         
         var userLibraryAddon = new UserLibraryAddon()
         {
-            Id = userLibraryAddonDto.Id,
-            UserLibraryGameId = userLibraryAddonDto.UserLibraryGame.Id,
-            AddonId = userLibraryAddonDto.GameAddon.Id,
-            PurchaseDate = userLibraryAddonDto.PurchaseDate
+            Id = Guid.NewGuid(),
+            UserLibraryGameId = request.UserLibraryGameId,
+            AddonId = request.AddonId,
+            PurchaseDate = DateTime.UtcNow
         };
         
-        await _userLibraryAddonRepository.AddAsync(userLibraryAddon);
+        var result = await _userLibraryAddonRepository.AddAsync(userLibraryAddon);
+        
+        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(result);
     }
 
     /// <inheritdoc />
-    public async Task UpdateUserLibraryAddonAsync(UserLibraryAddonDto userLibraryAddonDto)
+    public async Task<UserLibraryAddonDto?> UpdateUserLibraryAddonAsync(UserLibraryAddonUpdateRequest request)
     {
-        if (!ApplicationDtoValidator.ValidateUserLibraryAddonDto(userLibraryAddonDto))
+        if (!UserProfileRequestsValidator.ValidateUserLibraryAddonUpdateRequest(request))
         {
-            throw new ArgumentException("User library addon DTO is invalid.", nameof(userLibraryAddonDto));
+            throw new ArgumentException("User library addon update request is invalid.", nameof(request));
         }
 
-        var userLibraryAddon = await _userLibraryAddonRepository.GetByIdAsync(userLibraryAddonDto.Id);
+        var userLibraryAddon = await _userLibraryAddonRepository.GetByIdAsync(request.Id);
         if (userLibraryAddon == null)
         {
-            throw new InvalidOperationException($"User library addon with ID {userLibraryAddonDto.Id} does not exist.");
+            throw new InvalidOperationException($"User library addon with ID {request.Id} does not exist.");
         }
         
-        userLibraryAddon.PurchaseDate = userLibraryAddonDto.PurchaseDate;
-        userLibraryAddon.UserLibraryGameId = userLibraryAddonDto.UserLibraryGame.Id;
-        userLibraryAddon.AddonId = userLibraryAddonDto.GameAddon.Id;
+        userLibraryAddon.UserLibraryGameId = request.UserLibraryGameId;
+        userLibraryAddon.AddonId = request.AddonId;
+        userLibraryAddon.PurchaseDate = request.PurchaseDate;
         
-        await _userLibraryAddonRepository.UpdateAsync(userLibraryAddon);
+        var result = await _userLibraryAddonRepository.UpdateAsync(userLibraryAddon);
+        
+        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(result);
     }
 
     /// <inheritdoc />
@@ -307,68 +250,42 @@ public class UserLibraryService : IUserLibraryService
     }
 
     /// <inheritdoc />
-    public async Task<UserLibraryAddonDto> RestoreUserLibraryAddonAsync(Guid userLibraryAddonId)
+    public async Task<UserLibraryAddonDto?> RestoreUserLibraryAddonAsync(Guid userLibraryAddonId)
     {
         if (userLibraryAddonId == Guid.Empty)
         {
             throw new ArgumentException("User library addon ID cannot be an empty Guid.", nameof(userLibraryAddonId));
         }
         
-        var userLibraryAddon = await _userLibraryAddonRepository.RestoreAsync(userLibraryAddonId);
+        var result = await _userLibraryAddonRepository.RestoreAsync(userLibraryAddonId);
         
-        return new UserLibraryAddonDto()
-        {
-            Id = userLibraryAddon.Id,
-            UserLibraryGame = userLibraryAddon.UserLibraryGame,
-            GameAddon = userLibraryAddon.GameAddon,
-            PurchaseDate = userLibraryAddon.PurchaseDate
-        };
+        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(result);
     }
 
     /// <inheritdoc />
-    public async Task<UserLibraryAddonDto> GetUserLibraryAddonByIdAsync(Guid userLibraryAddonId)
+    public async Task<UserLibraryAddonDto?> GetUserLibraryAddonByIdAsync(Guid userLibraryAddonId)
     {
         if (userLibraryAddonId == Guid.Empty)
         {
             throw new ArgumentException("User library addon ID cannot be an empty Guid.", nameof(userLibraryAddonId));
         }
         
-        var userLibraryAddon = await _userLibraryAddonRepository.GetByIdAsync(userLibraryAddonId);
-        if (userLibraryAddon == null)
-        {
-            throw new KeyNotFoundException($"User library addon with ID '{userLibraryAddonId}' was not found.");
-        }
+        var result = await _userLibraryAddonRepository.GetByIdAsync(userLibraryAddonId);
         
-        return new UserLibraryAddonDto()
-        {
-            Id = userLibraryAddon.Id,
-            UserLibraryGame = userLibraryAddon.UserLibraryGame,
-            GameAddon = userLibraryAddon.GameAddon,
-            PurchaseDate = userLibraryAddon.PurchaseDate
-        };
+        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(result);
     }
 
     /// <inheritdoc />
-    public async Task<UserLibraryAddonDto> GetDeletedUserLibraryAddonByIdAsync(Guid userLibraryAddonId)
+    public async Task<UserLibraryAddonDto?> GetDeletedUserLibraryAddonByIdAsync(Guid userLibraryAddonId)
     {
         if (userLibraryAddonId == Guid.Empty)
         {
             throw new ArgumentException("User library addon ID cannot be an empty Guid.", nameof(userLibraryAddonId));
         }
         
-        var deletedUserLibraryAddon = await _userLibraryAddonRepository.GetDeletedByIdAsync(userLibraryAddonId);
-        if (deletedUserLibraryAddon == null)
-        {
-            throw new KeyNotFoundException($"User library addon with ID '{userLibraryAddonId}' was not found.");
-        }
+        var result = await _userLibraryAddonRepository.GetDeletedByIdAsync(userLibraryAddonId);
         
-        return new UserLibraryAddonDto()
-        {
-            Id = deletedUserLibraryAddon.Id,
-            UserLibraryGame = deletedUserLibraryAddon.UserLibraryGame,
-            GameAddon = deletedUserLibraryAddon.GameAddon,
-            PurchaseDate = deletedUserLibraryAddon.PurchaseDate
-        };
+        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(result);
     }
 
     /// <inheritdoc />
@@ -382,13 +299,7 @@ public class UserLibraryService : IUserLibraryService
             throw new KeyNotFoundException("No user library addons were found.");
         }
 
-        return userLibraryAddons.Select(userLibraryAddon => new UserLibraryAddonDto()
-        {
-            Id = userLibraryAddon.Id,
-            UserLibraryGame = userLibraryAddon.UserLibraryGame,
-            GameAddon = userLibraryAddon.GameAddon,
-            PurchaseDate = userLibraryAddon.PurchaseDate
-        }).ToList();
+        return userLibraryAddons.Select(UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto).ToList();
     }
 
     /// <inheritdoc />
@@ -402,13 +313,7 @@ public class UserLibraryService : IUserLibraryService
             throw new KeyNotFoundException("No user library addons were found.");
         }
 
-        return userLibraryAddons.Select(userLibraryAddon => new UserLibraryAddonDto()
-        {
-            Id = userLibraryAddon.Id,
-            UserLibraryGame = userLibraryAddon.UserLibraryGame,
-            GameAddon = userLibraryAddon.GameAddon,
-            PurchaseDate = userLibraryAddon.PurchaseDate
-        }).ToList();
+        return userLibraryAddons.Select(UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto).ToList();
     }
 
     /// <inheritdoc />
@@ -427,13 +332,7 @@ public class UserLibraryService : IUserLibraryService
             throw new KeyNotFoundException("No user library addons were found.");
         }
         
-        return userLibraryAddons.Select(userLibraryAddon => new UserLibraryAddonDto()
-        {
-            Id = userLibraryAddon.Id,
-            UserLibraryGame = userLibraryAddon.UserLibraryGame,
-            GameAddon = userLibraryAddon.GameAddon,
-            PurchaseDate = userLibraryAddon.PurchaseDate
-        }).ToList();
+        return userLibraryAddons.Select(UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto).ToList();
     }
 
     /// <inheritdoc />
@@ -452,12 +351,8 @@ public class UserLibraryService : IUserLibraryService
             throw new KeyNotFoundException("No user library addons were found.");
         }
         
-        return userLibraryAddons.Select(userLibraryAddon => new UserLibraryAddonDto()
-        {
-            Id = userLibraryAddon.Id,
-            UserLibraryGame = userLibraryAddon.UserLibraryGame,
-            GameAddon = userLibraryAddon.GameAddon,
-            PurchaseDate = userLibraryAddon.PurchaseDate
-        }).ToList();
+        return userLibraryAddons.Select(UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto).ToList();
     }
+
+    #endregion
 }

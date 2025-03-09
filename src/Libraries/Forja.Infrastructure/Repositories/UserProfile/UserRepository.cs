@@ -1,5 +1,13 @@
 namespace Forja.Infrastructure.Repositories.UserProfile;
 
+/// <summary>
+/// Provides repository operations for managing users in the system.
+/// </summary>
+/// <remarks>
+/// This class interacts with the underlying database through the ForjaDbContext
+/// to perform data access operations related to users.
+/// Implements the <see cref="IUserRepository"/> interface to standardize access patterns.
+/// </remarks>
 public class UserRepository : IUserRepository
 {
     private readonly ForjaDbContext _context;
@@ -75,6 +83,19 @@ public class UserRepository : IUserRepository
             .Where(u => u.IsDeleted == false)
             .FirstOrDefaultAsync(u => u.Email == email);
     }
+    
+    /// <inheritdoc />
+    public async Task<User?> GetDeletedByEmailAsync(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            throw new ArgumentException("User email is required", nameof(email));
+        }
+        
+        return await _users
+            .Where(u => u.IsDeleted == true)
+            .FirstOrDefaultAsync(u => u.Email == email);
+    }
 
     /// <inheritdoc />
     public async Task<IEnumerable<User>> GetAllAsync()
@@ -93,21 +114,23 @@ public class UserRepository : IUserRepository
     }
 
     /// <inheritdoc />
-    public async Task AddAsync(User user)
+    public async Task<User?> AddAsync(User user)
     {
-        if (!ProjectModelValidator.ValidateUser(user))
+        if (!UserProfileModelValidator.ValidateUser(user))
         {
             throw new ArgumentException("User is not valid.", nameof(user));
         }
         
         await _users.AddAsync(user);
         await _context.SaveChangesAsync();
+        
+        return user;
     }
 
     /// <inheritdoc />
-    public async Task UpdateAsync(User user)
+    public async Task<User?> UpdateAsync(User user)
     {
-        if (!ProjectModelValidator.ValidateUser(user))
+        if (!UserProfileModelValidator.ValidateUser(user))
         {
             throw new ArgumentException("User is not valid.", nameof(user));
         }
@@ -115,6 +138,7 @@ public class UserRepository : IUserRepository
         _users.Update(user);
         await _context.SaveChangesAsync();
 
+        return user;
     }
 
     /// <inheritdoc />
@@ -134,7 +158,7 @@ public class UserRepository : IUserRepository
     }
     
     /// <inheritdoc />
-    public async Task RestoreAsync(Guid userId)
+    public async Task<User?> RestoreAsync(Guid userId)
     {
         if (userId == Guid.Empty)
         {
@@ -147,6 +171,8 @@ public class UserRepository : IUserRepository
         user.ModifiedAt = DateTime.UtcNow;
         _users.Update(user);
         await _context.SaveChangesAsync();
+        
+        return user;
     }
 
     /// <inheritdoc />
@@ -158,5 +184,26 @@ public class UserRepository : IUserRepository
         }
         
         return await _users.AnyAsync(u => u.Username.ToLower() == username.ToLower());
+    }
+    
+    /// <inheritdoc />
+    public async Task<string> GenerateUniqueUsernameAsync(string baseUsername)
+    {
+        if (string.IsNullOrWhiteSpace(baseUsername))
+        {
+            throw new ArgumentException("Username is required", nameof(baseUsername));
+        }
+        
+        baseUsername = baseUsername.Trim().ToLowerInvariant();
+        string username = baseUsername;
+        int suffix = 0;
+        
+        while (await ExistsByUsernameAsync(username))
+        {
+            suffix++;
+            username = $"{baseUsername}{suffix}";
+        }
+    
+        return username;
     }
 }

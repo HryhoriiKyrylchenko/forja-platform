@@ -42,7 +42,7 @@ public abstract class Product : SoftDeletableEntity
     /// <summary>
     /// Gets or sets the platform on which the product is available.
     /// </summary>
-    public ProductPlatform Platform { get; set; }
+    public string Platforms { get; set; } = string.Empty;
     
     /// <summary>
     /// Gets or sets the price of the product.
@@ -135,4 +135,10 @@ public abstract class Product : SoftDeletableEntity
     /// Gets or sets the collection of images associated with the product.
     /// </summary>
     public virtual ICollection<ProductImages> ProductImages { get; set; } = [];
+    
+    /// <summary>
+    /// Gets or sets the collection of reviews associated with the product.
+    /// Virtual property for Entity Framework to handle related data.
+    /// </summary>
+    public virtual ICollection<Review> Reviews { get; set; } = [];
 }

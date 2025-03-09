@@ -56,7 +56,7 @@ public interface IUserLibraryAddonRepository
     /// <returns>
     /// A task representing the asynchronous operation.
     /// </returns>
-    Task AddAsync(UserLibraryAddon userLibraryAddon);
+    Task<UserLibraryAddon?> AddAsync(UserLibraryAddon userLibraryAddon);
 
     /// <summary>
     /// Updates an existing UserLibraryAddon entity in the repository.
@@ -67,7 +67,7 @@ public interface IUserLibraryAddonRepository
     /// <returns>
     /// A Task that represents the asynchronous operation.
     /// </returns>
-    Task UpdateAsync(UserLibraryAddon userLibraryAddon);
+    Task<UserLibraryAddon?> UpdateAsync(UserLibraryAddon userLibraryAddon);
 
     /// <summary>
     /// Deletes a user library addon from the repository asynchronously.
@@ -81,5 +81,5 @@ public interface IUserLibraryAddonRepository
     /// </summary>
     /// <param name="userLibraryAddonId">The unique identifier of the user library addon to restore.</param>
     /// <returns>A task representing the asynchronous operation. The task result contains the restored user library addon.</returns>
-    Task<UserLibraryAddon> RestoreAsync(Guid userLibraryAddonId);
+    Task<UserLibraryAddon?> RestoreAsync(Guid userLibraryAddonId);
 }

@@ -19,15 +19,15 @@ public class Review : SoftDeletableEntity
     public Guid UserId { get; set; }
         
     /// <summary>
-    /// Gets or sets the unique identifier of the game being reviewed.
+    /// Gets or sets the unique identifier of the product being reviewed.
     /// </summary>
-    [ForeignKey("Game")]
-    public Guid GameId { get; set; }
-        
+    [ForeignKey("Product")]
+    public Guid ProductId { get; set; }
+
     /// <summary>
     /// Gets or sets the rating given in the review.
     /// </summary>
-    public int Rating { get; set; }
+    public bool PositiveRating { get; set; }
         
     /// <summary>
     /// Gets or sets the comment provided in the review. The comment can be up to 1000 characters long.
@@ -52,8 +52,8 @@ public class Review : SoftDeletableEntity
     public virtual User User { get; set; } = null!;
     
     /// <summary>
-    /// Gets or sets the game being reviewed.
+    /// Gets or sets the product being reviewed.
     /// Virtual property for Entity Framework to handle related data.
     /// </summary>
-    public virtual Game Game { get; set; } = null!;
+    public virtual Product Product { get; set; } = null!;
 }

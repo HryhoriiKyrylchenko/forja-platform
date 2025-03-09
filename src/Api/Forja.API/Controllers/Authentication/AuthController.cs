@@ -1,3 +1,5 @@
+using Exception = System.Exception;
+
 namespace Forja.API.Controllers.Authentication;
 
 /// <summary>
@@ -24,16 +26,16 @@ public class AuthController : ControllerBase
     /// <returns>An <see cref="IActionResult"/> indicating the outcome of the registration process.
     /// Returns an Ok response if successful, or a Bad Request response with an error message if registration fails.</returns>
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] RegisterUserCommand request)
+    public async Task<IActionResult> Register([FromBody] RegisterUserRequest request)
     {
         try
         {
             await _authService.RegisterUserAsync(request);
-            return Ok("Registration successful");
+            return Ok(new { Message = "Registration successful" });
         }
         catch(Exception ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -44,7 +46,7 @@ public class AuthController : ControllerBase
     /// <returns>An <see cref="IActionResult"/> containing the authentication token if login is successful.
     /// Returns a Bad Request response with an error message if login fails.</returns>
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginUserCommand request)
+    public async Task<IActionResult> Login([FromBody] LoginUserRequest request)
     {
         try
         {
@@ -76,7 +78,7 @@ public class AuthController : ControllerBase
         }
         catch(Exception ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -88,16 +90,16 @@ public class AuthController : ControllerBase
     /// Returns an Ok response if the logout is successful, or a Bad Request response with an error message if the process fails.</returns>
     [Authorize]
     [HttpPost("logout")]
-    public async Task<IActionResult> Logout([FromBody] LogoutCommand request)
+    public async Task<IActionResult> Logout([FromBody] LogoutRequest request)
     {
         try
         {
             await _authService.LogoutUserAsync(request);
-            return Ok("Logout successful");
+            return Ok(new { Message = "Logout successful" });
         }
         catch(Exception ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -108,7 +110,7 @@ public class AuthController : ControllerBase
     /// <returns>An <see cref="IActionResult"/> containing the new token if the process is successful,
     /// or a Bad Request response with an error message if the refresh token is invalid or the process fails.</returns>
     [HttpPost("refresh")]
-    public async Task<IActionResult> Refresh([FromBody] RefreshTokenCommand request)
+    public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
     {
         try
         {
@@ -140,7 +142,7 @@ public class AuthController : ControllerBase
         }
         catch(Exception ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { error = ex.Message });
         }
     }
     
@@ -149,21 +151,21 @@ public class AuthController : ControllerBase
     /// <summary>
     /// Creates a new role in the application with the specified details.
     /// </summary>
-    /// <param name="command">The details of the role to be created, including role name and description.</param>
+    /// <param name="request">The details of the role to be created, including role name and description.</param>
     /// <returns>An <see cref="IActionResult"/> indicating the outcome of the role creation process.
     /// Returns an Ok response if the role is successfully created, or a Bad Request response with an error message if creation fails.</returns>
     [Authorize(Policy = "AdminPolicy")]
     [HttpPost("roles")]
-    public async Task<IActionResult> CreateRole([FromBody] CreateRoleCommand command)
+    public async Task<IActionResult> CreateRole([FromBody] CreateRoleRequest request)
     {
         try
         {
-            await _authService.CreateRoleAsync(command);
-            return Ok("Role created successfully");
+            await _authService.CreateRoleAsync(request);
+            return Ok(new { Message = "Role created successfully" });
         }
         catch(Exception ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -179,7 +181,7 @@ public class AuthController : ControllerBase
         {
             foreach (UserRole role in Enum.GetValues(typeof(UserRole)))
             {
-                await _authService.CreateRoleAsync(new CreateRoleCommand
+                await _authService.CreateRoleAsync(new CreateRoleRequest
                 {
                     RoleName = role.ToString(),
                     Description = GetRoleDescription(role)
@@ -188,7 +190,7 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { error = ex.Message });
         }
         
 
@@ -222,7 +224,7 @@ public class AuthController : ControllerBase
         }
         catch(Exception ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -234,18 +236,20 @@ public class AuthController : ControllerBase
     /// Returns a NotFound response if the role does not exist, or a Bad Request response in case of an error.</returns>
     [Authorize(Policy = "AdminPolicy")]
     [HttpGet("roles/{roleName}")]
-    public async Task<IActionResult> GetRoleByName(string roleName)
+    public async Task<IActionResult> GetRoleByName([FromRoute] string roleName)
     {
         try
         {
             var role = await _authService.GetRoleByNameAsync(roleName);
             if (role == null)
+            {
                 return NotFound();
+            }
             return Ok(role);
         }
         catch(Exception ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -257,7 +261,7 @@ public class AuthController : ControllerBase
     /// Returns a Bad Request response with an error message if the retrieval fails.</returns>
     [Authorize(Policy = "AdminPolicy")]
     [HttpGet("{userId}/roles")]
-    public async Task<IActionResult> GetUserRoles(string userId)
+    public async Task<IActionResult> GetUserRoles([FromRoute] string userId)
     {
         try
         {
@@ -266,7 +270,7 @@ public class AuthController : ControllerBase
         }
         catch(Exception ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -279,7 +283,7 @@ public class AuthController : ControllerBase
     /// Returns an Ok response with the result if successful, or a Bad Request response with an error message if the check fails.</returns>
     [Authorize(Policy = "AdminPolicy")]
     [HttpGet("{userId}/role-check")]
-    public async Task<IActionResult> CheckUserRole(string userId, [FromQuery] string roleName)
+    public async Task<IActionResult> CheckUserRole([FromRoute] string userId, [FromQuery] string roleName)
     {
         try
         {
@@ -288,7 +292,7 @@ public class AuthController : ControllerBase
         }
         catch(Exception ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -300,16 +304,16 @@ public class AuthController : ControllerBase
     /// <returns>An <see cref="IActionResult"/> indicating the result of the operation. Returns an Ok response if the roles are successfully assigned, or a Bad Request response with an error message if the operation fails.</returns>
     [Authorize(Policy = "AdminPolicy")]
     [HttpPost("{userId}/assign-roles")]
-    public async Task<IActionResult> AssignRoles(string userId, [FromBody] IEnumerable<RoleRepresentation> roles)
+    public async Task<IActionResult> AssignRoles([FromRoute] string userId, [FromBody] IEnumerable<RoleRepresentation> roles)
     {
         try
         {
             await _authService.AssignRolesToUserAsync(userId, roles);
-            return Ok("Roles assigned successfully");
+            return Ok(new { Message = "Roles assigned successfully" });
         }
         catch(Exception ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -322,16 +326,16 @@ public class AuthController : ControllerBase
     /// Returns an Ok response if the role is successfully assigned, or a Bad Request response with an error message if the process fails.</returns>
     [Authorize(Policy = "AdminPolicy")]
     [HttpPost("{userId}/assign-role")]
-    public async Task<IActionResult> AssignRole(string userId, [FromBody] RoleRepresentation role)
+    public async Task<IActionResult> AssignRole([FromRoute] string userId, [FromBody] RoleRepresentation role)
     {
         try
         {
             await _authService.AssignRoleToUserAsync(userId, role);
-            return Ok("Role assigned successfully");
+            return Ok(new { Message = "Role assigned successfully" });
         }
         catch(Exception ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -344,16 +348,16 @@ public class AuthController : ControllerBase
     /// Returns an Ok response if successful, or a Bad Request response with an error message if an exception occurs.</returns>
     [Authorize(Policy = "AdminPolicy")]
     [HttpDelete("{userId}/delete-roles")]
-    public async Task<IActionResult> DeleteRoles(string userId, [FromBody] IEnumerable<RoleRepresentation> roles)
+    public async Task<IActionResult> DeleteRoles([FromRoute] string userId, [FromBody] IEnumerable<RoleRepresentation> roles)
     {
         try
         {
             await _authService.DeleteRolesFromUserAsync(userId, roles);
-            return Ok("Roles deleted successfully");
+            return Ok(new { Message = "Roles deleted successfully" });
         }
         catch(Exception ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -366,16 +370,16 @@ public class AuthController : ControllerBase
     /// Returns an Ok response with a success message if successful, or a Bad Request response with an error message if the deletion fails.</returns>
     [Authorize(Policy = "AdminPolicy")]
     [HttpDelete("{userId}/delete-role")]
-    public async Task<IActionResult> DeleteRole(string userId, [FromBody] RoleRepresentation role)
+    public async Task<IActionResult> DeleteRole([FromRoute] string userId, [FromBody] RoleRepresentation role)
     {
         try
         {
             await _authService.DeleteRoleFromUserAsync(userId, role);
-            return Ok("Role deleted successfully");
+            return Ok(new { Message = "Role deleted successfully" });
         }
         catch(Exception ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -383,32 +387,39 @@ public class AuthController : ControllerBase
     /// Handles the password change request for an authenticated user.
     /// </summary>
     /// <param name="accessToken">The access token of the authenticated user, provided in the request header.</param>
-    /// <param name="newPassword">The new password to be set for the user.</param>
+    /// <param name="request">The ChangePasswordRequest.</param>
     /// <returns>An <see cref="IActionResult"/> indicating the outcome of the password change operation.
     /// Returns an Ok response if successful, a Bad Request response if the new password is invalid, or an Unauthorized response if the access token is invalid.</returns>
     [Authorize]
     [HttpPost("change-password")]
-    public async Task<IActionResult> ChangePassword([FromHeader] string accessToken, [FromBody] string newPassword)
+    public async Task<IActionResult> ChangePassword([FromHeader] string accessToken, [FromBody] ChangePasswordRequest request)
     {
-        if (string.IsNullOrWhiteSpace(newPassword))
+        try
         {
-            return BadRequest("New password cannot be null or empty.");
-        }
+            if (!AuthenticationRequestsValidator.ValidateChangePasswordRequest(request, out string _))
+            {
+                return BadRequest(new { error = "Invalid request." });
+            }
+            
+            var isValid = await _authService.ValidateTokenAsync(accessToken);
+            if (!isValid)
+            {
+                return Unauthorized(new { error = "Invalid access token." });
+            }
 
-        var isValid = await _authService.ValidateTokenAsync(accessToken);
-        if (!isValid)
+            var userId = await _authService.GetKeycloakUserIdAsync(accessToken);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized(new { error = "Invalid access token." });
+            }
+
+            await _authService.ChangePasswordAsync(userId, request.Password);
+            return Ok(new { Message = "Password changed successfully." });
+        }
+        catch (Exception ex)
         {
-            return Unauthorized("Invalid access token.");
+            return BadRequest(new { error = ex.Message });
         }
-
-        var userId = await _authService.GetKeycloakUserIdAsync(accessToken);
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            return Unauthorized("Invalid access token.");
-        }
-
-        await _authService.ChangePasswordAsync(userId, newPassword);
-        return Ok("Password changed successfully.");
     }
 
     /// <summary>
@@ -422,9 +433,16 @@ public class AuthController : ControllerBase
     [HttpPost("enable-disable-user")]
     public async Task<IActionResult> EnableDisableUser([FromBody] EnableDisableUserRequest request)
     {
-        await _authService.EnableDisableUserAsync(request.KeycloakUserId, request.Enable);
-        var action = request.Enable ? "enabled" : "disabled";
-        return Ok($"User has been {action} successfully.");
+        try
+        {
+            await _authService.EnableDisableUserAsync(request);
+            var action = request.Enable ? "enabled" : "disabled";
+            return Ok(new { Message = $"User has been {action} successfully." });
+        }
+        catch (Exception e)
+        {
+            return BadRequest(new { error = e.Message });
+        }
     }
     
     /// <summary>
@@ -434,11 +452,11 @@ public class AuthController : ControllerBase
     /// <param name="token">The email confirmation token required to confirm email.</param>
     /// <returns>An IActionResult representing the result of the operation.</returns>
     [HttpPut("users/{keycloakUserId}/confirm-email")]
-    public async Task<IActionResult> ConfirmEmail([FromQuery]string keycloakUserId, [FromQuery] string token)
+    public async Task<IActionResult> ConfirmEmail([FromRoute]string keycloakUserId, [FromQuery] string token)
     {
         if (string.IsNullOrWhiteSpace(keycloakUserId))
         {
-            return BadRequest("Keycloak User ID must be provided.");
+            return BadRequest(new { error = "Keycloak User ID must be provided." });
         }
 
         try
@@ -446,13 +464,9 @@ public class AuthController : ControllerBase
             await _authService.ConfirmUserEmailAsync(token);
             return NoContent();
         }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(ex.Message); 
-        }
         catch (Exception ex)
         {
-            return StatusCode(500, $"An error occurred while confirming the email for user {keycloakUserId}: {ex.Message}");
+            return BadRequest(new { error = ex.Message }); 
         }
     }
 
@@ -468,17 +482,17 @@ public class AuthController : ControllerBase
         if (string.IsNullOrWhiteSpace(request.KeycloakUserId) 
             || string.IsNullOrWhiteSpace(request.Password))
         {
-            throw new ArgumentException("Keycloak User ID and password must be provided.");
+            return BadRequest(new { error = "Keycloak User ID and new password must be provided." });
         }
 
         try
         {
-            await _authService.ResetUserPasswordAsync(request.KeycloakUserId, request.Password);
+            await _authService.ResetUserPasswordAsync(request);
             return NoContent();
         }
         catch (ArgumentException ex)
         {
-            return BadRequest(ex.Message); 
+            return BadRequest(new { error = ex.Message }); 
         }
     }
 
@@ -493,7 +507,7 @@ public class AuthController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(request.Email))
         {
-            return BadRequest("Email cannot be null or empty.");
+            return BadRequest(new { error = "Email cannot be null or empty." });
         }
 
         try
@@ -502,47 +516,40 @@ public class AuthController : ControllerBase
         }
         catch (KeyNotFoundException)
         {
-            return Ok("Password reset email sent successfully.");
+            return Ok(new { Message = "Password reset email sent successfully." });
         }
         catch (Exception ex)
         {
             return BadRequest(ex.Message);
         }
         
-        return Ok("Password reset email sent successfully.");
+        return Ok(new { Message = "Password reset email sent successfully." });
     }
 
     /// <summary>
     /// Validates a password reset token to ensure it is valid and not expired.
     /// </summary>
-    /// <param name="token">The password reset token to be validated.</param>
+    /// <param name="request">The password reset token to be validated.</param>
     /// <returns>An <see cref="IActionResult"/> indicating the result of the validation.
     /// Returns an Ok response with a success message if the token is valid,
     /// an Unauthorized response if the token is invalid or expired,
     /// or a Server Error response if an exception occurs during validation.</returns>
     [HttpPost("validate-reset-token")]
-    public async Task<IActionResult> ValidateResetToken([FromQuery] string token)
+    public async Task<IActionResult> ValidateResetToken([FromBody] ValidateResetTokenRequest request)
     {
-        if (string.IsNullOrWhiteSpace(token))
-        {
-            return BadRequest(new { Message = "Token must not be null or empty." });
-        }
-
         try
         {
-            var isValid = await _authService.ValidateResetTokenAsync(token);
-            if (isValid)
-            {
-                return Ok(new { Message = "The token is valid." });
-            }
-            else
+            var isValid = await _authService.ValidateResetTokenAsync(request);
+            if (!isValid)
             {
                 return Unauthorized(new { Message = "Invalid or expired token." });
+                
             }
+            return Ok(new { Message = "The token is valid." });
         }
         catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, new { Message = $"An error occurred while validating the token: {ex.Message}" });
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -556,14 +563,21 @@ public class AuthController : ControllerBase
     [HttpPost("send-email-confirmation")]
     public async Task<IActionResult> SendEmailConfirmation([FromHeader] string token)
     {
-        var keycloakUserId = await _authService.GetKeycloakUserIdAsync(token); 
-        if (string.IsNullOrWhiteSpace(keycloakUserId))
+        try
         {
-            return BadRequest("User ID is required.");
+            var keycloakUserId = await _authService.GetKeycloakUserIdAsync(token); 
+            if (string.IsNullOrWhiteSpace(keycloakUserId))
+            {
+                return BadRequest(new { error = "User ID is required." });
+            }
+            
+            await _authService.SendEmailConfirmationAsync(keycloakUserId);
+
+            return Ok("Email confirmation sent successfully.");
         }
-
-        await _authService.SendEmailConfirmationAsync(keycloakUserId);
-
-        return Ok("Email confirmation sent successfully.");
+        catch (Exception ex)
+        {
+            return BadRequest( new { error = ex.Message });
+        }
     }
 }

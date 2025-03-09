@@ -1,4 +1,4 @@
-namespace Forja.Application.DTOs.UserRegistration;
+namespace Forja.Application.Requests.Authentication;
 
 /// <summary>
 /// Represents a command used to create a new role in the system.
@@ -7,7 +7,7 @@ namespace Forja.Application.DTOs.UserRegistration;
 /// This class contains the necessary details, such as the role name and an optional description,
 /// required for creating a new role within the application.
 /// </remarks>
-public class CreateRoleCommand
+public class CreateRoleRequest
 {
     /// <summary>
     /// Gets or sets the name of the role to be created.

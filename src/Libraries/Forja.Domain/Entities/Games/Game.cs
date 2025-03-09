@@ -38,12 +38,6 @@ public class Game : Product
     /// Virtual property for Entity Framework to handle related data.
     /// </summary>
     public virtual ICollection<UserLibraryGame> UserLibraryGames { get; set; } = [];
-    
-    /// <summary>
-    /// Gets or sets the collection of reviews associated with the game.
-    /// Virtual property for Entity Framework to handle related data.
-    /// </summary>
-    public virtual ICollection<Review> Reviews { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the collection of game mechanics associated with the game.

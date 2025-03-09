@@ -52,14 +52,16 @@ public class ForjaDbContext : DbContext
 
     // User related entities (schema: user-profile)
     public DbSet<Achievement> Achievements { get; set; }
+    public DbSet<GameSave> GameSaves { get; set; }
     public DbSet<Review> Reviews { get; set; }
-    public DbSet<User> Users { get; set; }
     public DbSet<UserAchievement> UserAchievements { get; set; }
+    public DbSet<UserFollower> UserFollowers { get; set; }
     public DbSet<UserLibraryAddon> UserLibraryAddons { get; set; }
     public DbSet<UserLibraryGame> UserLibraryGames { get; set; }
-    public DbSet<UserWishList> UserWishList { get; set; }
-    public DbSet<UserFollower> UserFollowers { get; set; }
-    public DbSet<GameSave> GameSaves { get; set; }
+    public DbSet<User> Users { get; set; }
+    public DbSet<UserWishList> UserWishLists { get; set; }
+    
+    
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -28,6 +28,11 @@ public class UserLibraryGame : SoftDeletableEntity
     /// Gets or sets the date when the game was purchased.
     /// </summary>
     public DateTime PurchaseDate { get; set; } = DateTime.UtcNow;
+    
+    /// <summary>
+    /// Gets or sets the total time played for the game.
+    /// </summary>
+    public TimeSpan? TimePlayed { get; set; }
 
     /// <summary>
     /// Gets or sets the user associated with this library game.
