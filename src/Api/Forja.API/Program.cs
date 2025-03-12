@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,7 +19,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowSpecificOrigin",
        policy =>
        {
-           policy.WithOrigins("http://localhost:3001") 
+           policy.WithOrigins("https://localhost:3003") 
                  .AllowCredentials() 
                  .AllowAnyHeader()
                  .AllowAnyMethod();
@@ -30,19 +31,28 @@ builder.Services.AddAuthentication()
     {
         options.Authority = "http://localhost:8080/realms/forja";
         options.RequireHttpsMetadata = false;
-        
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = true, 
+            ValidateIssuer = true,
             ValidIssuer = "http://localhost:8080/realms/forja",
-            ValidateAudience = false, 
-            ValidateLifetime = true, 
-            RoleClaimType = ClaimTypes.Role, 
-            NameClaimType = "preferred_username" 
-
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            RoleClaimType = ClaimTypes.Role,
+            NameClaimType = "preferred_username"
         };
-        
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                context.Request.Cookies.TryGetValue("access_token", out var token);
+                context.Token = token;
+                return Task.CompletedTask;
+            }
+        };
     });
+
 
 builder.Services.AddAuthorizationBuilder();
 

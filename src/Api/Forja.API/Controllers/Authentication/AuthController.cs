@@ -73,10 +73,10 @@ public class AuthController : ControllerBase
 
             httpContext.Response.Cookies.Append("access_token", tokenResponse.AccessToken, accessTokenOptions);
             httpContext.Response.Cookies.Append("refresh_token", tokenResponse.RefreshToken, refreshTokenOptions);
-            
+
             return Ok(tokenResponse);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             return BadRequest(new { error = ex.Message });
         }
@@ -173,7 +173,6 @@ public class AuthController : ControllerBase
     /// Creates all the default project roles listed in the UserRole enumeration.
     /// </summary>
     /// <returns>An IActionResult indicating the result of the operation.</returns>
-    [Authorize(Policy = "AdminPolicy")]
     [HttpPost("all-default-roles")]
     public async Task<IActionResult> CreateAllDefaultProjectRoles()
     {
