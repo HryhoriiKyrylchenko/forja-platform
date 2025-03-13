@@ -1,0 +1,3 @@
+[submodule "src/Aspire/Web"]
+	path = src/Aspire/Web
+	url = https://github.com/CheDeniss/forja-next.git
