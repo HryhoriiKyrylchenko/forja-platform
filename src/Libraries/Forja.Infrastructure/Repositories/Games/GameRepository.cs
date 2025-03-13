@@ -11,7 +11,7 @@ public class GameRepository : IGameRepository
     
     public async Task<Game?> GetByIdAsync(Guid id)
     {
-        return await _context.Games.FindAsync(id);
+        return await _context.Games.FirstOrDefaultAsync(g => g.Id == id);
     }
     
     public async Task<IEnumerable<Game>> GetAllAsync()

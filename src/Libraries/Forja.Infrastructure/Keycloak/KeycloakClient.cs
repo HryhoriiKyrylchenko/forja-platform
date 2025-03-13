@@ -89,7 +89,7 @@ public class KeycloakClient : IKeycloakClient
     /// <inheritdoc />
     public async Task CreateClientRoleAsync(string role, string description = "")
     {
-        if (string.IsNullOrWhiteSpace(_baseUrl) || string.IsNullOrWhiteSpace(_realm) || string.IsNullOrWhiteSpace(_clientUuid))
+        if (string.IsNullOrWhiteSpace(_baseUrl) || string.IsNullOrWhiteSpace(_realm))
         {
             throw new InvalidOperationException("KeycloakClient is not properly initialized.");
         }
@@ -98,7 +98,7 @@ public class KeycloakClient : IKeycloakClient
         {
             throw new ArgumentException("Role name cannot be null or whitespace.", nameof(role));
         }
-        
+
         string accessToken;
         try
         {
@@ -108,28 +108,28 @@ public class KeycloakClient : IKeycloakClient
         {
             throw new HttpRequestException("Failed to obtain admin token.", ex);
         }
-        
-        var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/admin/realms/{_realm}/clients/{_clientUuid}/roles");
+
+        var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/admin/realms/{_realm}/roles");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         request.Content = new StringContent(
             JsonSerializer.Serialize(new
             {
                 name = role,
                 description
-            }, new JsonSerializerOptions 
-            { 
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase 
+            }, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             }),
             Encoding.UTF8,
             "application/json"
         );
 
         var response = await HttpRetryHelper.ExecuteWithRetryAsync(_httpClient, request);
-        
+
         if (!response.IsSuccessStatusCode)
         {
             var responseContent = await response.Content.ReadAsStringAsync();
-            throw new Exception($"Failed to create client role. Status: {response.StatusCode}, Response: {responseContent}");
+            throw new Exception($"Failed to create realm role. Status: {response.StatusCode}, Response: {responseContent}");
         }
     }
 

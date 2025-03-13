@@ -564,20 +564,6 @@ public class UserController : ControllerBase
     /// </returns>
     private string? GetAccessTokenFromRequest()
     {
-        //var accessToken = HttpContext.Request.Headers["Authorization"].ToString();
-
-        //if (string.IsNullOrWhiteSpace(accessToken))
-        //{
-        //    return null; 
-        //}
-
-        //if (accessToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-        //{
-        //    accessToken = accessToken.Substring("Bearer ".Length).Trim();
-        //}
-
-        //return accessToken;
-
         if (HttpContext.Request.Cookies.TryGetValue("access_token", out var cookieToken))
         {
             return cookieToken;

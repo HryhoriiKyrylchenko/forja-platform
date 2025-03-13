@@ -48,6 +48,7 @@ builder.Services.AddAuthentication()
             {
                 context.Request.Cookies.TryGetValue("access_token", out var token);
                 context.Token = token;
+              
                 return Task.CompletedTask;
             }
         };
@@ -112,12 +113,14 @@ builder.Services.AddAuthorization(options =>
 });
 
 
+
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
 app.UseCors("AllowSpecificOrigin"); // CORS
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
