@@ -12,6 +12,12 @@ public interface IGameRepository
     Task<IEnumerable<Game>> GetAllAsync();
 
     /// <summary>
+    /// Retrieves all deleted games from the repository.
+    /// </summary>
+    /// <returns>A collection of all deleted games.</returns>
+    Task<IEnumerable<Game>> GetAllDeletedAsync();
+
+    /// <summary>
     /// Gets a game by its unique identifier.
     /// </summary>
     /// <param name="id">The unique identifier of the game.</param>

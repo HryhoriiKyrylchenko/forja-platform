@@ -26,6 +26,13 @@ public interface IProductMatureContentRepository
     Task<ProductMatureContent?> AddAsync(ProductMatureContent productMatureContent);
 
     /// <summary>
+    /// Updates an existing product-mature content relationship in the repository.
+    /// </summary>
+    /// <param name="productMatureContent">The updated product-mature content relationship entity.</param>
+    /// <returns>The updated product-mature content relationship, or null if the update was not successful.</returns>
+    Task<ProductMatureContent?> UpdateAsync(ProductMatureContent productMatureContent);
+
+    /// <summary>
     /// Deletes a product-mature content relationship by its unique identifier.
     /// </summary>
     /// <param name="id">The unique identifier of the product-mature content relationship to delete.</param>

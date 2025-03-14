@@ -5,14 +5,14 @@ namespace Forja.Infrastructure.Repositories.Games;
 /// </summary>
 public class GameTagRepository : IGameTagRepository
 {
-    private readonly DbContext _context;
+    private readonly ForjaDbContext _context;
     private readonly DbSet<GameTag> _gameTags;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GameTagRepository"/> class with the provided DbContext.
     /// </summary>
     /// <param name="context">The database context to be used.</param>
-    public GameTagRepository(DbContext context)
+    public GameTagRepository(ForjaDbContext context)
     {
         _context = context;
         _gameTags = context.Set<GameTag>();
@@ -30,6 +30,11 @@ public class GameTagRepository : IGameTagRepository
     /// <inheritdoc />
     public async Task<GameTag?> GetByIdAsync(Guid id)
     {
+        if (id == Guid.Empty)
+        {
+            throw new ArgumentException("Invalid game tag ID.", nameof(id));
+        }
+        
         return await _gameTags
             .Include(gt => gt.Game) // Include associated Game
             .Include(gt => gt.Tag)  // Include associated Tag
@@ -39,6 +44,11 @@ public class GameTagRepository : IGameTagRepository
     /// <inheritdoc />
     public async Task<IEnumerable<GameTag>> GetByGameIdAsync(Guid gameId)
     {
+        if (gameId == Guid.Empty)
+        {
+            throw new ArgumentException("Invalid game ID.", nameof(gameId));
+        }
+        
         return await _gameTags
             .Where(gt => gt.GameId == gameId)
             .Include(gt => gt.Tag) // Include associated Tag
@@ -48,6 +58,11 @@ public class GameTagRepository : IGameTagRepository
     /// <inheritdoc />
     public async Task<IEnumerable<GameTag>> GetByTagIdAsync(Guid tagId)
     {
+        if (tagId == Guid.Empty)
+        {
+            throw new ArgumentException("Invalid tag ID.", nameof(tagId));
+        }
+        
         return await _gameTags
             .Where(gt => gt.TagId == tagId)
             .Include(gt => gt.Game) // Include associated Game
@@ -57,6 +72,11 @@ public class GameTagRepository : IGameTagRepository
     /// <inheritdoc />
     public async Task<GameTag?> AddAsync(GameTag gameTag)
     {
+        if (!GamesModelValidator.ValidateGameTag(gameTag, out _))
+        {
+            throw new ArgumentException("Invalid game tag.", nameof(gameTag));
+        }
+        
         await _gameTags.AddAsync(gameTag);
         await _context.SaveChangesAsync();
         return gameTag;
@@ -65,6 +85,11 @@ public class GameTagRepository : IGameTagRepository
     /// <inheritdoc />
     public async Task<GameTag?> UpdateAsync(GameTag gameTag)
     {
+        if (!GamesModelValidator.ValidateGameTag(gameTag, out _))
+        {
+            throw new ArgumentException("Invalid game tag.", nameof(gameTag));
+        }
+
         _gameTags.Update(gameTag);
         await _context.SaveChangesAsync();
         return gameTag;
@@ -73,11 +98,17 @@ public class GameTagRepository : IGameTagRepository
     /// <inheritdoc />
     public async Task DeleteAsync(Guid id)
     {
-        var gameTag = await _gameTags.FindAsync(id);
-        if (gameTag != null)
+        if (id == Guid.Empty)
         {
-            _gameTags.Remove(gameTag);
-            await _context.SaveChangesAsync();
+            throw new ArgumentException("Invalid game tag ID.", nameof(id));
         }
+        var gameTag = await _gameTags.FindAsync(id);
+        if (gameTag == null)
+        {
+            throw new ArgumentException("Game tag not found.", nameof(id));
+        }
+        
+        _gameTags.Remove(gameTag);
+        await _context.SaveChangesAsync();
     }
 }

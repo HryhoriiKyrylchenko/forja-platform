@@ -5,14 +5,14 @@ namespace Forja.Infrastructure.Repositories.Games;
 /// </summary>
 public class MechanicRepository : IMechanicRepository
 {
-    private readonly DbContext _context;
+    private readonly ForjaDbContext _context;
     private readonly DbSet<Mechanic> _mechanics;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MechanicRepository"/> class with the provided DbContext.
     /// </summary>
     /// <param name="context">The database context to be used.</param>
-    public MechanicRepository(DbContext context)
+    public MechanicRepository(ForjaDbContext context)
     {
         _context = context;
         _mechanics = context.Set<Mechanic>();
@@ -22,19 +22,39 @@ public class MechanicRepository : IMechanicRepository
     public async Task<IEnumerable<Mechanic>> GetAllAsync()
     {
         return await _mechanics
+            .Where(m => !m.IsDeleted)
+            .ToListAsync();
+    }
+    
+    /// <inheritdoc />
+    public async Task<IEnumerable<Mechanic>> GetAllDeletedAsync()
+    {
+        return await _mechanics
+            .Where(m => m.IsDeleted)
             .ToListAsync();
     }
 
     /// <inheritdoc />
     public async Task<Mechanic?> GetByIdAsync(Guid id)
     {
+        if (id == Guid.Empty)
+        {
+            throw new ArgumentException("Invalid mechanic ID.", nameof(id));
+        }
+        
         return await _mechanics
+            .Where(m => !m.IsDeleted)
             .FirstOrDefaultAsync(m => m.Id == id);
     }
 
     /// <inheritdoc />
     public async Task<Mechanic?> AddAsync(Mechanic mechanic)
     {
+        if (!GamesModelValidator.ValidateMechanic(mechanic, out _))
+        {
+            throw new ArgumentException("Invalid mechanic.", nameof(mechanic));
+        }
+        
         await _mechanics.AddAsync(mechanic);
         await _context.SaveChangesAsync();
         return mechanic;
@@ -43,6 +63,11 @@ public class MechanicRepository : IMechanicRepository
     /// <inheritdoc />
     public async Task<Mechanic?> UpdateAsync(Mechanic mechanic)
     {
+        if (!GamesModelValidator.ValidateMechanic(mechanic, out _))
+        {
+            throw new ArgumentException("Invalid mechanic.", nameof(mechanic));
+        }
+
         _mechanics.Update(mechanic);
         await _context.SaveChangesAsync();
         return mechanic;
@@ -51,20 +76,19 @@ public class MechanicRepository : IMechanicRepository
     /// <inheritdoc />
     public async Task DeleteAsync(Guid id)
     {
-        var mechanic = await _mechanics.FindAsync(id);
-        if (mechanic != null)
+        if (id == Guid.Empty)
         {
-            _mechanics.Remove(mechanic);
-            await _context.SaveChangesAsync();
+            throw new ArgumentException("Invalid mechanic ID.", nameof(id));
         }
-    }
-
-    /// <inheritdoc />
-    public async Task<IEnumerable<Mechanic>> GetAllWithGameMechanicsAsync()
-    {
-        return await _mechanics
-            .Include(m => m.GameMechanics) // Include the GameMechanics relationship
-            .ThenInclude(gm => gm.Game)   // Optionally include the associated Game entities
-            .ToListAsync();
+        
+        var mechanic = await _mechanics.FindAsync(id);
+        if (mechanic == null)
+        {
+            throw new ArgumentException("Mechanic not found.", nameof(id));
+        }
+        
+        mechanic.IsDeleted = true;
+        _mechanics.Update(mechanic);
+        await _context.SaveChangesAsync();
     }
 }

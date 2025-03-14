@@ -26,6 +26,13 @@ public interface IProductGenresRepository
     Task<ProductGenres?> AddAsync(ProductGenres productGenre);
 
     /// <summary>
+    /// Updates an existing product-genre relationship.
+    /// </summary>
+    /// <param name="productGenre">The product-genre entity containing updated information.</param>
+    /// <returns>The updated product-genre entity, or null if the update was unsuccessful.</returns>
+    Task<ProductGenres?> UpdateAsync(ProductGenres productGenre);
+
+    /// <summary>
     /// Deletes a product-genre relationship by its unique identifier.
     /// </summary>
     /// <param name="id">The unique identifier of the product-genre relationship to delete.</param>

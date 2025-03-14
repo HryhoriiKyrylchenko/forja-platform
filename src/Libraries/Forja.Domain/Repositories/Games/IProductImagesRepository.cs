@@ -26,6 +26,13 @@ public interface IProductImagesRepository
     Task<ProductImages?> AddAsync(ProductImages productImage);
 
     /// <summary>
+    /// Updates an existing product-image relationship in the repository.
+    /// </summary>
+    /// <param name="productImage">The product-image relationship to update.</param>
+    /// <returns>The updated product-image relationship, or null if the update was unsuccessful.</returns>
+    Task<ProductImages?> UpdateAsync(ProductImages productImage);
+
+    /// <summary>
     /// Deletes a product-image relationship by its unique identifier.
     /// </summary>
     /// <param name="id">The unique identifier of the product-image relationship to delete.</param>

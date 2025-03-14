@@ -38,10 +38,4 @@ public interface IMatureContentRepository
     /// <param name="id">The unique identifier of the mature content to delete.</param>
     /// <returns>A task representing the operation.</returns>
     Task DeleteAsync(Guid id);
-
-    /// <summary>
-    /// Gets all mature content entries with their associated product-mature content relationships.
-    /// </summary>
-    /// <returns>A collection of mature content entries including their related products.</returns>
-    Task<IEnumerable<MatureContent>> GetAllWithProductMatureContentsAsync();
 }

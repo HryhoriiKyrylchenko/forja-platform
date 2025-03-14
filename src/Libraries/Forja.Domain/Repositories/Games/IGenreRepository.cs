@@ -12,6 +12,12 @@ public interface IGenreRepository
     Task<IEnumerable<Genre>> GetAllAsync();
 
     /// <summary>
+    /// Gets all deleted genres.
+    /// </summary>
+    /// <returns>A collection of deleted genres.</returns>
+    Task<IEnumerable<Genre>> GetAllDeletedAsync();
+
+    /// <summary>
     /// Gets a genre by its unique identifier.
     /// </summary>
     /// <param name="id">The unique identifier of the genre.</param>
@@ -38,10 +44,4 @@ public interface IGenreRepository
     /// <param name="id">The unique identifier of the genre to delete.</param>
     /// <returns>A task representing the operation.</returns>
     Task DeleteAsync(Guid id);
-
-    /// <summary>
-    /// Gets all genres with their associated games.
-    /// </summary>
-    /// <returns>A collection of genres including their related games.</returns>
-    Task<IEnumerable<Genre>> GetAllWithGamesAsync();
 }

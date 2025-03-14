@@ -12,6 +12,12 @@ public interface IMechanicRepository
     Task<IEnumerable<Mechanic>> GetAllAsync();
 
     /// <summary>
+    /// Gets all deleted mechanics.
+    /// </summary>
+    /// <returns>A collection of all deleted mechanics.</returns>
+    Task<IEnumerable<Mechanic>> GetAllDeletedAsync();
+
+    /// <summary>
     /// Gets a mechanic by its unique identifier.
     /// </summary>
     /// <param name="id">The unique identifier of the mechanic.</param>
@@ -38,10 +44,4 @@ public interface IMechanicRepository
     /// <param name="id">The unique identifier of the mechanic to delete.</param>
     /// <returns>A task representing the operation.</returns>
     Task DeleteAsync(Guid id);
-
-    /// <summary>
-    /// Gets all mechanics, including their associated game-mechanic relationships and linked games.
-    /// </summary>
-    /// <returns>A collection of mechanics including their relationships and games.</returns>
-    Task<IEnumerable<Mechanic>> GetAllWithGameMechanicsAsync();
 }
