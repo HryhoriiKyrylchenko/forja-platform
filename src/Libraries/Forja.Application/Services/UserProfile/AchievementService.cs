@@ -1,3 +1,5 @@
+using System.Linq;
+
 namespace Forja.Application.Services.UserProfile;
 
 /// <summary>
@@ -290,6 +292,24 @@ public class AchievementService : IAchievementService
         }
         
         return userAchievements.Select(UserProfileEntityToDtoMapper.MapToUserAchievementDto).ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<List<UserAchievementDto>> GetAllAchievementsByUserIdAsync(Guid userId)
+    {
+        var userAchievements = await _userAchievementRepository.GetAllByUserIdAsync(userId);
+
+        return userAchievements
+            .Select(UserProfileEntityToDtoMapper.MapToUserAchievementDto).ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<List<UserAchievementDto>> GetNumAchievementsByUserIdAsync(Guid userId, int num)
+    {
+        var userAchievements = await _userAchievementRepository.GetNumByUserIdAsync(userId, num);
+
+        return userAchievements
+            .Select(UserProfileEntityToDtoMapper.MapToUserAchievementDto).ToList();
     }
 
     /// <inheritdoc />

@@ -113,8 +113,8 @@ public class KeycloakClient : IKeycloakClient
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         request.Content = new StringContent(
             JsonSerializer.Serialize(new
-            {
-                name = role,
+            {                name = role,
+
                 description
             }, new JsonSerializerOptions
             {

@@ -90,18 +90,30 @@ public class AuthController : ControllerBase
     /// Returns an Ok response if the logout is successful, or a Bad Request response with an error message if the process fails.</returns>
     [Authorize]
     [HttpPost("logout")]
-    public async Task<IActionResult> Logout([FromBody] LogoutRequest request)
+    public async Task<IActionResult> Logout()
     {
+        if (!Request.Cookies.TryGetValue("refresh_token", out var refreshToken) || string.IsNullOrEmpty(refreshToken))
+        {
+            return BadRequest(new { error = "Refresh token is missing or invalid." });
+        }
+
+        var logoutRequest = new LogoutRequest { RefreshToken = refreshToken };
+
         try
         {
-            await _authService.LogoutUserAsync(request);
-            return Ok(new { Message = "Logout successful" });
+            await _authService.LogoutUserAsync(logoutRequest);
+
+            Response.Cookies.Delete("access_token");
+            Response.Cookies.Delete("refresh_token");
+
+            return Ok(new { message = "Logout successful" });
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             return BadRequest(new { error = ex.Message });
         }
     }
+
 
     /// <summary>
     /// Refreshes the authentication token for a user using a provided refresh token.
