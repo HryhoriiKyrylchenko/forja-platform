@@ -13,12 +13,7 @@ var postgres = builder.AddPostgres("postgres", password: postgresPassword)
         port: 5432,
         targetPort: 5432,
         isProxied: false)
-    .WithLifetime(ContainerLifetime.Persistent)
-    .WithPgAdmin(pgAdmin => pgAdmin.WithHostPort(5050)
-            .WithImage("dpage/pgadmin4")
-            .WithImageTag("8.12")
-            .WithContainerName("forja-pgadmin")
-        , "forja-pgadmin");
+    .WithLifetime(ContainerLifetime.Persistent);
 
 var forjaDb = postgres.AddDatabase("forjadb");
 var keycloakDb = postgres.AddDatabase("keycloakdb");

@@ -133,4 +133,13 @@ public class UserProfileDto
     /// which can be used as a unique identifier or shortcut to their profile page.
     /// </remarks>
     public string? CustomUrl { get; set; }
+
+    /// <summary>
+    /// Gets or sets the hat variant associated with the user profile.
+    /// </summary>
+    /// <remarks>
+    /// This property represents a customization option for the user's profile,
+    /// indicating the specific hat variant chosen or assigned.
+    /// </remarks>
+    public short ProfileHatVariant { get; set; }
 }
