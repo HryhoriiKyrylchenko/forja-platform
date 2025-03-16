@@ -162,7 +162,8 @@ public class UserService : IUserService
             SelfDescription = request.SelfDescription,
             ShowPersonalInfo = request.ShowPersonalInfo,
             CreatedAt = request.CreatedAt,
-            CustomUrl = request.CustomUrl
+            CustomUrl = request.CustomUrl,
+            ProfileHatVariant = request.ProfileHatVariant
         };
 
         var result = await _userRepository.AddAsync(user);
@@ -200,6 +201,7 @@ public class UserService : IUserService
         user.ShowPersonalInfo = request.ShowPersonalInfo;
         user.ModifiedAt = request.ModifiedAt;
         user.CustomUrl = request.CustomUrl;
+        user.ProfileHatVariant = request.ProfileHatVariant;
         
         await _userRepository.UpdateAsync(user);
         

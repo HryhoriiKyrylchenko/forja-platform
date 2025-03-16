@@ -173,7 +173,6 @@ public class AuthController : ControllerBase
     /// Creates all the default project roles listed in the UserRole enumeration.
     /// </summary>
     /// <returns>An IActionResult indicating the result of the operation.</returns>
-    [Authorize(Policy = "AdminPolicy")]
     [HttpPost("all-default-roles")]
     public async Task<IActionResult> CreateAllDefaultProjectRoles()
     {

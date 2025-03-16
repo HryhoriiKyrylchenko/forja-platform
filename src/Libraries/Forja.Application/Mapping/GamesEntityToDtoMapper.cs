@@ -62,4 +62,227 @@ public static class GamesEntityToDtoMapper
             StorageUrl = gameAddon.StorageUrl
         };
     }
+
+    /// <summary>
+    /// Maps a <see cref="GameAddon"/> entity to a <see cref="GameAddonDto"/>.
+    /// </summary>
+    /// <param name="addon">The game addon entity to be mapped.</param>
+    /// <returns>A <see cref="GameAddonDto"/> that represents the mapped game addon entity.</returns>
+    public static GameAddonDto MapToGameAddonDto(GameAddon addon)
+    {
+        return new GameAddonDto
+        {
+            Id = addon.Id,
+            Title = addon.Title,
+            ShortDescription = addon.ShortDescription,
+            Description = addon.Description,
+            Developer = addon.Developer,
+            MinimalAge = addon.MinimalAge.ToString(),
+            Platforms = addon.Platforms,
+            Price = addon.Price,
+            LogoUrl = addon.LogoUrl,
+            ReleaseDate = addon.ReleaseDate,
+            IsActive = addon.IsActive,
+            InterfaceLanguages = addon.InterfaceLanguages,
+            AudioLanguages = addon.AudioLanguages,
+            SubtitlesLanguages = addon.SubtitlesLanguages,
+            GameId = addon.GameId,
+            StorageUrl = addon.StorageUrl
+        };
+    }
+    
+    /// <summary>
+    /// Maps a <see cref="Bundle"/> entity to a <see cref="BundleDto"/>.
+    /// </summary>
+    public static BundleDto MapToBundleDto(Bundle bundle)
+    {
+        var bundleProducts = bundle.BundleProducts.Select(bp => new ProductDto
+        {
+            Id = bp.ProductId,
+            Title = bp.Product.Title,
+            ShortDescription = bp.Product.ShortDescription,
+            Description = bp.Product.Description,
+            Price = bp.Product.Price,
+            LogoUrl = bp.Product.LogoUrl,
+            ReleaseDate = bp.Product.ReleaseDate,
+            IsActive = bp.Product.IsActive
+        }).ToList();
+        
+        return new BundleDto
+        {
+            Id = bundle.Id,
+            Title = bundle.Title,
+            Description = bundle.Description,
+            TotalPrice = bundle.TotalPrice,
+            CreatedAt = bundle.CreatedAt,
+            IsActive = bundle.IsActive,
+            BundleProducts = bundleProducts
+        };
+    }
+
+    /// <summary>
+    /// Maps a <see cref="BundleProduct"/> entity to a <see cref="BundleProductDto"/>.
+    /// </summary>
+    /// <param name="bundleProduct">The bundle product entity to be mapped.</param>
+    /// <returns>A <see cref="BundleProductDto"/> that represents the mapped bundle product entity.</returns>
+    public static BundleProductDto MapToBundleProductDto(BundleProduct bundleProduct)
+    {
+        return new BundleProductDto
+        {
+            Id = bundleProduct.Id,
+            BundleId = bundleProduct.BundleId,
+            ProductId = bundleProduct.ProductId
+        };
+    }
+
+    /// <summary>
+    /// Maps a <see cref="GameMechanic"/> entity to a <see cref="GameMechanicDto"/>.
+    /// </summary>
+    /// <param name="gameMechanic">The game mechanic entity to be mapped.</param>
+    /// <returns>A <see cref="GameMechanicDto"/> that represents the mapped game mechanic entity.</returns>
+    public static GameMechanicDto MapToGameMechanicDto(GameMechanic gameMechanic)
+    {
+        return new GameMechanicDto
+        {
+            Id = gameMechanic.Id,
+            GameId = gameMechanic.GameId,
+            MechanicId = gameMechanic.MechanicId
+        };
+    }
+
+    /// <summary>
+    /// Maps a <see cref="GameTag"/> entity to a <see cref="GameTagDto"/>.
+    /// </summary>
+    /// <param name="gameTag">The game tag entity to be mapped.</param>
+    /// <returns>A <see cref="GameTagDto"/> that represents the mapped game tag entity.</returns>
+    public static GameTagDto MapToGameTagDto(GameTag gameTag)
+    {
+        return new GameTagDto
+        {
+            Id = gameTag.Id,
+            GameId = gameTag.GameId,
+            TagId = gameTag.TagId
+        };
+    }
+
+    /// <summary>
+    /// Maps a <see cref="Genre"/> entity to a <see cref="GenreDto"/>.
+    /// </summary>
+    /// <param name="genre">The genre entity to be mapped.</param>
+    /// <returns>A <see cref="GenreDto"/> that represents the mapped genre entity.</returns>
+    public static GenreDto MapToGenreDto(Genre genre)
+    {
+        return new GenreDto
+        {
+            Id = genre.Id,
+            Name = genre.Name
+        };
+    }
+
+    /// <summary>
+    /// Maps an <see cref="ItemImage"/> entity to an <see cref="ItemImageDto"/>.
+    /// </summary>
+    /// <param name="itemImage">The item image entity to be mapped.</param>
+    /// <returns>An <see cref="ItemImageDto"/> that represents the mapped item image entity.</returns>
+    public static ItemImageDto MapToItemImageDto(ItemImage itemImage)
+    {
+        return new ItemImageDto
+        {
+            Id = itemImage.Id,
+            ImageUrl = itemImage.ImageUrl,
+            ImageAlt = itemImage.ImageAlt
+        };
+    }
+
+    /// <summary>
+    /// Maps a <see cref="MatureContent"/> entity to a <see cref="MatureContentDto"/>.
+    /// </summary>
+    /// <param name="matureContent">The mature content entity to be mapped.</param>
+    /// <returns>A <see cref="MatureContentDto"/> that represents the mapped mature content entity.</returns>
+    public static MatureContentDto MapToMatureContentDto(MatureContent matureContent)
+    {
+        return new MatureContentDto
+        {
+            Id = matureContent.Id,
+            Name = matureContent.Name,
+            Description = matureContent.Description,
+            LogoUrl = matureContent.LogoUrl
+        };
+    }
+
+    /// <summary>
+    /// Maps a <see cref="Mechanic"/> entity to a <see cref="MechanicDto"/>.
+    /// </summary>
+    /// <param name="mechanic">The mechanic entity to be mapped.</param>
+    /// <returns>A <see cref="MechanicDto"/> that represents the mapped mechanic entity.</returns>
+    public static MechanicDto MapToMechanicDto(Mechanic mechanic)
+    {
+        return new MechanicDto
+        {
+            Id = mechanic.Id,
+            Name = mechanic.Name,
+            Description = mechanic.Description,
+            LogoUrl = mechanic.LogoUrl,
+            IsDeleted = mechanic.IsDeleted
+        };
+    }
+
+    /// <summary>
+    /// Maps a <see cref="ProductGenres"/> entity to a <see cref="ProductGenresDto"/>.
+    /// </summary>
+    /// <param name="productGenres">The product genres entity to be mapped.</param>
+    /// <returns>A <see cref="ProductGenresDto"/> that represents the mapped product genres entity.</returns>
+    public static ProductGenresDto MapToProductGenresDto(ProductGenres productGenres)
+    {
+        return new ProductGenresDto
+        {
+            Id = productGenres.Id,
+            ProductId = productGenres.ProductId,
+            GenreId = productGenres.GenreId
+        };
+    }
+
+    /// <summary>
+    /// Maps a <see cref="ProductImages"/> entity to a <see cref="ProductImagesDto"/>.
+    /// </summary>
+    /// <param name="productImages">The product images entity to be mapped.</param>
+    /// <returns>A <see cref="ProductImagesDto"/> that represents the mapped product images entity.</returns>
+    public static ProductImagesDto MapToProductImagesDto(ProductImages productImages)
+    {
+        return new ProductImagesDto
+        {
+            Id = productImages.Id,
+            ProductId = productImages.ProductId,
+            ItemImageId = productImages.ItemImageId
+        };
+    }
+
+    /// <summary>
+    /// Maps a <see cref="ProductMatureContent"/> entity to a <see cref="ProductMatureContentDto"/>.
+    /// </summary>
+    /// <param name="productMatureContent">The product mature content entity to be mapped.</param>
+    /// <returns>A <see cref="ProductMatureContentDto"/> that represents the mapped product mature content entity.</returns>
+    public static ProductMatureContentDto MapToProductMatureContentDto(ProductMatureContent productMatureContent)
+    {
+        return new ProductMatureContentDto
+        {
+            Id = productMatureContent.Id,
+            ProductId = productMatureContent.ProductId,
+            MatureContentId = productMatureContent.MatureContentId
+        };
+    }
+
+    /// <summary>
+    /// Maps a <see cref="Tag"/> entity to a <see cref="TagDto"/>.
+    /// </summary>
+    /// <param name="tag">The tag entity to be mapped.</param>
+    /// <returns>A <see cref="TagDto"/> that represents the mapped tag entity.</returns>
+    public static TagDto MapToTagDto(Tag tag)
+    {
+        return new TagDto
+        {
+            Id = tag.Id,
+            Title = tag.Title
+        };
+    }
 }

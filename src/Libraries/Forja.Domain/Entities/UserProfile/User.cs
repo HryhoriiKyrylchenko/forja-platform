@@ -103,6 +103,11 @@ public class User : SoftDeletableEntity
     public string? CustomUrl { get; set; }
 
     /// <summary>
+    /// Gets or sets the variant of the user's profile hat.
+    /// </summary>
+    public short ProfileHatVariant { get; set; }
+
+    /// <summary>
     /// Gets or sets the cart associated with the user.
     /// Virtual property for Entity Framework to handle related data.
     /// </summary>

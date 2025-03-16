@@ -42,4 +42,6 @@ public class UserUpdateRequest
     public DateTime ModifiedAt { get; set; }
 
     public string? CustomUrl { get; set; }
+    
+    public short ProfileHatVariant { get; set; }
 }
