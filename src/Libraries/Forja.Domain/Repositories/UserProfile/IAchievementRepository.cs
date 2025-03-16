@@ -61,8 +61,9 @@ public interface IAchievementRepository
     /// </summary>
     /// <param name="achievementId">The unique identifier of the achievement to delete.</param>
     /// <returns>A task representing the asynchronous delete operation.</returns>
+    /// 
     Task DeleteAsync(Guid achievementId);
-
+    
     /// <summary>
     /// Restores a previously deleted achievement by its unique identifier.
     /// </summary>

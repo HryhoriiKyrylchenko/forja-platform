@@ -1,3 +1,5 @@
+using System.Security.Claims;
+
 namespace Forja.API.Controllers.UserProfile;
 
 /// <summary>
@@ -233,33 +235,38 @@ public class UserController : ControllerBase
     {
         try
         {
-            var accessToken = GetAccessTokenFromRequest();
-
-            if (string.IsNullOrEmpty(accessToken))
-            {
-                return Unauthorized(new { error = "Authorization header is missing or empty." });
-            }
-
-            var keycloakUserId = _keycloakClient.GetKeycloakUserId(accessToken);
+            var keycloakUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (string.IsNullOrEmpty(keycloakUserId))
             {
-                return Unauthorized(new { error = "Unable to retrieve user information from token." });
+                return Unauthorized(new { error = "User ID not found in token claims." });
             }
-        
+
             var result = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
             if (result == null)
             {
                 return NotFound(new { error = $"User with Keycloak ID {keycloakUserId} not found." });
             }
-        
+
             return Ok(result);
         }
         catch (Exception ex)
         {
-            return BadRequest(new { error = ex.Message });
+            return StatusCode(500, new { error = "An internal error occurred.", details = ex.Message });
         }
     }
+
+    [HttpGet("debug-token")]
+    public IActionResult DebugToken()
+    {
+        if (Request.Cookies.TryGetValue("access_token", out var token))
+        {
+            return Ok(new { message = "Token is present in cookies", accessToken = token });
+        }
+
+        return Unauthorized(new { error = "No access token found in cookies" });
+    }
+
 
     /// <summary>
     /// Retrieves the user profile for a specific user ID for manager-level access.
@@ -557,18 +564,11 @@ public class UserController : ControllerBase
     /// </returns>
     private string? GetAccessTokenFromRequest()
     {
-        var accessToken = HttpContext.Request.Headers["Authorization"].ToString();
-
-        if (string.IsNullOrWhiteSpace(accessToken))
+        if (HttpContext.Request.Cookies.TryGetValue("access_token", out var cookieToken))
         {
-            return null; 
+            return cookieToken;
         }
 
-        if (accessToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-        {
-            accessToken = accessToken.Substring("Bearer ".Length).Trim();
-        }
-
-        return accessToken;
+        return null;
     }
 }

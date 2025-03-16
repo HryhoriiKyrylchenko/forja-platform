@@ -1,3 +1,5 @@
+using System.Linq;
+
 namespace Forja.Application.Services.UserProfile;
 
 /// <summary>
@@ -8,12 +10,14 @@ public class AchievementService : IAchievementService
     private readonly IAchievementRepository _achievementRepository;
     private readonly IUserAchievementRepository _userAchievementRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IGameRepository _gameRepository;
 
-    public AchievementService(IAchievementRepository achievementRepository, IUserAchievementRepository userAchievementRepository, IUserRepository userRepository)
+    public AchievementService(IAchievementRepository achievementRepository, IUserAchievementRepository userAchievementRepository, IUserRepository userRepository, IGameRepository gameRepository)
     {
         _achievementRepository = achievementRepository ?? throw new ArgumentNullException(nameof(achievementRepository));
         _userAchievementRepository = userAchievementRepository ?? throw new ArgumentNullException(nameof(userAchievementRepository));
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        _gameRepository = gameRepository ?? throw new ArgumentNullException(nameof(gameRepository));
     }
     
     #region Achievement Methods
@@ -34,10 +38,13 @@ public class AchievementService : IAchievementService
             Description = request.Description,
             Points = request.Points,
             LogoUrl = request.LogoUrl
-        };
+        };        
     
         await _achievementRepository.AddAsync(achievement);
-        
+
+        var game = await _gameRepository.GetByIdAsync(request.GameId);
+        achievement.Game = game;
+
         return UserProfileEntityToDtoMapper.MapToAchievementDto(achievement);
     }
 
@@ -285,6 +292,24 @@ public class AchievementService : IAchievementService
         }
         
         return userAchievements.Select(UserProfileEntityToDtoMapper.MapToUserAchievementDto).ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<List<UserAchievementDto>> GetAllAchievementsByUserIdAsync(Guid userId)
+    {
+        var userAchievements = await _userAchievementRepository.GetAllByUserIdAsync(userId);
+
+        return userAchievements
+            .Select(UserProfileEntityToDtoMapper.MapToUserAchievementDto).ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<List<UserAchievementDto>> GetNumAchievementsByUserIdAsync(Guid userId, int num)
+    {
+        var userAchievements = await _userAchievementRepository.GetNumByUserIdAsync(userId, num);
+
+        return userAchievements
+            .Select(UserProfileEntityToDtoMapper.MapToUserAchievementDto).ToList();
     }
 
     /// <inheritdoc />

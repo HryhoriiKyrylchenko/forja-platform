@@ -110,6 +110,20 @@ public interface IAchievementService
     Task<List<UserAchievementDto>> GetAllUserAchievementsByUserKeycloakIdAsync(string userKeycloakId);
 
     /// <summary>
+    /// Retrieves all achievements associated with the specified user's ID.
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    Task<List<UserAchievementDto>> GetAllAchievementsByUserIdAsync(Guid userId);
+
+    /// <summary>
+    /// Retrieves all achievements associated with the specified user's ID.
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    Task<List<UserAchievementDto>> GetNumAchievementsByUserIdAsync(Guid userId, int num);
+
+    /// <summary>
     /// Retrieves all user achievements associated with the specified game ID.
     /// </summary>
     /// <param name="gameId">The unique identifier of the game to retrieve user achievements for.</param>

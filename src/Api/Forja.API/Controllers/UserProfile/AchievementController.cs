@@ -51,6 +51,7 @@ public class AchievementController : ControllerBase
     /// An <see cref="IActionResult"/> containing the requested achievement details if the operation is successful.
     /// Returns a status of 200 (OK) with the achievement data, or a status of 400 (Bad Request) if the provided ID is invalid.
     /// </returns>
+    [Authorize]
     [HttpGet("{achievementId}")]
     public async Task<ActionResult<AchievementDto>> GetAchievementById([FromRoute] Guid achievementId)
     {
@@ -179,6 +180,7 @@ public class AchievementController : ControllerBase
     /// If successful, returns a status of 200 (OK) with the list of achievements.
     /// If the game ID is invalid or an error occurs, returns an appropriate error response.
     /// </returns>
+    [Authorize]
     [HttpGet("game/{gameId}/all")]
     public async Task<ActionResult<List<AchievementDto>>> GetAllGameAchievements([FromRoute] Guid gameId)
     {
@@ -237,6 +239,7 @@ public class AchievementController : ControllerBase
     /// If successful, returns a status of 200 (OK) with the retrieved data.
     /// If an error occurs, returns a status of 400 (Bad Request) with an error message.
     /// </returns>
+    [Authorize]
     [HttpGet("all")]
     public async Task<ActionResult<List<AchievementDto>>> GetAllAchievements()
     {
@@ -313,6 +316,7 @@ public class AchievementController : ControllerBase
     /// An <see cref="IActionResult"/> containing the user achievement details if found.
     /// If the identifier is invalid or an error occurs, returns an appropriate error response.
     /// </returns>
+    [Authorize]
     [HttpGet("user-achievements/{userAchievementId}")]
     public async Task<ActionResult<UserAchievementDto>> GetUserAchievementById([FromRoute] Guid userAchievementId)
     {
@@ -407,6 +411,7 @@ public class AchievementController : ControllerBase
     /// If successful, returns a status of 200 (OK) with the list of achievements.
     /// In case of an error, returns a status of 400 (Bad Request) with the error message.
     /// </returns>
+    [Authorize]
     [HttpGet("user-achievements/all")]
     public async Task<ActionResult<List<UserAchievementDto>>> GetAllUserAchievements()
     {
@@ -432,6 +437,7 @@ public class AchievementController : ControllerBase
     /// Returns a status of 200 (OK) with the achievements if successful.
     /// Returns a 400 (Bad Request) if the Keycloak ID is invalid or if an error occurs.
     /// </returns>
+    [Authorize]
     [HttpGet("{keycloakId}/user-achievements")]
     public async Task<ActionResult<List<UserAchievementDto>>> GetAllUserAchievementsByUserKeycloakId([FromRoute] string keycloakId)
     {
@@ -452,6 +458,77 @@ public class AchievementController : ControllerBase
     }
 
     /// <summary>
+    /// Retrieves all achievements for a specific user based on their user ID.
+    /// </summary>
+    /// <param name="userId">
+    /// The unique identifier of the user.
+    /// </param>
+    /// <returns>
+    /// A list of achievements associated with the user.
+    /// Returns 200 (OK) if successful, 400 (Bad Request) if the user ID is invalid.
+    /// </returns>
+    [Authorize]
+    [HttpGet("user/{userId}/achievements")]
+    public async Task<ActionResult<List<AchievementDto>>> GetAllAchievementsByUserId([FromRoute] Guid userId)
+    {
+        if (userId == Guid.Empty)
+        {
+            return BadRequest(new { error = "Invalid user ID." });
+        }
+
+        try
+        {
+            var result = await _achievementService.GetAllAchievementsByUserIdAsync(userId);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+
+    /// <summary>
+    /// Retrieves a specified number of the most recent achievements for a user based on their user ID.
+    /// </summary>
+    /// <param name="userId">
+    /// The unique identifier of the user.
+    /// </param>
+    /// <param name="num">
+    /// The number of most recent achievements to retrieve.
+    /// </param>
+    /// <returns>
+    /// A list of up to <paramref name="num"/> achievements associated with the user, sorted by the most recent first.
+    /// Returns 200 (OK) if successful, 400 (Bad Request) if the user ID is invalid or if an error occurs.
+    /// </returns>
+
+    [Authorize]
+    [HttpGet("user/{userId}/achievements/{num}")]
+    public async Task<ActionResult<List<AchievementDto>>> GetNumAchievementsByUserId([FromRoute] Guid userId, int num)
+    {
+        if (userId == Guid.Empty)
+        {
+            return BadRequest(new { error = "Invalid user ID." });
+        }
+
+        if (num <= 0)
+        {
+            return BadRequest(new { error = "The number of achievements must be greater than zero." });
+        }
+
+        try
+        {
+            var result = await _achievementService.GetNumAchievementsByUserIdAsync(userId, num);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+
+    /// <summary>
     /// Retrieves all user achievements associated with a specific game using the provided game ID.
     /// </summary>
     /// <param name="gameId">
@@ -462,6 +539,7 @@ public class AchievementController : ControllerBase
     /// Returns a status of 200 (OK) with the retrieved achievements if successful.
     /// If the provided game ID is invalid or an exception occurs, returns a status of 400 (Bad Request) with an error message.
     /// </returns>
+    [Authorize]
     [HttpGet("games/{gameId}/user-achievements")]
     public async Task<ActionResult<List<UserAchievementDto>>> GetAllUserAchievementsByGameId([FromRoute] Guid gameId)
     {

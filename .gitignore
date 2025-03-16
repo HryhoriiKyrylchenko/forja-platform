@@ -417,3 +417,5 @@ Thumbs.db
 .directory
 [._]*.s[a-v][a-z]
 [._]*.sw[a-p]
+/src/Api/Forja.API/appsettings.json
+/src/Libraries/Forja.Domain/Entities.zip

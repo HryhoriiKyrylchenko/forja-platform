@@ -1,3 +1,5 @@
+using Forja.Domain.Entities.UserProfile;
+
 namespace Forja.Infrastructure.Repositories.UserProfile;
 
 public class UserAchievementRepository : IUserAchievementRepository
@@ -34,6 +36,7 @@ public class UserAchievementRepository : IUserAchievementRepository
             .ToListAsync();
     }
 
+    /// <inheritdoc />
     public async Task<IEnumerable<UserAchievement>> GetAllByUserIdAsync(Guid userId)
     {
         if (userId == Guid.Empty)
@@ -43,8 +46,34 @@ public class UserAchievementRepository : IUserAchievementRepository
         
         return await _userAchievements
             .Include(ua => ua.Achievement)
-            .Include(ua => ua.User)
+            .Include(ua => ua.Achievement.Game)
             .Where(ua => ua.UserId == userId)
+            .ToListAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<UserAchievement>> GetNumByUserIdAsync(Guid userId, int num)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User id cannot be empty.", nameof(userId));
+        }
+
+        return await _userAchievements
+            .Include(ua => ua.Achievement)
+            .Include(ua => ua.Achievement.Game)
+            .Where(ua => ua.UserId == userId)
+            .OrderByDescending(ua => ua.AchievedAt)
+            .Take(num) 
+            .ToListAsync();
+    }
+
+    public async Task<List<Achievement>> GetAllAchievementsByUserIdAsync(Guid userId)
+    {
+        return await _userAchievements
+            .Where(ua => ua.UserId == userId)
+            .Include(ua => ua.Achievement.Game)
+            .Select(ua => ua.Achievement)
             .ToListAsync();
     }
 

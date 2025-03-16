@@ -104,7 +104,9 @@ public class UserLibraryGameRepository : IUserLibraryGameRepository
         await _userLibraryGames.AddAsync(userLibraryGame);
         await _context.SaveChangesAsync();
 
-        return userLibraryGame;
+        return await _userLibraryGames
+            .Include(g => g.Game)
+            .FirstOrDefaultAsync(g => g.Id == userLibraryGame.Id);
     }
 
     /// <inheritdoc />
