@@ -25,3 +25,4 @@ global using Forja.Application.Requests.UserProfile;
 global using Forja.Application.DTOs.Games;
 global using Forja.Application.Mapping;
 global using Forja.Application.Requests.Authentication;
+global using Forja.Application.Requests.Games;

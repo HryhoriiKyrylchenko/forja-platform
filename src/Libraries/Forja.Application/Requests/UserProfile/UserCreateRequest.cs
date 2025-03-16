@@ -41,4 +41,6 @@ public class UserCreateRequest
     public DateTime CreatedAt { get; set; }
 
     public string? CustomUrl { get; set; }
+    
+    public short ProfileHatVariant { get; set; }
 }

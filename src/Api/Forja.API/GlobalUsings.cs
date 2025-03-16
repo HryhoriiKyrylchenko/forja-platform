@@ -1,7 +1,6 @@
 global using Forja.Application;
 global using Forja.Infrastructure;
 global using Microsoft.AspNetCore.Mvc;
-global using Forja.Domain.Entities.Games;
 global using Microsoft.OpenApi.Models;
 global using Forja.Application.DTOs.UserProfile;
 global using Forja.Application.Interfaces.Authentication;
@@ -15,3 +14,4 @@ global using Microsoft.AspNetCore.Authorization;
 global using Forja.Application.Requests.Authentication;
 global using Forja.Application.Requests.UserProfile;
 global using Forja.Application.Validators;
+global using Forja.Application.Requests.Games;
