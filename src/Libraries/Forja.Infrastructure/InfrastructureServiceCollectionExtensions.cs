@@ -10,6 +10,21 @@ public static class InfrastructureServiceCollectionExtensions
         builder.Services.AddSingleton<IEmailService, EmailService>();
         builder.Services.AddHttpClient<IKeycloakClient, KeycloakClient>();
         
+        builder.Services.Configure<MinioConfiguration>(builder.Configuration.GetSection("MinIO"));
+
+        builder.Services.AddScoped<IStorageService, StorageService>(provider =>
+        {
+            var minioConfig = provider.GetRequiredService<IOptions<MinioConfiguration>>().Value;
+
+            return new StorageService(
+                minioConfig.Endpoint,
+                minioConfig.AccessKey,
+                minioConfig.SecretKey,
+                minioConfig.DefaultBucketName,
+                minioConfig.UseSSL
+            );
+        });
+        
         builder.Services.AddScoped<IBundleRepository, BundleRepository>();
         builder.Services.AddScoped<IBundleProductRepository, BundleProductRepository>();
         builder.Services.AddScoped<IGameAddonRepository, GameAddonRepository>();

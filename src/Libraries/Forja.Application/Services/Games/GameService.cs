@@ -29,7 +29,24 @@ public class GameService : IGameService
     /// <inheritdoc />
     public async Task<GameDto?> GetByIdAsync(Guid id)
     {
+        if (id == Guid.Empty)
+        {
+            throw new ArgumentException("Id cannot be empty.", nameof(id));
+        }
+        
         var game = await _gameRepository.GetByIdAsync(id);
+        return game == null ? null : GamesEntityToDtoMapper.MapToGameDto(game);
+    }
+
+    /// <inheritdoc />
+    public async Task<GameDto?> GetByStorageUrlAsync(string storageUrl)
+    {
+        if (string.IsNullOrWhiteSpace(storageUrl))
+        {
+            throw new ArgumentException("Storage URL cannot be empty.", nameof(storageUrl));
+        }
+        
+        var game = await _gameRepository.GetByStorageUrlAsync(storageUrl);
         return game == null ? null : GamesEntityToDtoMapper.MapToGameDto(game);
     }
 

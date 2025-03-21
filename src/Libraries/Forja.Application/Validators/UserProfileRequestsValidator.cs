@@ -89,9 +89,6 @@ public static class UserProfileRequestsValidator
 
         if (!string.IsNullOrWhiteSpace(request.PhoneNumber) && !IsValidPhoneNumber(request.PhoneNumber))
             return false; 
-
-        if (!string.IsNullOrWhiteSpace(request.AvatarUrl) && !Uri.IsWellFormedUriString(request.AvatarUrl, UriKind.Absolute))
-            return false; 
         
         if (request.BirthDate != null && request.BirthDate > DateTime.UtcNow)
             return false;
@@ -106,6 +103,25 @@ public static class UserProfileRequestsValidator
             return false;
         
         if (!string.IsNullOrWhiteSpace(request.SelfDescription) && request.SelfDescription.Length > 500)
+            return false;
+
+        return true;
+    }
+
+    /// <summary>
+    /// Validates a UserUpdateAvatarRequest instance.
+    /// </summary>
+    /// <param name="request">The UserUpdateAvatarRequest object to validate.</param>
+    /// <returns>True if the request is valid, otherwise false.</returns>
+    public static bool ValidateUserUpdateAvatarRequest(UserUpdateAvatarRequest request)
+    {
+        if (request == null) 
+            throw new ArgumentNullException(nameof(request));
+        
+        if (request.Id == Guid.Empty)
+            return false;
+        
+        if (string.IsNullOrWhiteSpace(request.AvatarUrl))
             return false;
 
         return true;

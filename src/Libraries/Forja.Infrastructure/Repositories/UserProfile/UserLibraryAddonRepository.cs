@@ -42,6 +42,37 @@ public class UserLibraryAddonRepository : IUserLibraryAddonRepository
     }
 
     /// <inheritdoc />
+    public async Task<UserLibraryAddon?> GetByGameIdAndUserIdAsync(Guid gameId, Guid userId)
+    {
+        if (gameId == Guid.Empty)
+        {
+            throw new ArgumentException("Game id cannot be empty.", nameof(gameId));
+        }
+        
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User id cannot be empty.", nameof(userId));
+        }
+        
+        return await _userLibraryAddons
+            .Where(ula => !ula.IsDeleted)
+            .FirstOrDefaultAsync(ula => ula.UserLibraryGame.GameId == gameId && ula.UserLibraryGame.UserId == userId);
+    }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<UserLibraryAddon>> GetByAddonIdAsync(Guid addonId)
+    {
+        if (addonId == Guid.Empty)
+        {
+            throw new ArgumentException("Addon id cannot be empty.", nameof(addonId));
+        }
+        
+        return await _userLibraryAddons
+            .Where(ula => !ula.IsDeleted)
+            .ToListAsync();
+    }
+
+    /// <inheritdoc />
     public async Task<IEnumerable<UserLibraryAddon>> GetAllByGameIdAsync(Guid gameId)
     {
         if (gameId == Guid.Empty)

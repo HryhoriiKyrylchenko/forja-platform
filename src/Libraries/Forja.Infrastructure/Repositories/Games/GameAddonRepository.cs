@@ -48,6 +48,19 @@ public class GameAddonRepository : IGameAddonRepository
     }
 
     /// <inheritdoc />
+    public async Task<GameAddon?> GetByStorageUrlAsync(string storageUrl)
+    {
+        if (string.IsNullOrWhiteSpace(storageUrl))
+        {
+            throw new ArgumentException("Invalid storage URL.", nameof(storageUrl));
+        }
+        
+        return await _gameAddons
+            .Where(ga => !ga.IsDeleted)
+            .FirstOrDefaultAsync(ga => ga.StorageUrl == storageUrl);
+    }
+
+    /// <inheritdoc />
     public async Task<IEnumerable<GameAddon>> GetByGameIdAsync(Guid gameId)
     {
         if (gameId == Guid.Empty)

@@ -15,3 +15,6 @@ global using Forja.Application.Requests.Authentication;
 global using Forja.Application.Requests.UserProfile;
 global using Forja.Application.Validators;
 global using Forja.Application.Requests.Games;
+global using Forja.Application.Interfaces.Storage;
+global using Forja.Application.Requests.Storage;
+global using System.Security.Claims;

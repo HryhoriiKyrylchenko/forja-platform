@@ -29,3 +29,8 @@ global using Forja.Infrastructure.Interfaces;
 global using System.Net.Mail;
 global using Forja.Infrastructure.Repositories.Store;
 global using Forja.Infrastructure.Services;
+global using Minio;
+global using Minio.DataModel.Args;
+global using Minio.Exceptions;
+global using Microsoft.Extensions.Options;
+global using Forja.Infrastructure.Minio;

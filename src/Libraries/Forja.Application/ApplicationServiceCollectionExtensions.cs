@@ -1,5 +1,3 @@
-using Forja.Application.Services.Authentication;
-
 namespace Forja.Application;
 
 public static class ApplicationServiceCollectionExtensions
@@ -33,6 +31,8 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<IUserLibraryService, UserLibraryService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IUserWishListService, UserWishListService>();
+        
+        services.AddScoped<IFileManagerService, FileManagerService>();
 
         return services;
     }

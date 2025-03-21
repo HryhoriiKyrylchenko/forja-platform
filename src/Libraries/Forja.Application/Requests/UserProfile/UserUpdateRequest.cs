@@ -21,8 +21,6 @@ public class UserUpdateRequest
 
     public string? PhoneNumber { get; set; }
 
-    public string? AvatarUrl { get; set; }
-
     public DateTime? BirthDate { get; set; }
 
     [MaxLength(10)]
