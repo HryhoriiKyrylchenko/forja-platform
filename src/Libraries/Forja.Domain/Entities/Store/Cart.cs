@@ -4,7 +4,7 @@ namespace Forja.Domain.Entities.Store;
 /// Represents a shopping cart in the store.
 /// </summary>
 [Table("Carts", Schema = "store")]
-public class Cart : SoftDeletableEntity
+public class Cart
 {
     /// <summary>
     /// Gets or sets the unique identifier for the cart.

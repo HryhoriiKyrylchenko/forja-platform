@@ -4,7 +4,7 @@ namespace Forja.Domain.Entities.Store;
 /// Represents an item in a shopping cart.
 /// </summary>
 [Table("CartItems", Schema = "store")]
-public class CartItem : SoftDeletableEntity
+public class CartItem
 {
     /// <summary>
     /// Gets or sets the unique identifier for the cart item.
@@ -27,6 +27,8 @@ public class CartItem : SoftDeletableEntity
     /// <summary>
     /// Gets or sets the price of the cart item.
     /// </summary>
+    [Column(TypeName = "decimal(18, 2)")]
+    [Range(0.01, double.MaxValue, ErrorMessage = "Price must be at least 0.01")]
     public decimal Price { get; set; }
     
     /// <summary>
