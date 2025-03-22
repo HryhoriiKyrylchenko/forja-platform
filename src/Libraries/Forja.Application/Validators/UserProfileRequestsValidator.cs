@@ -77,6 +77,11 @@ public static class UserProfileRequestsValidator
         if (request.ModifiedAt > DateTime.UtcNow)
             return false;
 
+        if (request.ProfileHatVariant is < 1 or > 5)
+        {
+            return false;
+        }
+
         // Optional fields validation
         if (!string.IsNullOrWhiteSpace(request.Username) && request.Username.Length > 30)
             return false; 
@@ -105,6 +110,25 @@ public static class UserProfileRequestsValidator
         if (!string.IsNullOrWhiteSpace(request.SelfDescription) && request.SelfDescription.Length > 500)
             return false;
 
+        return true;
+    }
+
+    /// <summary>
+    /// Validates a UserUpdateProfileHatVariantRequest instance.
+    /// </summary>
+    /// <param name="request">The UserUpdateProfileHatVariantRequest object to validate.</param>
+    /// <returns>True if valid, otherwise false.</returns>
+    public static bool ValidateUserUpdateProfileHatVariantRequest(UserUpdateProfileHatVariantRequest request)
+    {
+        if (request == null)
+            throw new ArgumentNullException(nameof(request));
+        
+        if (request.UserId == Guid.Empty)
+            return false;
+        
+        if (request.Variant is < 1 or > 5)
+            return false;
+        
         return true;
     }
 

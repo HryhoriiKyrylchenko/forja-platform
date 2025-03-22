@@ -11,11 +11,13 @@ namespace Forja.API.Controllers.Authentication;
 public class AuthController : ControllerBase
 {
     private readonly IUserAuthService _authService;
+    private readonly IUserService _userService;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public AuthController(IUserAuthService authService, IHttpContextAccessor httpContextAccessor)
+    public AuthController(IUserAuthService authService, IUserService userService, IHttpContextAccessor httpContextAccessor)
     {
         _authService = authService;
+        _userService = userService;
         _httpContextAccessor = httpContextAccessor;
     }
 
@@ -85,7 +87,6 @@ public class AuthController : ControllerBase
     /// <summary>
     /// Handles the logout process for a user, invalidating their current session and associated tokens.
     /// </summary>
-    /// <param name="request">The logout details, including the refresh token to be invalidated.</param>
     /// <returns>An <see cref="IActionResult"/> indicating the outcome of the logout process.
     /// Returns an Ok response if the logout is successful, or a Bad Request response with an error message if the process fails.</returns>
     [Authorize]
@@ -473,6 +474,7 @@ public class AuthController : ControllerBase
         try
         {
             await _authService.ConfirmUserEmailAsync(token);
+            await _userService.ConfirmEmailAsync(keycloakUserId, true);
             return NoContent();
         }
         catch (Exception ex)

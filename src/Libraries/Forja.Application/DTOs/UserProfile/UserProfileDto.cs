@@ -142,4 +142,13 @@ public class UserProfileDto
     /// indicating the specific hat variant chosen or assigned.
     /// </remarks>
     public short ProfileHatVariant { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the email address associated with the user profile has been confirmed.
+    /// </summary>
+    /// <remarks>
+    /// This property shows the email confirmation status of the user. A value of <c>true</c> indicates the user has verified
+    /// their email address, while <c>false</c> indicates the email address has not been confirmed.
+    /// </remarks>
+    public bool IsEmailConfirmed { get; set; }
 }

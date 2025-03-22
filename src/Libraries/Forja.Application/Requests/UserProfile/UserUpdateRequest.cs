@@ -41,5 +41,6 @@ public class UserUpdateRequest
 
     public string? CustomUrl { get; set; }
     
+    [Range(1, 5)]
     public short ProfileHatVariant { get; set; }
 }

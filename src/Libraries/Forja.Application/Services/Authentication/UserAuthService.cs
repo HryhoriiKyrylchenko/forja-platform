@@ -51,7 +51,8 @@ public class UserAuthService : IUserAuthService
             KeycloakUserId = keycloakId,
             Username = username,
             Email = request.Email,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            IsEmailConfirmed = false
         };
 
         var result = await _userRepository.AddAsync(appUser);
