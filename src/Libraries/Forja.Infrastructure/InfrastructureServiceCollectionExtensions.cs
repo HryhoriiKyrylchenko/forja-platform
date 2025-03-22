@@ -4,7 +4,9 @@ public static class InfrastructureServiceCollectionExtensions
 {
     public static IHostApplicationBuilder AddInfrastructureServices(this IHostApplicationBuilder builder)
     {
-        builder.AddNpgsqlDbContext<ForjaDbContext>("forjadb");
+        builder.Services.AddDbContext<ForjaDbContext>(options =>
+            options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection")));
+
 
         // Register repositories or other infrastructure services here
         builder.Services.AddSingleton<IEmailService, EmailService>();

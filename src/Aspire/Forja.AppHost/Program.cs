@@ -1,5 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-
 var builder = DistributedApplication.CreateBuilder(args);
 
 //Postgres Configuration
@@ -17,7 +15,6 @@ var postgres = builder.AddPostgres("postgres", password: postgresPassword)
         isProxied: false)
     .WithLifetime(ContainerLifetime.Persistent);
 
-var forjaDb = postgres.AddDatabase("forjadb");
 var keycloakDb = postgres.AddDatabase("keycloakdb");
 
 //Redis Configuration
@@ -64,7 +61,6 @@ builder.AddContainer("minio", "minio/minio")
 //backend
 var forjaApi = builder.AddProject<Projects.Forja_API>("forjaapi")
     .WithExternalHttpEndpoints()
-    .WithReference(forjaDb).WaitFor(forjaDb)
     .WithReference(redis)
     .WithReference(keycloak).WaitFor(keycloak);
 
