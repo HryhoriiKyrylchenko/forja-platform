@@ -8,12 +8,13 @@ public class KeycloakRolesClaimsTransformer : IClaimsTransformation
 
         if (identity.IsAuthenticated)
         {
-            var realmAccessClaim = identity.FindFirst("realm_access");
-            if (realmAccessClaim != null)
+            var resourceAccessClaim = identity.FindFirst("resource_access");
+            if (resourceAccessClaim != null)
             {
-                var resourceAccess = JsonDocument.Parse(realmAccessClaim.Value);
+                var resourceAccess = JsonDocument.Parse(resourceAccessClaim.Value);
 
-                if (resourceAccess.RootElement.TryGetProperty("roles", out var rolesElement))
+                if (resourceAccess.RootElement.TryGetProperty("Forja.Api", out var clientRolesElement)
+                    && clientRolesElement.TryGetProperty("roles", out var rolesElement))
                 {
                     foreach (var role in rolesElement.EnumerateArray())
                     {
