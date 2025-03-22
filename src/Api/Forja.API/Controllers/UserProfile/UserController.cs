@@ -409,6 +409,55 @@ public class UserController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Updates the user's profile hat variant file based on the provided request.
+    /// </summary>
+    /// <param name="request">The request containing details of the user and the new profile hat variant to be updated.</param>
+    /// <returns>An <see cref="IActionResult"/> indicating the result of the update operation, which may include success, validation errors,
+    /// or authorization errors.</returns>
+    [Authorize]
+    [HttpPost("profile-hat-variant")]
+    public async Task<IActionResult> UpdateUserProfileHatVariantFile([FromBody] UserUpdateProfileHatVariantRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var keycloakUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(keycloakUserId))
+            {
+                return Unauthorized(new { error = "User ID not found in token claims." });
+            }
+
+            var user = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
+            if (user == null)
+            {
+                return NotFound(new { error = $"User not found." });
+            }
+
+            if (user.Id != request.UserId)
+            {
+                return Unauthorized(new { error = "You are not authorized to update this user's profile." });
+            }
+
+            UserProfileDto? userProfile = null;
+            if (user.ProfileHatVariant != request.Variant)
+            {
+                await _userService.UpdateProfileHatVariant(request);
+            }
+            
+            return userProfile == null ? BadRequest( new { error = "Failed to update user profile hat variant."}) : Ok(userProfile);
+        }
+        catch (Exception e)
+        {
+            return BadRequest(new { error = e.Message });
+        }
+    }
+
     /// Deletes the user profile associated with the currently authenticated user.
     /// This method retrieves the access token from the request, validates it,
     /// and fetches the associated Keycloak user ID. If the Keycloak user ID

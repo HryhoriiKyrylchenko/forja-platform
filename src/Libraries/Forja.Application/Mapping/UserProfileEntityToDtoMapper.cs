@@ -158,7 +158,8 @@ public static class UserProfileEntityToDtoMapper
             ShowPersonalInfo = user.ShowPersonalInfo,
             CreatedAt = user.CreatedAt,
             CustomUrl = user.CustomUrl,
-            ProfileHatVariant = user.ProfileHatVariant
+            ProfileHatVariant = user.ProfileHatVariant,
+            IsEmailConfirmed = user.IsEmailConfirmed
         };
     }
     

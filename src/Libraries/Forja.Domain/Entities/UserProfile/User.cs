@@ -86,6 +86,11 @@ public class User : SoftDeletableEntity
     /// Gets or sets a value indicating whether personal information should be visible.
     /// </summary>
     public bool ShowPersonalInfo { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the user's email address has been confirmed.
+    /// </summary>
+    public bool IsEmailConfirmed { get; set; }
     
     /// <summary>
     /// Gets or sets the date and time when the user was created.
@@ -105,6 +110,7 @@ public class User : SoftDeletableEntity
     /// <summary>
     /// Gets or sets the variant of the user's profile hat.
     /// </summary>
+    [Range(1, 5)]
     public short ProfileHatVariant { get; set; }
 
     /// <summary>
