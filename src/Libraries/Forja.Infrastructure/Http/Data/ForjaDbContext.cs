@@ -6,7 +6,6 @@ public class ForjaDbContext : DbContext
 {
     public ForjaDbContext(DbContextOptions<ForjaDbContext> options) : base(options)
     {
-        Database.EnsureCreated();
     }
     
     // Analytics entities (schema: analytics)
@@ -60,8 +59,6 @@ public class ForjaDbContext : DbContext
     public DbSet<UserLibraryGame> UserLibraryGames { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<UserWishList> UserWishLists { get; set; }
-    
-    
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
