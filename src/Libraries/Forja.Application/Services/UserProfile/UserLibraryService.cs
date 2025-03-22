@@ -119,6 +119,37 @@ public class UserLibraryService : IUserLibraryService
     }
 
     /// <inheritdoc />
+    public async Task<UserLibraryGameDto?> GetUserLibraryGameByGameIdAndUserIdAsync(Guid gameId, Guid userId)
+    {
+        if (gameId == Guid.Empty)
+        {
+            throw new ArgumentException("Game ID cannot be an empty Guid.", nameof(gameId));
+        }
+        
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User ID cannot be an empty Guid.", nameof(userId));
+        }
+        
+        var userLibraryGame = await _userLibraryGameRepository.GetByGameIdAndUserIdAsync(gameId, userId);
+        
+        return userLibraryGame == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(userLibraryGame);
+    }
+
+    /// <inheritdoc />
+    public async Task<List<UserLibraryGameDto>> GetUserLibraryGamesByGameIdAsync(Guid gameId)
+    {
+        if (gameId == Guid.Empty)
+        {
+            throw new ArgumentException("Game ID cannot be an empty Guid.", nameof(gameId));
+        }
+        
+        var userLibraryGames = await _userLibraryGameRepository.GetByGameIdAsync(gameId);
+
+        return userLibraryGames.Select(UserProfileEntityToDtoMapper.MapToUserLibraryGameDto).ToList();
+    }
+
+    /// <inheritdoc />
     public async Task<List<UserLibraryGameDto>> GetAllUserLibraryGamesAsync()
     {
         var allUserLibraryGames = await _userLibraryGameRepository.GetAllAsync();
@@ -286,6 +317,37 @@ public class UserLibraryService : IUserLibraryService
         var result = await _userLibraryAddonRepository.GetDeletedByIdAsync(userLibraryAddonId);
         
         return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(result);
+    }
+
+    /// <inheritdoc />
+    public async Task<UserLibraryAddonDto?> GetUserLibraryAddonByAddonIdAndUserIdAsync(Guid addonId, Guid userId)
+    {
+        if (addonId == Guid.Empty)
+        {
+            throw new ArgumentException("Addon ID cannot be an empty Guid.", nameof(addonId));
+        }
+        
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User ID cannot be an empty Guid.", nameof(userId));
+        }
+        
+        var userLibraryAddon = await _userLibraryAddonRepository.GetByGameIdAndUserIdAsync(addonId, userId);
+        
+        return userLibraryAddon == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(userLibraryAddon);
+    }
+
+    /// <inheritdoc />
+    public async Task<List<UserLibraryAddonDto>> GetUserLibraryAddonByAddonIdAsync(Guid addonId)
+    {
+        if (addonId == Guid.Empty)
+        {
+            throw new ArgumentException("Addon ID cannot be an empty Guid.", nameof(addonId));
+        }
+        
+        var result = await _userLibraryAddonRepository.GetByAddonIdAsync(addonId);
+        
+        return result.Select(UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto).ToList();
     }
 
     /// <inheritdoc />

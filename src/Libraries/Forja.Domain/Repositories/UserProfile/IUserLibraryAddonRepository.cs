@@ -20,6 +20,20 @@ public interface IUserLibraryAddonRepository
     /// <returns>A task representing the asynchronous operation. The task result contains the deleted user library addon if found, or null if no deleted addon with the specified identifier exists.</returns>
     Task<UserLibraryAddon?> GetDeletedByIdAsync(Guid id);
 
+    /// <summary>
+    /// Retrieves a user library addon based on the specified game identifier and user identifier.
+    /// </summary>
+    /// <param name="gameId">The unique identifier of the game.</param>
+    /// <param name="userId">The unique identifier of the user.</param>
+    /// <returns>A task representing the asynchronous operation. The task result contains the user library addon if found, or null if no addon with the specified game and user identifiers exists.</returns>
+    Task<UserLibraryAddon?> GetByGameIdAndUserIdAsync(Guid gameId, Guid userId);
+
+    /// <summary>
+    /// Retrieves all user library addons associated with a specific addon identifier.
+    /// </summary>
+    /// <param name="addonId">The unique identifier of the addon.</param>
+    /// <returns>A task representing the asynchronous operation. The task result contains a collection of user library addons associated with the specified addon identifier.</returns>
+    Task<IEnumerable<UserLibraryAddon>> GetByAddonIdAsync(Guid addonId);
 
     /// <summary>
     /// Asynchronously retrieves all user library addons associated with a specific game.

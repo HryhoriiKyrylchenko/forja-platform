@@ -26,6 +26,27 @@ public interface IUserLibraryGameRepository
     Task<UserLibraryGame?> GetDeletedByIdAsync(Guid id);
 
     /// <summary>
+    /// Retrieves a user library addon by the associated game identifier and user identifier.
+    /// </summary>
+    /// <param name="gameId">The unique identifier of the game associated with the addon.</param>
+    /// <param name="userId">The unique identifier of the user associated with the addon.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation. The task result contains the
+    /// <see cref="UserLibraryGame"/> object if found; otherwise, null.
+    /// </returns>
+    Task<UserLibraryGame?> GetByGameIdAndUserIdAsync(Guid gameId, Guid userId);
+
+    /// <summary>
+    /// Retrieves all user library games associated with the specified game identifier.
+    /// </summary>
+    /// <param name="gameId">The unique identifier of the game to search for.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation. The task result contains a collection of
+    /// <see cref="UserLibraryGame"/> objects associated with the specified game identifier.
+    /// </returns>
+    Task<IEnumerable<UserLibraryGame>> GetByGameIdAsync(Guid gameId);
+
+    /// <summary>
     /// Asynchronously retrieves all user library games.
     /// </summary>
     /// <returns>A collection of <see cref="UserLibraryGame"/> entities.</returns>

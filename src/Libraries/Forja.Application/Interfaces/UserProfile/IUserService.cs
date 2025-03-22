@@ -85,6 +85,13 @@ public interface IUserService
     Task<UserProfileDto?> UpdateUserAsync(UserUpdateRequest request);
 
     /// <summary>
+    /// Updates the avatar of a user based on the provided request.
+    /// </summary>
+    /// <param name="request">An instance of <see cref="UserUpdateAvatarRequest"/> containing the user's identifier and avatar update data.</param>
+    /// <returns>A task representing the asynchronous operation, containing the updated <see cref="UserProfileDto"/> object.</returns>
+    Task<UserProfileDto?> UpdateUserAvatarAsync(UserUpdateAvatarRequest request);
+
+    /// <summary>
     /// Deletes a user identified by the given Keycloak ID.
     /// </summary>
     /// <param name="userId">The ID of the user to be deleted.</param>

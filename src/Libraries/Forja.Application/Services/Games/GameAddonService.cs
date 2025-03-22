@@ -32,6 +32,18 @@ public class GameAddonService : IGameAddonService
     }
 
     /// <inheritdoc />
+    public async Task<GameAddonDto?> GetByStorageUrlAsync(string storageUrl)
+    {
+        if (string.IsNullOrWhiteSpace(storageUrl))
+        {
+            throw new ArgumentException("Storage URL cannot be empty.", nameof(storageUrl));
+        }
+        
+        var addon = await _gameAddonRepository.GetByStorageUrlAsync(storageUrl);
+        return addon == null ? null : GamesEntityToDtoMapper.MapToGameAddonDto(addon);
+    }
+
+    /// <inheritdoc />
     public async Task<GameAddonDto?> CreateAsync(GameAddonCreateRequest request)
     {
         if (!GamesRequestsValidator.ValidateGameAddonCreateRequest(request))

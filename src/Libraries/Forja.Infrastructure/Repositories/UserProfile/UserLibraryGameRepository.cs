@@ -42,6 +42,37 @@ public class UserLibraryGameRepository : IUserLibraryGameRepository
     }
 
     /// <inheritdoc />
+    public async Task<UserLibraryGame?> GetByGameIdAndUserIdAsync(Guid gameId, Guid userId)
+    {
+        if (gameId == Guid.Empty)
+        {
+            throw new ArgumentException("Game id cannot be empty.", nameof(gameId));
+        }
+        
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User id cannot be empty.", nameof(userId));
+        }
+        
+        return await _userLibraryGames
+            .Where(ulg => !ulg.IsDeleted)
+            .FirstOrDefaultAsync(ulg => ulg.UserId == userId && ulg.GameId == gameId);
+    }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<UserLibraryGame>> GetByGameIdAsync(Guid gameId)
+    {
+        if (gameId == Guid.Empty)
+        {
+            throw new ArgumentException("Game id cannot be empty.", nameof(gameId));
+        }
+        
+        return await _userLibraryGames
+            .Where(ulg => !ulg.IsDeleted)
+            .ToListAsync();
+    }
+
+    /// <inheritdoc />
     public async Task<IEnumerable<UserLibraryGame>> GetAllAsync()
     {
         return await _userLibraryGames
