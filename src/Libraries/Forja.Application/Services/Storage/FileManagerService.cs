@@ -176,6 +176,51 @@ public class FileManagerService : IFileManagerService
         await _storageService.DeleteFileAsync(request.SourcePath);
     }
 
+    public async Task<string> UploadProfileHatVariantFileAsync(ProfileHatVariantFileUploadRequest request)
+    {
+        if (!StorageRequestsValidator.ValidateProfileHatVariantFileUploadRequest(request, out string errorMessage))
+        {
+            throw new ArgumentException($"Invalid request: {errorMessage}", nameof(request));
+        }
+
+        string destinationPath = "profile-hat-variants/";
+        string extension = Path.GetExtension(request.FilePath);
+        string destinationFilePath = $"{destinationPath}{request.ProfileHatVariantId}{extension}";
+        
+        await _storageService.UploadFileAsync(destinationFilePath, request.FilePath);
+        return destinationFilePath;
+    }
+
+    public async Task DeleteProfileHatVariantFileAsync(ProfileHatVariantFileDeleteRequest request)
+    {
+        if (!StorageRequestsValidator.ValidateProfileHatVariantFileDeleteRequest(request, out string errorMessage))
+        {
+            throw new ArgumentException($"Invalid request: {errorMessage}", nameof(request));
+        }
+
+        string path = $"profile-hat-variants/{request.ProfileHatVariantId}.png"; // Path should be in .png format.
+        
+        await _storageService.DeleteFileAsync(path);
+    }
+
+    public async Task<string> GetPresignedProfileHatVariantUrlAsync(ProfileHatVariantGetByIdRequest request)
+    {
+        if (!StorageRequestsValidator.ValidateProfileHatVariantGetByIdRequest(request, out string errorMessage))
+        {
+            throw new ArgumentException($"Invalid request: {errorMessage}", nameof(request));
+        }
+        
+        string objectPath = $"profile-hat-variants/{request.ProfileHatVariantId}.png";
+        
+        var result = await _storageService.GetPresignedUrlAsync(objectPath, 3600);
+        if (string.IsNullOrWhiteSpace(result))
+        {
+            throw new InvalidOperationException($"Failed to get presigned URL for object path: {objectPath}");
+        }
+        
+        return result;
+    }
+
     private async Task<string> EnsureUniqueFilePathAsync(string filePath)
     {
         int count = 0;

@@ -17,4 +17,8 @@ public interface IFileManagerService
     
     Task<string> UploadUserImageFileAsync(ImageFileUploadRequest request);
     Task DeleteUserImageFileAsync(ImageFileDeleteRequest request);
+    
+    Task<string> UploadProfileHatVariantFileAsync(ProfileHatVariantFileUploadRequest request);
+    Task DeleteProfileHatVariantFileAsync(ProfileHatVariantFileDeleteRequest request);
+    Task<string> GetPresignedProfileHatVariantUrlAsync(ProfileHatVariantGetByIdRequest request);
 }

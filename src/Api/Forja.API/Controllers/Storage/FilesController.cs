@@ -394,4 +394,63 @@ public class FilesController : ControllerBase
             return StatusCode(500, $"Error generating image URL: {e.Message}");
         }
     }
+    
+    [Authorize(Policy = "ContentManagePolicy")]
+    [HttpPost("profile-hat-variant/upload")]
+    public async Task<IActionResult> UploadProfileHatVariantFile([FromBody] ProfileHatVariantFileUploadRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var resultPath = await _fileManagerService.UploadProfileHatVariantFileAsync(request);
+            return Ok(new { Message = $"Profile hat variant '{request.ProfileHatVariantId}' file successfully uploaded.", Path = resultPath });
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, new { error = $"An error occurred while uploading image file: {e.Message}" });
+        }
+    }
+    
+    [Authorize(Policy = "ContentManagePolicy")]
+    [HttpDelete("profile-hat-variant")]
+    public async Task<IActionResult> DeleteProfileHatVariantFile([FromBody] ProfileHatVariantFileDeleteRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            await _fileManagerService.DeleteProfileHatVariantFileAsync(request);
+            return Ok($"Profile hat variant '{request.ProfileHatVariantId}' successfully deleted.");
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, $"An error occurred while deleting image file: {e.Message}");
+        }
+    }
+    
+    [HttpGet("profile-hat-variant/url")]
+    public async Task<IActionResult> GetProfileHatVariantUrl([FromQuery] ProfileHatVariantGetByIdRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            string url = await _fileManagerService.GetPresignedProfileHatVariantUrlAsync(request);
+            return Ok(new { url });
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, $"Error generating image URL: {e.Message}");
+        }
+    }
 }

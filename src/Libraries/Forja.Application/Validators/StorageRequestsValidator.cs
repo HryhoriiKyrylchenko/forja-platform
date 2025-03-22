@@ -95,6 +95,17 @@ public static class StorageRequestsValidator
             return false;
         }
         
+        if (Path.GetExtension(request.FilePath) != ".png"
+            || Path.GetExtension(request.FilePath) != ".jpg"
+            || Path.GetExtension(request.FilePath) != ".jpeg"
+            || Path.GetExtension(request.FilePath) != ".gif"
+            || Path.GetExtension(request.FilePath) != ".bmp"
+            || Path.GetExtension(request.FilePath) != ".webp")
+        {
+            errorMessage = "File extension must be .png, .jpg, .jpeg, .gif, .bmp or .webp.";
+            return false;
+        }
+        
         errorMessage = string.Empty;
         return true;
     }
@@ -125,6 +136,72 @@ public static class StorageRequestsValidator
             return false;
         }
 
+        errorMessage = string.Empty;
+        return true;
+    }
+
+    public static bool ValidateProfileHatVariantFileUploadRequest(ProfileHatVariantFileUploadRequest request,
+        out string errorMessage)
+    {
+        if (request == null)
+        {
+            throw new ArgumentNullException(nameof(request));
+        }
+        
+        if (string.IsNullOrWhiteSpace(request.FilePath))
+        {
+            errorMessage = "FilePath cannot be null or empty.";
+            return false;
+        }
+
+        if (Path.GetExtension(request.FilePath) != ".png")
+        {
+            errorMessage = "File extension must be .png.";
+            return false;
+        }
+
+        if (request.ProfileHatVariantId < 1 || request.ProfileHatVariantId > 5)
+        {
+            errorMessage = "ProfileHatVariantId must be between 1 and 5.";
+            return false;
+        }
+        
+        errorMessage = string.Empty;
+        return true;
+    }
+
+    public static bool ValidateProfileHatVariantFileDeleteRequest(ProfileHatVariantFileDeleteRequest request, 
+        out string errorMessage)
+    {
+        if (request == null)
+        {
+            throw new ArgumentNullException(nameof(request));
+        }
+        
+        if (request.ProfileHatVariantId < 1 || request.ProfileHatVariantId > 5)
+        {
+            errorMessage = "ProfileHatVariantId must be between 1 and 5.";
+            return false;
+        }
+        
+        errorMessage = string.Empty;
+        return true;
+    }
+
+    public static bool ValidateProfileHatVariantGetByIdRequest(ProfileHatVariantGetByIdRequest request,
+        out string errorMessage)
+    {
+        if (request == null)
+        {
+            throw new ArgumentNullException(nameof(request));
+        }
+        
+        if (request.ProfileHatVariantId < 1 || request.ProfileHatVariantId > 5)
+        {
+            errorMessage = "ProfileHatVariantId must be between 1 and 5.";
+            return false;
+        }
+        
         errorMessage = string.Empty;
         return true;
     }
