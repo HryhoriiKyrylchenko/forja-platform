@@ -1,3 +1,5 @@
+using Forja.Domain.Enums;
+
 namespace Forja.Infrastructure.Repositories.Store;
 
 /// <summary>
@@ -7,22 +9,14 @@ public class CartRepository : ICartRepository
 {
     private readonly ForjaDbContext _context;
     private readonly DbSet<Cart> _carts;
-
-    /// <summary>
-    /// Initializes a new instance of the CartRepository class.
-    /// </summary>
-    /// <param name="context">The database context to use for operations.</param>
+    
     public CartRepository(ForjaDbContext context)
     {
         _context = context;
         _carts = context.Set<Cart>();
     }
 
-    /// <summary>
-    /// Retrieves a cart by its unique identifier.
-    /// </summary>
-    /// <param name="cartId">The cart's unique identifier.</param>
-    /// <returns>The matching Cart object or null if not found.</returns>
+    /// <inheritdoc />
     public async Task<Cart?> GetCartByIdAsync(Guid cartId)
     {
         if (cartId == Guid.Empty)
@@ -35,11 +29,7 @@ public class CartRepository : ICartRepository
             .FirstOrDefaultAsync(c => c.Id == cartId);
     }
 
-    /// <summary>
-    /// Retrieves all carts for a specific user by user ID.
-    /// </summary>
-    /// <param name="userId">The user's unique identifier.</param>
-    /// <returns>A list of all carts matching the user ID.</returns>
+    /// <inheritdoc />
     public async Task<IEnumerable<Cart>> GetCartsByUserIdAsync(Guid userId)
     {
         if (userId == Guid.Empty)
@@ -53,11 +43,21 @@ public class CartRepository : ICartRepository
             .ToListAsync();
     }
 
-    /// <summary>
-    /// Adds a new Cart to the database.
-    /// </summary>
-    /// <param name="cart">The Cart to add.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
+    /// <inheritdoc />
+    public async Task<Cart?> GetActiveCartByUserIdAsync(Guid userId)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("Invalid user ID.", nameof(userId));
+        }
+        
+        return await _carts
+            .Where(c => c.UserId == userId)
+            .Where(c => c.Status == CartStatus.Active)
+            .FirstOrDefaultAsync();
+    }
+
+    /// <inheritdoc />
     public async Task AddCartAsync(Cart cart)
     {
         if (!StoreModelValidator.ValidateCartModel(cart, out string errors))
@@ -69,11 +69,7 @@ public class CartRepository : ICartRepository
         await _context.SaveChangesAsync();
     }
 
-    /// <summary>
-    /// Updates an existing Cart in the database.
-    /// </summary>
-    /// <param name="cart">The Cart to update.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
+    /// <inheritdoc />
     public async Task UpdateCartAsync(Cart cart)
     {
         if (!StoreModelValidator.ValidateCartModel(cart, out string errors))
@@ -85,11 +81,7 @@ public class CartRepository : ICartRepository
         await _context.SaveChangesAsync();
     }
 
-    /// <summary>
-    /// Deletes a Cart from the database by its ID.
-    /// </summary>
-    /// <param name="cartId">The cart's unique identifier.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
+    /// <inheritdoc />
     public async Task DeleteCartAsync(Guid cartId)
     {
         if (cartId == Guid.Empty)
@@ -116,5 +108,36 @@ public class CartRepository : ICartRepository
 
         _carts.Remove(cart);
         await _context.SaveChangesAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<Cart>> GetCartsByStatusAndInactivityAsync(CartStatus active,
+        TimeSpan inactivityPeriod)
+    {
+        if (inactivityPeriod.TotalSeconds < 0)
+        {
+            throw new ArgumentException("Inactivity period cannot be negative.", nameof(inactivityPeriod));
+        }
+        
+        var cutoffDate = DateTime.UtcNow - inactivityPeriod;
+
+        return await _carts
+            .Where(c => c.Status == active && c.LastModifiedAt <= cutoffDate)
+            .ToListAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task<Cart?> GetLatestAbandonedCartByUserIdAsync(Guid userId)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("Invalid user ID.", nameof(userId));
+        }
+        
+        return await _carts
+            .Where(c => c.UserId == userId)
+            .Where(c => c.Status == CartStatus.Abandoned)
+            .OrderByDescending(c => c.LastModifiedAt)
+            .FirstOrDefaultAsync();
     }
 }

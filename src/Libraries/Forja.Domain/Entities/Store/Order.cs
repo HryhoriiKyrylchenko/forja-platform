@@ -13,10 +13,10 @@ public class Order : SoftDeletableEntity
     public Guid Id { get; set; }
 
     /// <summary>
-    /// Gets or sets the unique identifier for the user who placed the order.
+    /// Gets or sets the unique identifier for the cart placed the order.
     /// </summary>
-    [ForeignKey("User")]
-    public Guid UserId { get; set; }
+    [ForeignKey("Cart")]
+    public Guid CartId { get; set; }
 
     /// <summary>
     /// Gets or sets the date and time when the order was placed.
@@ -30,19 +30,13 @@ public class Order : SoftDeletableEntity
     public OrderPaymentStatus PaymentStatus { get; set; }
 
     /// <summary>
-    /// Gets or sets the total amount for the order.
+    /// Gets or sets the shopping cart associated with the order.
     /// </summary>
-    public decimal TotalAmount { get; set; }
+    public virtual Cart Cart { get; set; } = null!;
 
     /// <summary>
     /// Gets or sets the payment details for the order.
     /// Virtual property for Entity Framework to handle related data.
     /// </summary>
     public virtual Payment? Payment { get; set; }
-
-    /// <summary>
-    /// Gets or sets the collection of order items.
-    /// Virtual property for Entity Framework to handle related data.
-    /// </summary>
-    public virtual ICollection<OrderItem> OrderItems { get; set; } = [];
 }

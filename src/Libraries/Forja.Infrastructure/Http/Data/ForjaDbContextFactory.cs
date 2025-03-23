@@ -28,4 +28,6 @@ namespace Forja.Infrastructure.Http.Data
             return new ForjaDbContext(optionsBuilder.Options);
         }
     }
+    
+    // TODO: Refactor DB connection code
 }

@@ -17,7 +17,7 @@ public class OrderRepository : IOrderRepository
         _context = context;
         _orders = context.Set<Order>();
     }
-
+    
     /// <summary>
     /// Retrieves an Order by its unique identifier.
     /// </summary>
@@ -32,8 +32,9 @@ public class OrderRepository : IOrderRepository
 
         return await _orders
             .Where(o => !o.IsDeleted)
-            .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.Product)
+            .Include(o => o.Cart)
+                .ThenInclude(c => c.CartItems)
+                .ThenInclude(ci => ci.Product)
             .Include(o => o.Payment)
             .FirstOrDefaultAsync(o => o.Id == orderId);
     }
@@ -52,9 +53,10 @@ public class OrderRepository : IOrderRepository
 
         return await _orders
             .Where(o => !o.IsDeleted)
-            .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.Product)
-            .Where(o => o.UserId == userId)
+            .Include(o => o.Cart)
+                .ThenInclude(c => c.CartItems)
+                .ThenInclude(ci => ci.Product)
+            .Where(o => o.Cart.UserId == userId)
             .ToListAsync();
     }
 
@@ -66,7 +68,9 @@ public class OrderRepository : IOrderRepository
     {
         return await _orders
             .Where(o => !o.IsDeleted)
-            .Include(o => o.OrderItems)
+            .Include(o => o.Cart)
+                .ThenInclude(c => c.CartItems)
+                .ThenInclude(ci => ci.Product)
             .ToListAsync();
     }
 
@@ -114,23 +118,10 @@ public class OrderRepository : IOrderRepository
             throw new ArgumentException("Invalid order ID.", nameof(orderId));
         }
 
-        var order = await _orders
-            .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.Product)
-            .FirstOrDefaultAsync(o => o.Id == orderId);
-
+        var order = await _orders.FirstOrDefaultAsync(o => o.Id == orderId);
         if (order == null)
         {
             throw new KeyNotFoundException($"Order with ID {orderId} not found.");
-        }
-
-        if (order.OrderItems.Any())
-        {
-            foreach (var orderItem in order.OrderItems)
-            {
-                orderItem.IsDeleted = true;
-                _context.OrderItems.Update(orderItem);
-            }
         }
         
         order.IsDeleted = true;

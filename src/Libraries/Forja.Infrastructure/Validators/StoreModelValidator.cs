@@ -31,6 +31,18 @@ public static class StoreModelValidator
             return false;
         }
 
+        if (cartModel.CreatedAt > DateTime.UtcNow)
+        {
+            errorMessage = "Cart creation date cannot be in the future.";
+            return false;
+        }
+
+        if (cartModel.LastModifiedAt != null && cartModel.LastModifiedAt > DateTime.UtcNow)
+        {
+            errorMessage = "Cart last modified date cannot be in the future.";
+            return false;
+        }
+
         errorMessage = string.Empty;
         return true;
     }
@@ -130,9 +142,9 @@ public static class StoreModelValidator
             return false;
         }
         
-        if (orderModel.UserId == Guid.Empty)
+        if (orderModel.CartId == Guid.Empty)
         {
-            errorMessage = "User ID cannot be empty.";
+            errorMessage = "Cart ID cannot be empty.";
             return false;
         }
 
@@ -142,47 +154,6 @@ public static class StoreModelValidator
             return false;
         }
         
-        if (orderModel.TotalAmount <= 0)
-        {
-            errorMessage = "Total amount must be greater than zero.";
-            return false;
-        }
-        
-        errorMessage = string.Empty;
-        return true;
-    }
-
-    /// <summary>
-    /// Validates an OrderItem model for correctness.
-    /// </summary>
-    /// <param name="orderItemModel">The OrderItem model to validate.</param>
-    /// <param name="errorMessage">An output parameter containing the error message if validation fails.</param>
-    /// <returns>True if the model is valid; otherwise, false.</returns>
-    public static bool ValidateOrderItemModel(OrderItem orderItemModel, out string errorMessage)
-    {
-        if (orderItemModel == null)
-        {
-            throw new ArgumentNullException(nameof(orderItemModel));
-        }
-
-        if (orderItemModel.Id == Guid.Empty)
-        {
-            errorMessage = "Order item ID cannot be empty.";
-            return false;
-        }
-        
-        if (orderItemModel.OrderId == Guid.Empty)
-        {
-            errorMessage = "Order ID cannot be empty.";
-            return false;
-        }
-        
-        if (orderItemModel.ProductId == Guid.Empty)
-        {
-            errorMessage = "Product ID cannot be empty.";
-            return false;
-        }
-
         errorMessage = string.Empty;
         return true;
     }
