@@ -142,4 +142,22 @@ public class UserProfileDto
     /// indicating the specific hat variant chosen or assigned.
     /// </remarks>
     public short ProfileHatVariant { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the user's email address has been confirmed.
+    /// </summary>
+    /// <remarks>
+    /// This property is used to determine if the user has verified their email 
+    /// address through a confirmation process.
+    /// </remarks>
+    public bool IsEmailConfirmed { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether an email has been sent to the user.
+    /// </summary>
+    /// <remarks>
+    /// This property is used to track whether an email has been sent to the user,
+    /// </remarks>
+    public bool IsEmailSent { get; set; }
+
 }

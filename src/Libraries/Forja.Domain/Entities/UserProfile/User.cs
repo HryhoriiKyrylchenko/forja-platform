@@ -105,7 +105,12 @@ public class User : SoftDeletableEntity
     /// <summary>
     /// Gets or sets the variant of the user's profile hat.
     /// </summary>
-    public short ProfileHatVariant { get; set; }
+    public short ProfileHatVariant { get; set; } = 0;
+
+    /// <summary>
+    /// enabling/disabling email confirmation
+    /// </summary>
+    public bool IsEmailConfirmed { get; set; } = false;
 
     /// <summary>
     /// Gets or sets the cart associated with the user.

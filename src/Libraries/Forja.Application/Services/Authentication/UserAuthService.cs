@@ -57,13 +57,23 @@ public class UserAuthService : IUserAuthService
         var result = await _userRepository.AddAsync(appUser);
         
         var user = await _userRepository.GetByKeycloakIdAsync(keycloakId);
+        bool emailSent = false;
 
         if (user != null)
         {
-            await SendEmailConfirmationAsync(keycloakId);
+            try
+            {
+                await SendEmailConfirmationAsync(keycloakId);
+                emailSent = true;
+
+                await _userRepository.UpdateAsync(appUser);
+            }
+            catch (Exception ex)
+            {
+            }
         }
         
-        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserProfileDto(result);
+        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserProfileDto(result, emailSent);
     }
     
     /// <inheritdoc />
