@@ -66,6 +66,7 @@ public class TagsController : ControllerBase
     /// <summary>
     /// Creates a new tag.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost]
     public async Task<IActionResult> CreateTagAsync([FromBody] TagCreateRequest request)
     {
@@ -87,6 +88,7 @@ public class TagsController : ControllerBase
     /// <summary>
     /// Updates an existing tag.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPut]
     public async Task<IActionResult> UpdateTagAsync([FromBody] TagUpdateRequest request)
     {
@@ -110,6 +112,7 @@ public class TagsController : ControllerBase
     /// <summary>
     /// Deletes an existing tag.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTagAsync([FromRoute] Guid id)
     {
@@ -229,6 +232,7 @@ public class TagsController : ControllerBase
     /// <summary>
     /// Creates a new game tag.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("game-tags")]
     public async Task<IActionResult> CreateGameTagAsync([FromBody] GameTagCreateRequest request)
     {
@@ -252,6 +256,7 @@ public class TagsController : ControllerBase
     /// <summary>
     /// Updates an existing game tag.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPut("game-tags")]
     public async Task<IActionResult> UpdateGameTagAsync([FromBody] GameTagUpdateRequest request)
     {
@@ -277,6 +282,7 @@ public class TagsController : ControllerBase
     /// <summary>
     /// Deletes an existing game tag.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpDelete("game-tags/{id}")]
     public async Task<IActionResult> DeleteGameTagAsync([FromRoute] Guid id)
     {

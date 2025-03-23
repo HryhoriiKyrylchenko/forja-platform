@@ -66,6 +66,7 @@ public class MatureContentController : ControllerBase
     /// <summary>
     /// Creates a new mature content record.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost]
     public async Task<IActionResult> CreateMatureContentAsync([FromBody] MatureContentCreateRequest request)
     {
@@ -89,6 +90,7 @@ public class MatureContentController : ControllerBase
     /// <summary>
     /// Updates an existing mature content record.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPut]
     public async Task<IActionResult> UpdateMatureContentAsync([FromBody] MatureContentUpdateRequest request)
     {
@@ -112,6 +114,7 @@ public class MatureContentController : ControllerBase
     /// <summary>
     /// Deletes an existing mature content record.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteMatureContentAsync([FromRoute] Guid id)
     {
@@ -231,6 +234,7 @@ public class MatureContentController : ControllerBase
     /// <summary>
     /// Creates a new product-mature content association.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("product-mature-content")]
     public async Task<IActionResult> CreateProductMatureContentAsync([FromBody] ProductMatureContentCreateRequest request)
     {
@@ -252,6 +256,7 @@ public class MatureContentController : ControllerBase
     /// <summary>
     /// Updates an existing product-mature content association.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPut("product-mature-content/{id}")]
     public async Task<IActionResult> UpdateProductMatureContentAsync([FromBody] ProductMatureContentUpdateRequest request, [FromRoute] Guid id)
     {
@@ -275,6 +280,7 @@ public class MatureContentController : ControllerBase
     /// <summary>
     /// Deletes an existing product-mature content association.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpDelete("product-mature-content/{id}")]
     public async Task<IActionResult> DeleteProductMatureContentAsync([FromRoute] Guid id)
     {

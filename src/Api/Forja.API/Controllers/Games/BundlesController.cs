@@ -21,6 +21,7 @@ public class BundlesController : ControllerBase
     /// <summary>
     /// Gets all bundles.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpGet("bundles")]
     public async Task<IActionResult> GetBundlesAsync()
     {
@@ -74,6 +75,7 @@ public class BundlesController : ControllerBase
     /// <summary>
     /// Creates a new bundle.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("bundles")]
     public async Task<IActionResult> CreateBundleAsync([FromBody] BundleCreateRequest request)
     {
@@ -93,6 +95,7 @@ public class BundlesController : ControllerBase
     /// <summary>
     /// Updates an existing bundle by its ID.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPut("bundles")]
     public async Task<IActionResult> UpdateBundleAsync([FromBody] BundleUpdateRequest request)
     {
@@ -112,6 +115,7 @@ public class BundlesController : ControllerBase
     /// <summary>
     /// Deletes a bundle by its ID.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpDelete("bundles/{id}")]
     public async Task<IActionResult> DeleteBundleAsync([FromRoute] Guid id)
     {
@@ -135,6 +139,7 @@ public class BundlesController : ControllerBase
     /// <summary>
     /// Gets all bundle products.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpGet("bundle-products")]
     public async Task<IActionResult> GetBundleProductsAsync()
     {
@@ -189,6 +194,7 @@ public class BundlesController : ControllerBase
     /// <summary>
     /// Creates a new bundle product.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("bundle-products")]
     public async Task<IActionResult> CreateBundleProductAsync([FromBody] BundleProductCreateRequest request)
     {
@@ -208,6 +214,7 @@ public class BundlesController : ControllerBase
     /// <summary>
     /// Updates an existing bundle product.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPut("bundle-products")]
     public async Task<IActionResult> UpdateBundleProductAsync([FromBody] BundleProductUpdateRequest request)
     {
@@ -230,6 +237,7 @@ public class BundlesController : ControllerBase
     /// <summary>
     /// Deletes a bundle product by its ID.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpDelete("bundle-products/{id}")]
     public async Task<IActionResult> DeleteBundleProductAsync([FromRoute] Guid id)
     {
