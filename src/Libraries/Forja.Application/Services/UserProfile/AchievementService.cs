@@ -1,5 +1,3 @@
-using System.Linq;
-
 namespace Forja.Application.Services.UserProfile;
 
 /// <summary>
@@ -43,6 +41,10 @@ public class AchievementService : IAchievementService
         await _achievementRepository.AddAsync(achievement);
 
         var game = await _gameRepository.GetByIdAsync(request.GameId);
+        if (game == null)
+        {
+            throw new InvalidOperationException($"Game with ID {request.GameId} does not exist.");
+        }
         achievement.Game = game;
 
         return UserProfileEntityToDtoMapper.MapToAchievementDto(achievement);

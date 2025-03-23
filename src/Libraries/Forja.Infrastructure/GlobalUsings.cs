@@ -34,3 +34,5 @@ global using Minio.DataModel.Args;
 global using Minio.Exceptions;
 global using Microsoft.Extensions.Options;
 global using Forja.Infrastructure.Minio;
+global using Forja.Domain.Enums;
+global using Forja.Domain.Entities.Common;

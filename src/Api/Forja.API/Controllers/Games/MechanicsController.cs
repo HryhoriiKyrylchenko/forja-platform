@@ -43,6 +43,7 @@ public class MechanicsController : ControllerBase
     /// <summary>
     /// Gets all deleted mechanics.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpGet("mechanics/deleted")]
     public async Task<IActionResult> GetAllDeletedMechanicsAsync()
     {
@@ -88,6 +89,7 @@ public class MechanicsController : ControllerBase
     /// <summary>
     /// Creates a new mechanic.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("mechanics")]
     public async Task<IActionResult> CreateMechanicAsync([FromBody] MechanicCreateRequest request)
     {
@@ -108,6 +110,7 @@ public class MechanicsController : ControllerBase
     /// <summary>
     /// Updates an existing mechanic.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPut("mechanics")]
     public async Task<IActionResult> UpdateMechanicAsync([FromBody] MechanicUpdateRequest request)
     {
@@ -131,6 +134,7 @@ public class MechanicsController : ControllerBase
     /// <summary>
     /// Deletes an existing mechanic.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpDelete("mechanics/{id}")]
     public async Task<IActionResult> DeleteMechanicAsync([FromRoute] Guid id)
     {
@@ -252,6 +256,7 @@ public class MechanicsController : ControllerBase
     /// <summary>
     /// Creates a new game-mechanic association.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("game-mechanics")]
     public async Task<IActionResult> CreateGameMechanicAsync([FromBody] GameMechanicCreateRequest request)
     {
@@ -272,6 +277,7 @@ public class MechanicsController : ControllerBase
     /// <summary>
     /// Updates an existing game-mechanic association.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPut("game-mechanics")]
     public async Task<IActionResult> UpdateGameMechanicAsync([FromBody] GameMechanicUpdateRequest request)
     {
@@ -295,6 +301,7 @@ public class MechanicsController : ControllerBase
     /// <summary>
     /// Deletes an existing game-mechanic association.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpDelete("game-mechanics/{id}")]
     public async Task<IActionResult> DeleteGameMechanicAsync([FromRoute] Guid id)
     {

@@ -109,12 +109,6 @@ public abstract class Product : SoftDeletableEntity
     public virtual ICollection<CartItem> CartItems { get; set; } = [];
     
     /// <summary>
-    /// Gets or sets the collection of order items associated with the product.
-    /// Virtual property for Entity Framework to handle related data.
-    /// </summary>
-    public virtual ICollection<OrderItem> OrderItems { get; set; } = [];    
-    
-    /// <summary>
     /// Gets or sets the collection of product discounts associated with the product.
     /// Virtual property for Entity Framework to handle related data.
     /// </summary>
