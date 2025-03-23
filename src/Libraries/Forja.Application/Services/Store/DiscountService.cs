@@ -13,27 +13,33 @@ public class DiscountService : IDiscountService
 
     // ---------------- Discount Operations ----------------
 
-    public async Task<Discount?> GetDiscountByIdAsync(Guid discountId)
+    public async Task<DiscountDto?> GetDiscountByIdAsync(Guid discountId)
     {
         if (discountId == Guid.Empty)
         {
             throw new ArgumentException("Discount ID cannot be empty.", nameof(discountId));
         }
 
-        return await _discountRepository.GetDiscountByIdAsync(discountId);
+        var discount = await _discountRepository.GetDiscountByIdAsync(discountId);
+        
+        return discount == null ? null : StoreEntityToDtoMapper.MapToDiscountDto(discount);
     }
 
-    public async Task<IEnumerable<Discount>> GetAllDiscountsAsync()
+    public async Task<IEnumerable<DiscountDto>> GetAllDiscountsAsync()
     {
-        return await _discountRepository.GetAllDiscountsAsync();
+        var discounts = await _discountRepository.GetAllDiscountsAsync();
+        
+        return discounts.Select(StoreEntityToDtoMapper.MapToDiscountDto);
     }
 
-    public async Task<IEnumerable<Discount>> GetActiveDiscountsAsync(DateTime currentDate)
+    public async Task<IEnumerable<DiscountDto>> GetActiveDiscountsAsync(DateTime currentDate)
     {
-        return await _discountRepository.GetActiveDiscountsAsync(currentDate);
+        var activeDiscounts =  await _discountRepository.GetActiveDiscountsAsync(currentDate);
+        
+        return activeDiscounts.Select(StoreEntityToDtoMapper.MapToDiscountDto);
     }
 
-    public async Task AddDiscountAsync(DiscountCreateRequest request)
+    public async Task<DiscountDto?> AddDiscountAsync(DiscountCreateRequest request)
     {
         if (!StoreRequestsValidator.ValidateDiscountCreateRequest(request, out string? errorMessage))
         {
@@ -51,10 +57,12 @@ public class DiscountService : IDiscountService
             ProductDiscounts = new List<ProductDiscount>()
         };
 
-        await _discountRepository.AddDiscountAsync(discount);
+        var result = await _discountRepository.AddDiscountAsync(discount);
+        
+        return result == null ? null : StoreEntityToDtoMapper.MapToDiscountDto(result);
     }
 
-    public async Task UpdateDiscountAsync(DiscountUpdateRequest request)
+    public async Task<DiscountDto?> UpdateDiscountAsync(DiscountUpdateRequest request)
     {
         if (!StoreRequestsValidator.ValidateDiscountUpdateRequest(request, out string? errorMessage))
         {
@@ -73,7 +81,9 @@ public class DiscountService : IDiscountService
         discount.StartDate = request.StartDate;
         discount.EndDate = request.EndDate;
 
-        await _discountRepository.UpdateDiscountAsync(discount);
+        var result = await _discountRepository.UpdateDiscountAsync(discount);
+        
+        return result == null ? null : StoreEntityToDtoMapper.MapToDiscountDto(result);
     }
 
     public async Task DeleteDiscountAsync(Guid discountId)
@@ -88,37 +98,43 @@ public class DiscountService : IDiscountService
 
     // ---------------- ProductDiscount Operations ----------------
 
-    public async Task<ProductDiscount?> GetProductDiscountByIdAsync(Guid productDiscountId)
+    public async Task<ProductDiscountDto?> GetProductDiscountByIdAsync(Guid productDiscountId)
     {
         if (productDiscountId == Guid.Empty)
         {
             throw new ArgumentException("ProductDiscount ID cannot be empty.", nameof(productDiscountId));
         }
 
-        return await _productDiscountRepository.GetProductDiscountByIdAsync(productDiscountId);
+        var productDiscount = await _productDiscountRepository.GetProductDiscountByIdAsync(productDiscountId);
+        
+        return productDiscount == null ? null : StoreEntityToDtoMapper.MapToProductDiscountDto(productDiscount);
     }
 
-    public async Task<IEnumerable<ProductDiscount>> GetProductDiscountsByProductIdAsync(Guid productId)
+    public async Task<IEnumerable<ProductDiscountDto>> GetProductDiscountsByProductIdAsync(Guid productId)
     {
         if (productId == Guid.Empty)
         {
             throw new ArgumentException("Product ID cannot be empty.", nameof(productId));
         }
 
-        return await _productDiscountRepository.GetProductDiscountsByProductIdAsync(productId);
+        var productDiscounts = await _productDiscountRepository.GetProductDiscountsByProductIdAsync(productId);
+        
+        return productDiscounts.Select(StoreEntityToDtoMapper.MapToProductDiscountDto);
     }
 
-    public async Task<IEnumerable<ProductDiscount>> GetProductDiscountsByDiscountIdAsync(Guid discountId)
+    public async Task<IEnumerable<ProductDiscountDto>> GetProductDiscountsByDiscountIdAsync(Guid discountId)
     {
         if (discountId == Guid.Empty)
         {
             throw new ArgumentException("Discount ID cannot be empty.", nameof(discountId));
         }
 
-        return await _productDiscountRepository.GetProductDiscountsByDiscountIdAsync(discountId);
+        var productDiscounts = await _productDiscountRepository.GetProductDiscountsByDiscountIdAsync(discountId);
+        
+        return productDiscounts.Select(StoreEntityToDtoMapper.MapToProductDiscountDto);
     }
 
-    public async Task AddProductDiscountAsync(ProductDiscountCreateRequest request)
+    public async Task<ProductDiscountDto?> AddProductDiscountAsync(ProductDiscountCreateRequest request)
     {
         if (!StoreRequestsValidator.ValidateProductDiscountCreateRequest(request, out string? errorMessage))
         {
@@ -132,10 +148,12 @@ public class DiscountService : IDiscountService
             DiscountId = request.DiscountId
         };
 
-        await _productDiscountRepository.AddProductDiscountAsync(productDiscount);
+        var result = await _productDiscountRepository.AddProductDiscountAsync(productDiscount);
+        
+        return result == null ? null : StoreEntityToDtoMapper.MapToProductDiscountDto(result);
     }
 
-    public async Task UpdateProductDiscountAsync(ProductDiscountUpdateRequest request)
+    public async Task<ProductDiscountDto?> UpdateProductDiscountAsync(ProductDiscountUpdateRequest request)
     {
         if (!StoreRequestsValidator.ValidateProductDiscountUpdateRequest(request, out string? errorMessage))
         {
@@ -151,7 +169,9 @@ public class DiscountService : IDiscountService
         productDiscount.ProductId = request.ProductId;
         productDiscount.DiscountId = request.DiscountId;
 
-        await _productDiscountRepository.UpdateProductDiscountAsync(productDiscount);
+        var result = await _productDiscountRepository.UpdateProductDiscountAsync(productDiscount);
+        
+        return result == null ? null : StoreEntityToDtoMapper.MapToProductDiscountDto(result);
     }
 
     public async Task DeleteProductDiscountAsync(Guid productDiscountId)

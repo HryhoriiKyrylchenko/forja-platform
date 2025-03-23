@@ -1,5 +1,3 @@
-using Forja.Domain.Entities.Common;
-
 namespace Forja.Infrastructure.Data;
 
 public class ForjaDbContext : DbContext

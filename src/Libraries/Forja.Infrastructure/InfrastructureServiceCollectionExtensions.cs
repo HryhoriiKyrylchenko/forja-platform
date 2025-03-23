@@ -26,6 +26,8 @@ public static class InfrastructureServiceCollectionExtensions
                 minioConfig.UseSSL
             );
         });
+
+        builder.Services.AddScoped<ITestPaymentService, TestPaymentService>();
         
         builder.Services.AddScoped<IBundleRepository, BundleRepository>();
         builder.Services.AddScoped<IBundleProductRepository, BundleProductRepository>();

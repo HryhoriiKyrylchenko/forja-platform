@@ -14,38 +14,49 @@ public class OrderService : IOrderService
         _cartRepository = cartRepository;
         _cartItemRepository = cartItemRepository;
     }
-
-
-    public async Task<Order?> GetOrderByIdAsync(Guid orderId)
+    
+    public async Task<OrderDto?> GetOrderByIdAsync(Guid orderId)
     {
         if (orderId == Guid.Empty)
         {
             throw new ArgumentException("Order ID cannot be empty.", nameof(orderId));
         }
 
-        return await _orderRepository.GetOrderByIdAsync(orderId);
+        var order = await _orderRepository.GetOrderByIdAsync(orderId);
+        
+        return order == null ? null : StoreEntityToDtoMapper.MapToOrderDto(order);
     }
 
-    public async Task<IEnumerable<Order>> GetOrdersByUserIdAsync(Guid userId)
+    public async Task<IEnumerable<OrderDto>> GetOrdersByUserIdAsync(Guid userId)
     {
         if (userId == Guid.Empty)
         {
             throw new ArgumentException("User ID cannot be empty.", nameof(userId));
         }
 
-        return await _orderRepository.GetOrdersByUserIdAsync(userId);
+        var orders =  await _orderRepository.GetOrdersByUserIdAsync(userId);
+        
+        return orders.Select(StoreEntityToDtoMapper.MapToOrderDto);
     }
 
-    public async Task<IEnumerable<Order>> GetAllOrdersAsync()
+    public async Task<IEnumerable<OrderDto>> GetAllOrdersAsync()
     {
-        return await _orderRepository.GetAllOrdersAsync();
+        var orders = await _orderRepository.GetAllOrdersAsync();
+        
+        return orders.Select(StoreEntityToDtoMapper.MapToOrderDto);
     }
 
-    public async Task AddOrderAsync(OrderCreateRequest request)
+    public async Task<OrderDto?> AddOrderAsync(OrderCreateRequest request)
     {
         if (!StoreRequestsValidator.ValidateOrderCreateRequest(request, out var errors))
         {
             throw new ArgumentException($"Invalid request. Errors: {errors}", nameof(request));
+        }
+        
+        var cart = await _cartRepository.GetCartByIdAsync(request.CartId);
+        if (cart == null)
+        {
+            throw new InvalidOperationException("Cart not found.");
         }
         
         var order = new Order
@@ -53,13 +64,18 @@ public class OrderService : IOrderService
             Id = Guid.NewGuid(),
             CartId = request.CartId,
             OrderDate = DateTime.UtcNow,
-            PaymentStatus = OrderPaymentStatus.Pending
+            Status = OrderStatus.Pending
         };
 
-        await _orderRepository.AddOrderAsync(order);
+        var result = await _orderRepository.AddOrderAsync(order);
+        
+        cart.Status = CartStatus.Archived;
+        await _cartRepository.UpdateCartAsync(cart);
+        
+        return result == null ? null : StoreEntityToDtoMapper.MapToOrderDto(result);
     }
 
-    public async Task UpdateOrderAsync(OrderUpdateRequest request)
+    public async Task<OrderDto?> UpdateOrderStatusAsync(OrderUpdateRequest request)
     {
         if (!StoreRequestsValidator.ValidateOrderUpdateRequest(request, out var errors))
         {
@@ -72,9 +88,10 @@ public class OrderService : IOrderService
             throw new KeyNotFoundException($"Order with ID {request.Id} not found.");
         }
         
-        order.PaymentStatus = request.PaymentStatus;
-
-        await _orderRepository.UpdateOrderAsync(order);
+        order.Status = request.Status;
+        var result = await _orderRepository.UpdateOrderAsync(order);
+        
+        return result == null ? null : StoreEntityToDtoMapper.MapToOrderDto(result);
     }
 
     public async Task DeleteOrderAsync(Guid orderId)

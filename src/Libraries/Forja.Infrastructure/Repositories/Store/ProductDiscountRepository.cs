@@ -79,7 +79,7 @@ public class ProductDiscountRepository : IProductDiscountRepository
     /// </summary>
     /// <param name="productDiscount">The ProductDiscount object to add.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task AddProductDiscountAsync(ProductDiscount productDiscount)
+    public async Task<ProductDiscount?> AddProductDiscountAsync(ProductDiscount productDiscount)
     {
         if (!StoreModelValidator.ValidateProductDiscountModel(productDiscount, out string errors))
         {
@@ -88,6 +88,8 @@ public class ProductDiscountRepository : IProductDiscountRepository
 
         await _productDiscounts.AddAsync(productDiscount);
         await _context.SaveChangesAsync();
+        
+        return productDiscount;
     }
 
     /// <summary>
@@ -95,7 +97,7 @@ public class ProductDiscountRepository : IProductDiscountRepository
     /// </summary>
     /// <param name="productDiscount">The ProductDiscount object to update.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task UpdateProductDiscountAsync(ProductDiscount productDiscount)
+    public async Task<ProductDiscount?> UpdateProductDiscountAsync(ProductDiscount productDiscount)
     {
         if (!StoreModelValidator.ValidateProductDiscountModel(productDiscount, out string errors))
         {
@@ -104,6 +106,8 @@ public class ProductDiscountRepository : IProductDiscountRepository
 
         _productDiscounts.Update(productDiscount);
         await _context.SaveChangesAsync();
+        
+        return productDiscount;
     }
 
     /// <summary>

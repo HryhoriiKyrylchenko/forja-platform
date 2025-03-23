@@ -7,9 +7,8 @@ public class PaymentDto
     public string PaymentMethod { get; set; } = string.Empty;
     public decimal Amount { get; set; }
     public DateTime PaymentDate { get; set; }
-    public string? ExternalPaymentId { get; set; }
-    public string? ProviderName { get; set; }
-    public string? ProviderResponse { get; set; }
-    public string PaymentStatus { get; set; } = string.Empty;
+    public string ExternalPaymentId { get; set; } = string.Empty;
+    public string ProviderName { get; set; } = string.Empty;
+    public string ProviderResponse { get; set; } = string.Empty;
     public bool IsRefunded { get; set; }
 }

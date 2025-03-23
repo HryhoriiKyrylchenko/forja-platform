@@ -2,10 +2,12 @@ namespace Forja.Application.Interfaces.Store;
 
 public interface IPaymentService
 {
-    Task<Payment?> GetPaymentByIdAsync(Guid paymentId);
-    Task<Payment?> GetPaymentByTransactionIdAsync(string transactionId);
-    Task<IEnumerable<Payment>> GetPaymentsByOrderIdAsync(Guid orderId);
-    Task AddPaymentAsync(PaymentCreateRequest request);
-    Task UpdatePaymentAsync(PaymentUpdateRequest request);
+    Task<PaymentDto?> GetPaymentByIdAsync(Guid paymentId);
+    Task<PaymentDto?> GetPaymentByTransactionIdAsync(string transactionId);
+    Task<IEnumerable<PaymentDto>> GetPaymentsByOrderIdAsync(Guid orderId);
+    Task<PaymentDto?> UpdatePaymentStatusAsync(PaymentUpdateSatusRequest satusRequest);
     Task DeletePaymentAsync(Guid paymentId);
+
+    Task<string> ExecutePaymentAsync(PaymentRequest request);
+    Task<bool> RefundPaymentAsync(Guid paymentId);
 }

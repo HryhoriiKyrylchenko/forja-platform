@@ -79,7 +79,7 @@ public class OrderRepository : IOrderRepository
     /// </summary>
     /// <param name="order">The Order object to add.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task AddOrderAsync(Order order)
+    public async Task<Order?> AddOrderAsync(Order order)
     {
         if (!StoreModelValidator.ValidateOrderModel(order, out string errors))
         {
@@ -88,6 +88,8 @@ public class OrderRepository : IOrderRepository
 
         await _orders.AddAsync(order);
         await _context.SaveChangesAsync();
+        
+        return order;
     }
 
     /// <summary>
@@ -95,7 +97,7 @@ public class OrderRepository : IOrderRepository
     /// </summary>
     /// <param name="order">The Order object to update.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task UpdateOrderAsync(Order order)
+    public async Task<Order?> UpdateOrderAsync(Order order)
     {
         if (!StoreModelValidator.ValidateOrderModel(order, out string errors))
         {
@@ -104,6 +106,8 @@ public class OrderRepository : IOrderRepository
 
         _orders.Update(order);
         await _context.SaveChangesAsync();
+        
+        return order;
     }
 
     /// <summary>

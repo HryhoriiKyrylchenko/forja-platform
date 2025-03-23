@@ -30,14 +30,14 @@ public interface IDiscountRepository
     /// </summary>
     /// <param name="discount">The Discount to add.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task AddDiscountAsync(Discount discount);
+    Task<Discount?> AddDiscountAsync(Discount discount);
 
     /// <summary>
     /// Updates an existing Discount in the database.
     /// </summary>
     /// <param name="discount">The Discount to update.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task UpdateDiscountAsync(Discount discount);
+    Task<Discount?> UpdateDiscountAsync(Discount discount);
 
     /// <summary>
     /// Deletes a Discount from the database by its ID.

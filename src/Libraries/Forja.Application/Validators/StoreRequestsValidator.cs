@@ -171,51 +171,51 @@ public static class StoreRequestsValidator
         return true;
     }
 
-    public static bool ValidatePaymentCreateRequest(PaymentCreateRequest request, out string? error)
+    public static bool ValidatePaymentRequest(PaymentRequest request, out string? error)
     {
         if (request == null)
         {
             throw new ArgumentNullException(nameof(request));
         }
-
+        
         if (request.OrderId == Guid.Empty)
         {
             error = "Order ID cannot be empty.";
             return false;
         }
-
-        if (request.Amount < 0)
+        
+        if (request.Amount <= 0)
         {
-            error = "Payment amount cannot be negative.";
+            error = "Payment amount cannot be zero or negative.";
             return false;
         }
 
+        if (string.IsNullOrWhiteSpace(request.Currency))
+        {
+            error = "Payment currency cannot be empty.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.PaymentMethodToken))
+        {
+            error = "Payment method token cannot be empty.";
+            return false;
+        }
+        
         error = null;
         return true;
     }
 
-    public static bool ValidatePaymentUpdateRequest(PaymentUpdateRequest request, out string? error)
+    public static bool ValidatePaymentUpdateRequest(PaymentUpdateSatusRequest satusRequest, out string? error)
     {
-        if (request == null)
+        if (satusRequest == null)
         {
-            throw new ArgumentNullException(nameof(request));
+            throw new ArgumentNullException(nameof(satusRequest));
         }
 
-        if (request.Id == Guid.Empty)
+        if (satusRequest.Id == Guid.Empty)
         {
             error = "Payment ID cannot be empty.";
-            return false;
-        }
-
-        if (request.OrderId == Guid.Empty)
-        {
-            error = "Order ID cannot be empty.";
-            return false;
-        }
-
-        if (request.Amount < 0)
-        {
-            error = "Payment amount cannot be negative.";
             return false;
         }
 

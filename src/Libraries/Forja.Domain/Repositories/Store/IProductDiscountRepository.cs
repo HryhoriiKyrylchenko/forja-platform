@@ -31,14 +31,14 @@ public interface IProductDiscountRepository
     /// </summary>
     /// <param name="productDiscount">The ProductDiscount object to add.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task AddProductDiscountAsync(ProductDiscount productDiscount);
+    Task<ProductDiscount?> AddProductDiscountAsync(ProductDiscount productDiscount);
 
     /// <summary>
     /// Updates an existing ProductDiscount in the database.
     /// </summary>
     /// <param name="productDiscount">The ProductDiscount object to update.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task UpdateProductDiscountAsync(ProductDiscount productDiscount);
+    Task<ProductDiscount?> UpdateProductDiscountAsync(ProductDiscount productDiscount);
 
     /// <summary>
     /// Deletes a ProductDiscount from the database by its unique identifier.

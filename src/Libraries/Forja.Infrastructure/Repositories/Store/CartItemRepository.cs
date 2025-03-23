@@ -59,7 +59,7 @@ public class CartItemRepository : ICartItemRepository
     /// </summary>
     /// <param name="cartItem">The CartItem to add.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task AddCartItemAsync(CartItem cartItem)
+    public async Task<CartItem?> AddCartItemAsync(CartItem cartItem)
     {
         if (StoreModelValidator.ValidateCartItemModel(cartItem, out string errors))
         {
@@ -68,6 +68,8 @@ public class CartItemRepository : ICartItemRepository
 
         await _cartItems.AddAsync(cartItem);
         await _context.SaveChangesAsync();
+        
+        return cartItem;
     }
 
     /// <summary>
@@ -75,7 +77,7 @@ public class CartItemRepository : ICartItemRepository
     /// </summary>
     /// <param name="cartItem">The CartItem to update.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task UpdateCartItemAsync(CartItem cartItem)
+    public async Task<CartItem?> UpdateCartItemAsync(CartItem cartItem)
     {
         if (StoreModelValidator.ValidateCartItemModel(cartItem, out string errors))
         {
@@ -84,6 +86,8 @@ public class CartItemRepository : ICartItemRepository
 
         _cartItems.Update(cartItem);
         await _context.SaveChangesAsync();
+        
+        return cartItem;
     }
 
     /// <summary>

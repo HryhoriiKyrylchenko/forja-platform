@@ -69,7 +69,7 @@ public class DiscountRepository : IDiscountRepository
     /// </summary>
     /// <param name="discount">The Discount to add.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task AddDiscountAsync(Discount discount)
+    public async Task<Discount?> AddDiscountAsync(Discount discount)
     {
         if (!StoreModelValidator.ValidateDiscountModel(discount, out string errors))
         {
@@ -78,6 +78,8 @@ public class DiscountRepository : IDiscountRepository
 
         await _discounts.AddAsync(discount);
         await _context.SaveChangesAsync();
+        
+        return discount;
     }
 
     /// <summary>
@@ -85,7 +87,7 @@ public class DiscountRepository : IDiscountRepository
     /// </summary>
     /// <param name="discount">The Discount to update.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task UpdateDiscountAsync(Discount discount)
+    public async Task<Discount?> UpdateDiscountAsync(Discount discount)
     {
         if (!StoreModelValidator.ValidateDiscountModel(discount, out string errors))
         {
@@ -94,6 +96,8 @@ public class DiscountRepository : IDiscountRepository
 
         _discounts.Update(discount);
         await _context.SaveChangesAsync();
+        
+        return discount;
     }
 
     /// <summary>

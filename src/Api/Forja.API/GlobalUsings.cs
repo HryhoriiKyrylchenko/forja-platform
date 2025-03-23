@@ -18,3 +18,5 @@ global using Forja.Application.Requests.Games;
 global using Forja.Application.Interfaces.Storage;
 global using Forja.Application.Requests.Storage;
 global using System.Security.Claims;
+global using Forja.Application.Interfaces.Store;
+global using Forja.Application.Requests.Store;

@@ -30,14 +30,14 @@ public interface IOrderRepository
     /// </summary>
     /// <param name="order">The Order object to add.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task AddOrderAsync(Order order);
+    Task<Order?> AddOrderAsync(Order order);
 
     /// <summary>
     /// Updates an existing Order in the database.
     /// </summary>
     /// <param name="order">The Order object to update.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task UpdateOrderAsync(Order order);
+    Task<Order?> UpdateOrderAsync(Order order);
 
     /// <summary>
     /// Deletes an Order from the database by its unique identifier.

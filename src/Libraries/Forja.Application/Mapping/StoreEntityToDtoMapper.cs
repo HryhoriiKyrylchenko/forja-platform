@@ -47,7 +47,7 @@ public class StoreEntityToDtoMapper
             Id = order.Id,
             CartId = order.CartId,
             OrderDate = order.OrderDate,
-            PaymentStatus = order.PaymentStatus.ToString()
+            Status = order.Status
         };
     }
 
@@ -61,9 +61,8 @@ public class StoreEntityToDtoMapper
             Amount = payment.Amount,
             PaymentDate = payment.PaymentDate,
             ExternalPaymentId = payment.ExternalPaymentId,
-            ProviderName = payment.ProviderName,
-            ProviderResponse = payment.ProviderResponse,
-            PaymentStatus = payment.PaymentStatus.ToString(),
+            ProviderName = payment.ProviderName.ToString(),
+            ProviderResponse = payment.ProviderResponse.ToString(),
             IsRefunded = payment.IsRefunded
         };
     }

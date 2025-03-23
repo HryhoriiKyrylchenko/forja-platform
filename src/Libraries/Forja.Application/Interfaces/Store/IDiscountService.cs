@@ -3,18 +3,18 @@ namespace Forja.Application.Interfaces.Store;
 public interface IDiscountService
 {
     // Discount Operations
-    Task<Discount?> GetDiscountByIdAsync(Guid discountId);
-    Task<IEnumerable<Discount>> GetAllDiscountsAsync();
-    Task<IEnumerable<Discount>> GetActiveDiscountsAsync(DateTime currentDate);
-    Task AddDiscountAsync(DiscountCreateRequest request);
-    Task UpdateDiscountAsync(DiscountUpdateRequest request);
+    Task<DiscountDto?> GetDiscountByIdAsync(Guid discountId);
+    Task<IEnumerable<DiscountDto>> GetAllDiscountsAsync();
+    Task<IEnumerable<DiscountDto>> GetActiveDiscountsAsync(DateTime currentDate);
+    Task<DiscountDto?> AddDiscountAsync(DiscountCreateRequest request);
+    Task<DiscountDto?> UpdateDiscountAsync(DiscountUpdateRequest request);
     Task DeleteDiscountAsync(Guid discountId);
 
     // ProductDiscount Operations
-    Task<ProductDiscount?> GetProductDiscountByIdAsync(Guid productDiscountId);
-    Task<IEnumerable<ProductDiscount>> GetProductDiscountsByProductIdAsync(Guid productId);
-    Task<IEnumerable<ProductDiscount>> GetProductDiscountsByDiscountIdAsync(Guid discountId);
-    Task AddProductDiscountAsync(ProductDiscountCreateRequest request);
-    Task UpdateProductDiscountAsync(ProductDiscountUpdateRequest request);
+    Task<ProductDiscountDto?> GetProductDiscountByIdAsync(Guid productDiscountId);
+    Task<IEnumerable<ProductDiscountDto>> GetProductDiscountsByProductIdAsync(Guid productId);
+    Task<IEnumerable<ProductDiscountDto>> GetProductDiscountsByDiscountIdAsync(Guid discountId);
+    Task<ProductDiscountDto?> AddProductDiscountAsync(ProductDiscountCreateRequest request);
+    Task<ProductDiscountDto?> UpdateProductDiscountAsync(ProductDiscountUpdateRequest request);
     Task DeleteProductDiscountAsync(Guid productDiscountId);
 }

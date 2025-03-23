@@ -23,27 +23,31 @@ public class CartService : ICartService
 
     // ---------------- Cart Operations --------------------
 
-    public async Task<Cart?> GetCartByIdAsync(Guid cartId)
+    public async Task<CartDto?> GetCartByIdAsync(Guid cartId)
     {
         if (cartId == Guid.Empty)
         {
             throw new ArgumentException("Cart ID cannot be empty.", nameof(cartId));
         }
 
-        return await _cartRepository.GetCartByIdAsync(cartId);
+        var cart = await _cartRepository.GetCartByIdAsync(cartId);
+        
+        return cart == null ? null : StoreEntityToDtoMapper.MapToCartDto(cart);
     }
 
-    public async Task<IEnumerable<Cart>> GetCartsByUserIdAsync(Guid userId)
+    public async Task<IEnumerable<CartDto>> GetCartsByUserIdAsync(Guid userId)
     {
         if (userId == Guid.Empty)
         {
             throw new ArgumentException("User ID cannot be empty.", nameof(userId));
         }
+        
+        var carts = await _cartRepository.GetCartsByUserIdAsync(userId);
 
-        return await _cartRepository.GetCartsByUserIdAsync(userId);
+        return carts.Select(StoreEntityToDtoMapper.MapToCartDto);
     }
 
-    public async Task<Cart> GetOrCreateActiveCartAsync(CartCreateRequest request)
+    public async Task<CartDto> GetOrCreateActiveCartAsync(CartCreateRequest request)
     {
         if (!StoreRequestsValidator.ValidateCartCreateRequest(request, out var errors))
         {
@@ -65,7 +69,7 @@ public class CartService : ICartService
             await _cartRepository.AddCartAsync(activeCart);
         }
 
-        return activeCart;
+        return StoreEntityToDtoMapper.MapToCartDto(activeCart);
     }
 
     public async Task RemoveCartAsync(Guid cartId)
@@ -109,7 +113,7 @@ public class CartService : ICartService
         }
     }
 
-    public async Task<Cart?> RecoverAbandonedCartAsync(Guid userId)
+    public async Task<CartDto?> RecoverAbandonedCartAsync(Guid userId)
     {
         if (userId == Guid.Empty)
         {
@@ -125,7 +129,7 @@ public class CartService : ICartService
         var abandonedCart = await _cartRepository.GetLatestAbandonedCartByUserIdAsync(userId);
         if (abandonedCart == null)
         {
-            return null;
+            throw new InvalidOperationException("Cannot recover abandoned cart. There is no abandoned cart.");
         }
 
         abandonedCart.Status = CartStatus.Active;
@@ -133,32 +137,36 @@ public class CartService : ICartService
 
         await _cartRepository.UpdateCartAsync(abandonedCart);
 
-        return abandonedCart;
+        return StoreEntityToDtoMapper.MapToCartDto(abandonedCart);
     }
 
     // ---------------- Cart Item Operations --------------------
 
-    public async Task<CartItem?> GetCartItemByIdAsync(Guid cartItemId)
+    public async Task<CartItemDto?> GetCartItemByIdAsync(Guid cartItemId)
     {
         if (cartItemId == Guid.Empty)
         {
             throw new ArgumentException("CartItem ID cannot be empty.", nameof(cartItemId));
         }
 
-        return await _cartItemRepository.GetCartItemByIdAsync(cartItemId);
+        var cartItem = await _cartItemRepository.GetCartItemByIdAsync(cartItemId);
+        
+        return cartItem == null ? null : StoreEntityToDtoMapper.MapToCartItemDto(cartItem);
     }
 
-    public async Task<IEnumerable<CartItem>> GetCartItemsByCartIdAsync(Guid cartId)
+    public async Task<IEnumerable<CartItemDto>> GetCartItemsByCartIdAsync(Guid cartId)
     {
         if (cartId == Guid.Empty)
         {
             throw new ArgumentException("Cart ID cannot be empty.", nameof(cartId));
         }
 
-        return await _cartItemRepository.GetCartItemsByCartIdAsync(cartId);
+        var cartItems = await _cartItemRepository.GetCartItemsByCartIdAsync(cartId);
+        
+        return cartItems.Select(StoreEntityToDtoMapper.MapToCartItemDto);
     }
 
-    public async Task AddCartItemAsync(CartItemCreateRequest request)
+    public async Task<CartItemDto?> AddCartItemAsync(CartItemCreateRequest request)
     {
         if (!StoreRequestsValidator.ValidateCartItemCreateRequest(request, out var errors))
         {
@@ -185,12 +193,14 @@ public class CartService : ICartService
             Price = product.Price
         };
 
-        await _cartItemRepository.AddCartItemAsync(cartItem);
+        var result = await _cartItemRepository.AddCartItemAsync(cartItem);
 
         await RecalculateCartTotalAsync(request.CartId);
+
+        return result == null ? null : StoreEntityToDtoMapper.MapToCartItemDto(result);
     }
 
-    public async Task UpdateCartItemAsync(CartItemUpdateRequest request)
+    public async Task<CartItemDto?> UpdateCartItemAsync(CartItemUpdateRequest request)
     {
         if (!StoreRequestsValidator.ValidateCartItemUpdateRequest(request, out var errors))
         {
@@ -213,9 +223,11 @@ public class CartService : ICartService
         cartItem.ProductId = request.ProductId;
         cartItem.Price = product.Price;
 
-        await _cartItemRepository.UpdateCartItemAsync(cartItem);
+        var result = await _cartItemRepository.UpdateCartItemAsync(cartItem);
 
         await RecalculateCartTotalAsync(request.CartId);
+        
+        return result == null ? null : StoreEntityToDtoMapper.MapToCartItemDto(result);
     }
 
     public async Task RemoveCartItemAsync(Guid cartItemId)

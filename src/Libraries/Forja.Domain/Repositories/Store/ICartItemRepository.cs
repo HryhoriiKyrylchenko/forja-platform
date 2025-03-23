@@ -24,14 +24,14 @@ public interface ICartItemRepository
     /// </summary>
     /// <param name="cartItem">The CartItem to add.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task AddCartItemAsync(CartItem cartItem);
+    Task<CartItem?> AddCartItemAsync(CartItem cartItem);
 
     /// <summary>
     /// Updates an existing CartItem in the database.
     /// </summary>
     /// <param name="cartItem">The CartItem to update.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task UpdateCartItemAsync(CartItem cartItem);
+    Task<CartItem?> UpdateCartItemAsync(CartItem cartItem);
 
     /// <summary>
     /// Deletes a CartItem from the database by its ID.

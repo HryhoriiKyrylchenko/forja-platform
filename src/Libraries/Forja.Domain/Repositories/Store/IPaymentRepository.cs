@@ -31,14 +31,14 @@ public interface IPaymentRepository
     /// </summary>
     /// <param name="payment">The Payment object to add.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task AddPaymentAsync(Payment payment);
+    Task<Payment?> AddPaymentAsync(Payment payment);
 
     /// <summary>
     /// Updates an existing Payment in the database.
     /// </summary>
     /// <param name="payment">The Payment object to update.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task UpdatePaymentAsync(Payment payment);
+    Task<Payment?> UpdatePaymentAsync(Payment payment);
 
     /// <summary>
     /// Deletes a Payment from the database by its unique identifier.

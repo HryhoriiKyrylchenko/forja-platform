@@ -27,7 +27,7 @@ public class Order : SoftDeletableEntity
     /// Gets or sets the payment status of the order.
     /// </summary>
     [Required]
-    public OrderPaymentStatus PaymentStatus { get; set; }
+    public OrderStatus Status { get; set; }
 
     /// <summary>
     /// Gets or sets the shopping cart associated with the order.

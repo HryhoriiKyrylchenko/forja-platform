@@ -37,23 +37,18 @@ public class Payment : SoftDeletableEntity
     /// <summary>
     /// Gets or sets the external identifier associated with the payment, typically provided by the payment provider.
     /// </summary>
-    public string? ExternalPaymentId { get; set; }
+    [Required]
+    public string ExternalPaymentId { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the name of the payment provider used for processing the payment.
     /// </summary>
-    public string? ProviderName { get; set; }
+    public PaymentMethod ProviderName { get; set; }
 
     /// <summary>
     /// Gets or sets the response returned by the payment provider.
     /// </summary>
-    public string? ProviderResponse { get; set; }
-    
-    /// <summary>
-    /// Gets or sets the status of the payment.
-    /// </summary>
-    [Required]
-    public PaymentStatus PaymentStatus { get; set; }
+    public PaymentStatus ProviderResponse { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether the payment has been refunded.

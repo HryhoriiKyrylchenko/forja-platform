@@ -3,7 +3,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 //Postgres Configuration
 var postgresPassword = builder.AddParameter("postgresql-password", secret: true);
 
-var postgres = builder.AddPostgres("postgres", password: postgresPassword)
+builder.AddPostgres("postgres", password: postgresPassword)
     .WithImage("postgres")
     .WithImageTag("17.2")
     .WithContainerName("forja-postgres")
@@ -14,8 +14,6 @@ var postgres = builder.AddPostgres("postgres", password: postgresPassword)
         targetPort: 5432,
         isProxied: false)
     .WithLifetime(ContainerLifetime.Persistent);
-
-var keycloakDb = postgres.AddDatabase("keycloakdb");
 
 //Redis Configuration
 var redis = builder.AddRedis("redis")
@@ -28,11 +26,10 @@ var redis = builder.AddRedis("redis")
 var keycloakUsername = builder.AddParameter("keycloak-admin", secret: true);
 var keycloakPassword = builder.AddParameter("keycloak-password", secret: true);
 
-var keycloak = builder.AddKeycloak("keycloak", 8080, keycloakUsername, keycloakPassword)
+builder.AddKeycloak("keycloak", 8080, keycloakUsername, keycloakPassword)
     .WithImage("keycloak/keycloak")
     .WithImageTag("26.1")
     .WithContainerName("forja-keycloak")
-    .WithReference(keycloakDb).WaitFor(keycloakDb)
     .WithEnvironment("KC_DB", "postgres")
     .WithEnvironment("KC_DB_URL", "jdbc:postgresql://forja-postgres:5432/keycloakdb")
     .WithEnvironment("KC_DB_USERNAME", "postgres")
@@ -61,8 +58,7 @@ builder.AddContainer("minio", "minio/minio")
 //backend
 var forjaApi = builder.AddProject<Projects.Forja_API>("forjaapi")
     .WithExternalHttpEndpoints()
-    .WithReference(redis)
-    .WithReference(keycloak).WaitFor(keycloak);
+    .WithReference(redis);
 
 //frontend
 builder.AddNpmApp("forja-react", "../../Web/forja-react")

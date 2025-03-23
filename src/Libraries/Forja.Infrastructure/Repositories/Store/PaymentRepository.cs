@@ -75,7 +75,7 @@ public class PaymentRepository : IPaymentRepository
     /// </summary>
     /// <param name="payment">The Payment object to add.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task AddPaymentAsync(Payment payment)
+    public async Task<Payment?> AddPaymentAsync(Payment payment)
     {
         if (!StoreModelValidator.ValidatePaymentModel(payment, out string errors))
         {
@@ -84,6 +84,8 @@ public class PaymentRepository : IPaymentRepository
 
         await _payments.AddAsync(payment);
         await _dbContext.SaveChangesAsync();
+        
+        return payment;
     }
 
     /// <summary>
@@ -91,7 +93,7 @@ public class PaymentRepository : IPaymentRepository
     /// </summary>
     /// <param name="payment">The Payment object to update.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task UpdatePaymentAsync(Payment payment)
+    public async Task<Payment?> UpdatePaymentAsync(Payment payment)
     {
         if (!StoreModelValidator.ValidatePaymentModel(payment, out string errors))
         {
@@ -100,6 +102,8 @@ public class PaymentRepository : IPaymentRepository
 
         _payments.Update(payment);
         await _dbContext.SaveChangesAsync();
+        
+        return payment;
     }
 
     /// <summary>
