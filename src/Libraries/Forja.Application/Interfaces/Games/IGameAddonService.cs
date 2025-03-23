@@ -19,6 +19,13 @@ public interface IGameAddonService
     Task<GameAddonDto?> GetByIdAsync(Guid id);
 
     /// <summary>
+    /// Asynchronously retrieves a game addon based on its associated storage URL.
+    /// </summary>
+    /// <param name="storageUrl">The storage URL of the game addon used to locate the specific resource.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a <see cref="GameAddonDto"/> object if a matching addon is found, or null if not found.</returns>
+    Task<GameAddonDto?> GetByStorageUrlAsync(string storageUrl);
+
+    /// <summary>
     /// Creates a new game addon and returns the created addon details.
     /// </summary>
     /// <param name="request">

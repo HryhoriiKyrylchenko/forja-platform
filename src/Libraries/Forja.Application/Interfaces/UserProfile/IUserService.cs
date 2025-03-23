@@ -85,6 +85,28 @@ public interface IUserService
     Task<UserProfileDto?> UpdateUserAsync(UserUpdateRequest request);
 
     /// <summary>
+    /// Updates the avatar of a user based on the provided request.
+    /// </summary>
+    /// <param name="request">An instance of <see cref="UserUpdateAvatarRequest"/> containing the user's identifier and avatar update data.</param>
+    /// <returns>A task representing the asynchronous operation, containing the updated <see cref="UserProfileDto"/> object.</returns>
+    Task<UserProfileDto?> UpdateUserAvatarAsync(UserUpdateAvatarRequest request);
+
+    /// <summary>
+    /// Updates the profile hat variant for the specified user.
+    /// </summary>
+    /// <param name="request">A <see cref="UserUpdateProfileHatVariantRequest"/> containing the user identifier and the new hat variant value.</param>
+    /// <returns>A task representing the asynchronous operation, containing the updated <see cref="UserProfileDto"/> object.</returns>
+    Task<UserProfileDto?> UpdateProfileHatVariant(UserUpdateProfileHatVariantRequest request);
+
+    /// <summary>
+    /// Confirms the email address associated with the specified user.
+    /// </summary>
+    /// <param name="keycloakUserId">The unique identifier of the keycloak user.</param>
+    /// <param name="confirmed">A boolean value indicating whether the email has been confirmed.</param>
+    /// <returns>A task representing the asynchronous operation, containing the updated <see cref="UserProfileDto"/> object if successful, or null if the user does not exist.</returns>
+    Task<UserProfileDto?> ConfirmEmailAsync(string keycloakUserId, bool confirmed);
+
+    /// <summary>
     /// Deletes a user identified by the given Keycloak ID.
     /// </summary>
     /// <param name="userId">The ID of the user to be deleted.</param>

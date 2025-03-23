@@ -21,8 +21,6 @@ public class UserUpdateRequest
 
     public string? PhoneNumber { get; set; }
 
-    public string? AvatarUrl { get; set; }
-
     public DateTime? BirthDate { get; set; }
 
     [MaxLength(10)]
@@ -43,5 +41,6 @@ public class UserUpdateRequest
 
     public string? CustomUrl { get; set; }
     
+    [Range(1, 5)]
     public short ProfileHatVariant { get; set; }
 }

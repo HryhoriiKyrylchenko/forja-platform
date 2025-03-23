@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Forja.Infrastructure.Migrations
 {
     [DbContext(typeof(ForjaDbContext))]
-    [Migration("20250318061826_Add_profileHatVariant")]
-    partial class Add_profileHatVariant
+    [Migration("20250322133418_AddedUserEmailConfirmatonFieldAndValidationforProfileHatVariant")]
+    partial class AddedUserEmailConfirmatonFieldAndValidationforProfileHatVariant
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -988,6 +988,9 @@ namespace Forja.Infrastructure.Migrations
                         .HasColumnType("character varying(10)");
 
                     b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsEmailConfirmed")
                         .HasColumnType("boolean");
 
                     b.Property<string>("KeycloakUserId")

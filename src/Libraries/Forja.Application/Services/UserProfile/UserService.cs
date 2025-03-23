@@ -192,7 +192,6 @@ public class UserService : IUserService
         user.Lastname = request.Lastname;
         user.Email = request.Email;
         user.PhoneNumber = request.PhoneNumber;
-        user.AvatarUrl = request.AvatarUrl;
         user.BirthDate = request.BirthDate;
         user.Gender = request.Gender;
         user.Country = request.Country;
@@ -202,6 +201,69 @@ public class UserService : IUserService
         user.ModifiedAt = request.ModifiedAt;
         user.CustomUrl = request.CustomUrl;
         user.ProfileHatVariant = request.ProfileHatVariant;
+        
+        await _userRepository.UpdateAsync(user);
+        
+        return UserProfileEntityToDtoMapper.MapToUserProfileDto(user);
+    }
+
+    /// <inheritdoc />
+    public async Task<UserProfileDto?> UpdateUserAvatarAsync(UserUpdateAvatarRequest request)
+    {
+        if (!UserProfileRequestsValidator.ValidateUserUpdateAvatarRequest(request))
+        {
+            throw new ArgumentException("Invalid user update avatar request.");
+        }
+        
+        var user = await _userRepository.GetByIdAsync(request.Id);
+        if (user == null)
+        {
+            throw new KeyNotFoundException("User not found.");
+        }
+        
+        user.AvatarUrl = request.AvatarUrl;
+        
+        await _userRepository.UpdateAsync(user);
+        
+        return UserProfileEntityToDtoMapper.MapToUserProfileDto(user);
+    }
+
+    /// <inheritdoc />
+    public async Task<UserProfileDto?> UpdateProfileHatVariant(UserUpdateProfileHatVariantRequest request)
+    {
+        if (!UserProfileRequestsValidator.ValidateUserUpdateProfileHatVariantRequest(request))
+        {
+            throw new ArgumentException("Invalid user update profile hat variant request.");
+        }
+        
+        var user = await _userRepository.GetByIdAsync(request.UserId);
+        if (user == null)
+        {
+            throw new KeyNotFoundException("User not found.");
+        }
+
+        user.ProfileHatVariant = request.Variant;
+        
+        await _userRepository.UpdateAsync(user);
+        
+        return UserProfileEntityToDtoMapper.MapToUserProfileDto(user);
+    }
+
+    /// <inheritdoc />
+    public async Task<UserProfileDto?> ConfirmEmailAsync(string keycloakUserId, bool confirmed)
+    {
+        if (string.IsNullOrWhiteSpace(keycloakUserId))
+        {
+            throw new ArgumentNullException(nameof(keycloakUserId), "User Keycloak ID cannot be null or empty.");
+        }
+        
+        var user = await _userRepository.GetByKeycloakIdAsync(keycloakUserId);
+        if (user == null)
+        {
+            throw new KeyNotFoundException("User not found.");
+        }
+        
+        user.IsEmailConfirmed = confirmed;
         
         await _userRepository.UpdateAsync(user);
         

@@ -49,6 +49,21 @@ public interface IUserLibraryService
     Task<UserLibraryGameDto?> GetDeletedUserLibraryGameByIdAsync(Guid userLibraryGameId);
 
     /// <summary>
+    /// Retrieves a user's library game by the specified game ID and user ID.
+    /// </summary>
+    /// <param name="gameId">The unique identifier of the game.</param>
+    /// <param name="userId">The unique identifier of the user.</param>
+    /// <returns>A Task containing a UserLibraryGameDto object if found, otherwise null.</returns>
+    Task<UserLibraryGameDto?> GetUserLibraryGameByGameIdAndUserIdAsync(Guid gameId, Guid userId);
+
+    /// <summary>
+    /// Retrieves a list of user library games associated with the specified game ID.
+    /// </summary>
+    /// <param name="gameId">The unique identifier of the game.</param>
+    /// <returns>A Task representing the asynchronous operation that returns a list of UserLibraryGameDto objects.</returns>
+    Task<List<UserLibraryGameDto>> GetUserLibraryGamesByGameIdAsync(Guid gameId);
+
+    /// <summary>
     /// Retrieves a list of all user library games.
     /// </summary>
     /// <returns>A Task representing the result of the asynchronous operation. The task result contains a list of UserLibraryGameDto representing all user library games.</returns>
@@ -116,6 +131,21 @@ public interface IUserLibraryService
     /// <param name="userLibraryAddonId">The unique identifier of the deleted user library addon to retrieve.</param>
     /// <returns>A Task representing the result of the asynchronous operation. The task result contains the UserLibraryAddonDto for the deleted addon associated with the specified ID.</returns>
     Task<UserLibraryAddonDto?> GetDeletedUserLibraryAddonByIdAsync(Guid userLibraryAddonId);
+
+    /// <summary>
+    /// Retrieves a user's library addon based on the provided addon ID and user ID.
+    /// </summary>
+    /// <param name="addonId">The unique identifier of the addon.</param>
+    /// <param name="userId">The unique identifier of the user.</param>
+    /// <returns>A Task that represents the asynchronous operation, containing the UserLibraryAddonDto if found, or null if not.</returns>
+    Task<UserLibraryAddonDto?> GetUserLibraryAddonByAddonIdAndUserIdAsync(Guid addonId, Guid userId);
+
+    /// <summary>
+    /// Retrieves a list of user library addons associated with the specified addon ID.
+    /// </summary>
+    /// <param name="addonId">The unique identifier of the addon.</param>
+    /// <returns>A Task containing a list of UserLibraryAddonDto objects associated with the specified addon ID.</returns>
+    Task<List<UserLibraryAddonDto>> GetUserLibraryAddonByAddonIdAsync(Guid addonId);
 
     /// <summary>
     /// Retrieves a list of all user library addons.

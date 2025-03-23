@@ -4,11 +4,28 @@ public static class InfrastructureServiceCollectionExtensions
 {
     public static IHostApplicationBuilder AddInfrastructureServices(this IHostApplicationBuilder builder)
     {
-        builder.AddNpgsqlDbContext<ForjaDbContext>("forjadb");
+        builder.Services.AddDbContext<ForjaDbContext>(options =>
+            options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection")));
+
 
         // Register repositories or other infrastructure services here
         builder.Services.AddSingleton<IEmailService, EmailService>();
         builder.Services.AddHttpClient<IKeycloakClient, KeycloakClient>();
+        
+        builder.Services.Configure<MinioConfiguration>(builder.Configuration.GetSection("MinIO"));
+
+        builder.Services.AddScoped<IStorageService, StorageService>(provider =>
+        {
+            var minioConfig = provider.GetRequiredService<IOptions<MinioConfiguration>>().Value;
+
+            return new StorageService(
+                minioConfig.Endpoint,
+                minioConfig.AccessKey,
+                minioConfig.SecretKey,
+                minioConfig.DefaultBucketName,
+                minioConfig.UseSSL
+            );
+        });
         
         builder.Services.AddScoped<IBundleRepository, BundleRepository>();
         builder.Services.AddScoped<IBundleProductRepository, BundleProductRepository>();
