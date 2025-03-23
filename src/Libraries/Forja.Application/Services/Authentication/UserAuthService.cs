@@ -74,7 +74,7 @@ public class UserAuthService : IUserAuthService
             }
         }
         
-        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserProfileDto(result, emailSent);
+        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserProfileDto(result);
     }
     
     /// <inheritdoc />

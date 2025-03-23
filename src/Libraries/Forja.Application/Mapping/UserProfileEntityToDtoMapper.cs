@@ -141,7 +141,7 @@ public static class UserProfileEntityToDtoMapper
     /// <param name="user">The <see cref="User"/> instance to map.</param>
     /// <param name="emailSent">Indicates whether the email confirmation message has been sent.</param>
     /// <returns>A <see cref="UserProfileDto"/> containing user profile information.</returns>
-    public static UserProfileDto MapToUserProfileDto(User user, bool emailSent = false)
+    public static UserProfileDto MapToUserProfileDto(User user)
     {
         return new UserProfileDto
         {
@@ -162,7 +162,6 @@ public static class UserProfileEntityToDtoMapper
             CustomUrl = user.CustomUrl,
             ProfileHatVariant = user.ProfileHatVariant,
             IsEmailConfirmed = user.IsEmailConfirmed,
-            IsEmailSent = emailSent
         };
     }
 
@@ -172,10 +171,10 @@ public static class UserProfileEntityToDtoMapper
     /// </summary>
     /// <param name="user">The <see cref="User"/> instance to map.</param>
     /// <returns>A <see cref="UserProfileDto"/> that represents the mapped user information.</returns>
-    public static UserProfileDto MapToUserProfileDto(User user)
-    {
-        return MapToUserProfileDto(user);
-    }
+    //public static UserProfileDto MapToUserProfileDto(User user)
+    //{
+    //    return MapToUserProfileDto(user);
+    //}
 
 
     /// <summary>

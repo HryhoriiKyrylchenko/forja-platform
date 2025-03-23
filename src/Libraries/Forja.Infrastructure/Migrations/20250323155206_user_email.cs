@@ -5,13 +5,13 @@
 namespace Forja.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class AddedUserEmailConfirmatonFieldAndValidationforProfileHatVariant : Migration
+    public partial class user_email : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<bool>(
-                name: "IsEmailConfirmed",
+                name: "IsEmailSent",
                 schema: "user-profile",
                 table: "Users",
                 type: "boolean",
@@ -23,7 +23,7 @@ namespace Forja.Infrastructure.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "IsEmailConfirmed",
+                name: "IsEmailSent",
                 schema: "user-profile",
                 table: "Users");
         }

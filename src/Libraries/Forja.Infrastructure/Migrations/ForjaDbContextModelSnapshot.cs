@@ -990,6 +990,9 @@ namespace Forja.Infrastructure.Migrations
                     b.Property<bool>("IsEmailConfirmed")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsEmailSent")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("KeycloakUserId")
                         .IsRequired()
                         .HasColumnType("text");

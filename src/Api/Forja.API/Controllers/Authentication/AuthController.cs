@@ -474,7 +474,7 @@ public class AuthController : ControllerBase
         try
         {
             await _authService.ConfirmUserEmailAsync(token);
-            await _userService.ConfirmEmailAsync(keycloakUserId, true);
+            //await _userService.ConfirmEmailAsync(keycloakUserId, true);
             return NoContent();
         }
         catch (Exception ex)

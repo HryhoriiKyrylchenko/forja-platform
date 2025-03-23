@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Forja.Infrastructure.Migrations
 {
     [DbContext(typeof(ForjaDbContext))]
-    [Migration("20250321182952_emailConfirm")]
-    partial class emailConfirm
+    [Migration("20250323153218__baseline")]
+    partial class _baseline
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

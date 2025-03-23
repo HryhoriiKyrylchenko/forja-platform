@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Forja.Infrastructure.Migrations
 {
     [DbContext(typeof(ForjaDbContext))]
-    [Migration("20250322133418_AddedUserEmailConfirmatonFieldAndValidationforProfileHatVariant")]
-    partial class AddedUserEmailConfirmatonFieldAndValidationforProfileHatVariant
+    [Migration("20250323155206_user_email")]
+    partial class user_email
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -991,6 +991,9 @@ namespace Forja.Infrastructure.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<bool>("IsEmailConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsEmailSent")
                         .HasColumnType("boolean");
 
                     b.Property<string>("KeycloakUserId")
