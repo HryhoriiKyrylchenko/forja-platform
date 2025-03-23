@@ -36,3 +36,4 @@ global using Microsoft.Extensions.Options;
 global using Forja.Infrastructure.Minio;
 global using Forja.Domain.Enums;
 global using Forja.Domain.Entities.Common;
+global using Forja.Domain.Repositories.Support;
