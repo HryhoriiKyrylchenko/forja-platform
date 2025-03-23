@@ -43,6 +43,7 @@ public class GenresController : ControllerBase
     /// <summary>
     /// Gets all deleted genres.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpGet("genres/deleted")]
     public async Task<IActionResult> GetAllDeletedGenresAsync()
     {
@@ -88,6 +89,7 @@ public class GenresController : ControllerBase
     /// <summary>
     /// Creates a new genre.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("genres")]
     public async Task<IActionResult> CreateGenreAsync([FromBody] GenreCreateRequest request)
     {
@@ -108,6 +110,7 @@ public class GenresController : ControllerBase
     /// <summary>
     /// Updates an existing genre.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPut("genres")]
     public async Task<IActionResult> UpdateGenreAsync([FromBody] GenreUpdateRequest request)
     {
@@ -132,6 +135,7 @@ public class GenresController : ControllerBase
     /// <summary>
     /// Deletes an existing genre.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpDelete("genres/{id}")]
     public async Task<IActionResult> DeleteGenreAsync([FromRoute] Guid id)
     {
@@ -252,6 +256,7 @@ public class GenresController : ControllerBase
     /// <summary>
     /// Creates a new product-genre association.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("product-genres")]
     public async Task<IActionResult> CreateProductGenreAsync([FromBody] ProductGenresCreateRequest request)
     {
@@ -273,6 +278,7 @@ public class GenresController : ControllerBase
     /// <summary>
     /// Updates an existing product-genre association.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPut("product-genres/{id}")]
     public async Task<IActionResult> UpdateProductGenreAsync([FromBody] ProductGenresUpdateRequest request, [FromRoute] Guid id)
     {
@@ -297,6 +303,7 @@ public class GenresController : ControllerBase
     /// <summary>
     /// Deletes an existing product-genre association.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpDelete("product-genres/{id}")]
     public async Task<IActionResult> DeleteProductGenreAsync([FromRoute] Guid id)
     {

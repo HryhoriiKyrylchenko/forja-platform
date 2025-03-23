@@ -26,6 +26,8 @@ public static class InfrastructureServiceCollectionExtensions
                 minioConfig.UseSSL
             );
         });
+
+        builder.Services.AddScoped<ITestPaymentService, TestPaymentService>();
         
         builder.Services.AddScoped<IBundleRepository, BundleRepository>();
         builder.Services.AddScoped<IBundleProductRepository, BundleProductRepository>();
@@ -43,7 +45,12 @@ public static class InfrastructureServiceCollectionExtensions
         builder.Services.AddScoped<IProductMatureContentRepository, ProductMatureContentRepository>();
         builder.Services.AddScoped<ITagRepository, TagRepository>();
         
+        builder.Services.AddScoped<ICartItemRepository, CartItemRepository>();
+        builder.Services.AddScoped<ICartRepository, CartRepository>();
+        builder.Services.AddScoped<IDiscountRepository, DiscountRepository>();
+        builder.Services.AddScoped<IOrderRepository, OrderRepository>();
         builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+        builder.Services.AddScoped<IProductDiscountRepository, ProductDiscountRepository>();
         
         builder.Services.AddScoped<IAchievementRepository, AchievementRepository>();
         builder.Services.AddScoped<IGameSaveRepository, GameSaveRepository>();

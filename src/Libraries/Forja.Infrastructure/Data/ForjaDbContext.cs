@@ -1,5 +1,3 @@
-using Forja.Domain.Entities.Common;
-
 namespace Forja.Infrastructure.Data;
 
 public class ForjaDbContext : DbContext
@@ -39,7 +37,6 @@ public class ForjaDbContext : DbContext
     public DbSet<CartItem> CartItems { get; set; }
     public DbSet<Discount> Discounts { get; set; }
     public DbSet<Order> Orders { get; set; }
-    public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<Payment> Payments { get; set; }
     public DbSet<Product> Products { get; set; }
     public DbSet<ProductDiscount> ProductDiscounts { get; set; }

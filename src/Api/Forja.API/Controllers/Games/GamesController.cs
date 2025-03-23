@@ -41,6 +41,7 @@ public class GamesController : ControllerBase
     /// <summary>
     /// Gets all deleted games.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpGet("games/deleted")]
     public async Task<IActionResult> GetAllDeletedGamesAsync()
     {
@@ -84,6 +85,7 @@ public class GamesController : ControllerBase
     /// <summary>
     /// Creates a new game.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("games")]
     public async Task<IActionResult> CreateGameAsync([FromBody] GameCreateRequest request)
     {
@@ -105,6 +107,7 @@ public class GamesController : ControllerBase
     /// <summary>
     /// Updates an existing game.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPut("games")]
     public async Task<IActionResult> UpdateGameAsync([FromBody] GameUpdateRequest request)
     {
@@ -128,6 +131,7 @@ public class GamesController : ControllerBase
     /// <summary>
     /// Deletes a game by its ID.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpDelete("games/{id}")]
     public async Task<IActionResult> DeleteGameAsync([FromRoute] Guid id)
     {
@@ -199,6 +203,7 @@ public class GamesController : ControllerBase
     /// <summary>
     /// Creates a new game addon.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("game-addons")]
     public async Task<IActionResult> CreateGameAddonAsync([FromBody] GameAddonCreateRequest request)
     {
@@ -220,6 +225,7 @@ public class GamesController : ControllerBase
     /// <summary>
     /// Updates a game addon by its ID.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPut("game-addons")]
     public async Task<IActionResult> UpdateGameAddonAsync([FromBody] GameAddonUpdateRequest request)
     {
@@ -243,6 +249,7 @@ public class GamesController : ControllerBase
     /// <summary>
     /// Deletes a game addon by its ID.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpDelete("game-addons/{id}")]
     public async Task<IActionResult> DeleteGameAddonAsync([FromRoute] Guid id)
     {

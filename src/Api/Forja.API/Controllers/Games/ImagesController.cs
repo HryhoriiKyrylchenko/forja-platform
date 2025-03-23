@@ -21,6 +21,7 @@ public class ImagesController : ControllerBase
     /// <summary>
     /// Gets all item images.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpGet("item-images")]
     public async Task<IActionResult> GetAllItemImagesAsync()
     {
@@ -66,6 +67,7 @@ public class ImagesController : ControllerBase
     /// <summary>
     /// Creates a new item image.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("item-images")]
     public async Task<IActionResult> CreateItemImageAsync([FromBody] ItemImageCreateRequest request)
     {
@@ -86,6 +88,7 @@ public class ImagesController : ControllerBase
     /// <summary>
     /// Updates an existing item image.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPut("item-images")]
     public async Task<IActionResult> UpdateItemImageAsync([FromBody] ItemImageUpdateRequest request)
     {
@@ -109,6 +112,7 @@ public class ImagesController : ControllerBase
     /// <summary>
     /// Deletes an existing item image.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpDelete("item-images/{id}")]
     public async Task<IActionResult> DeleteItemImageAsync([FromRoute] Guid id)
     {
@@ -228,6 +232,7 @@ public class ImagesController : ControllerBase
     /// <summary>
     /// Creates a new product image association.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("product-images")]
     public async Task<IActionResult> CreateProductImageAsync([FromBody] ProductImagesCreateRequest request)
     {
@@ -248,6 +253,7 @@ public class ImagesController : ControllerBase
     /// <summary>
     /// Updates an existing product image association.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPut("product-images")]
     public async Task<IActionResult> UpdateProductImageAsync([FromBody] ProductImagesUpdateRequest request)
     {
@@ -271,6 +277,7 @@ public class ImagesController : ControllerBase
     /// <summary>
     /// Deletes an existing product image association.
     /// </summary>
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpDelete("product-images/{id}")]
     public async Task<IActionResult> DeleteProductImageAsync([FromRoute] Guid id)
     {

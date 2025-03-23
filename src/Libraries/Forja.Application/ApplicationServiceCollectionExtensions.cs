@@ -1,3 +1,5 @@
+
+
 namespace Forja.Application;
 
 public static class ApplicationServiceCollectionExtensions
@@ -24,6 +26,14 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<IProductMatureContentService, ProductMatureContentService>();
         services.AddScoped<ITagService, TagService>();
         
+        services.AddScoped<IFileManagerService, FileManagerService>();
+
+        services.AddScoped<ICartService, CartService>();
+        services.AddScoped<IDiscountService, DiscountService>();
+        services.AddScoped<IOrderService, OrderService>();
+        services.AddScoped<IPaymentService, PaymentService>();
+        services.AddScoped<IPriceCalculator, PriceCalculator>();
+        
         services.AddScoped<IAchievementService, AchievementService>();
         services.AddScoped<IGameSaveService, GameSaveService>();
         services.AddScoped<IReviewService, ReviewService>();
@@ -32,8 +42,6 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IUserWishListService, UserWishListService>();
         
-        services.AddScoped<IFileManagerService, FileManagerService>();
-
         return services;
     }
 }

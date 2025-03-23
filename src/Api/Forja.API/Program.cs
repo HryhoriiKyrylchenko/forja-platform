@@ -110,6 +110,8 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole("Administrator", "SystemAdministrator", "Moderator", "ContentManager"));
     options.AddPolicy("ModeratePolicy", policy =>
         policy.RequireRole("Administrator", "SystemAdministrator", "Moderator"));
+    options.AddPolicy("StoreManagePolicy", policy =>
+        policy.RequireRole("Administrator", "SystemAdministrator", "SalesManager"));
 });
 
 
