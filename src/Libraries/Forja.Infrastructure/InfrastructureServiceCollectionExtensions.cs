@@ -1,3 +1,5 @@
+using Forja.Infrastructure.Repositories.Support;
+
 namespace Forja.Infrastructure;
 
 public static class InfrastructureServiceCollectionExtensions
@@ -60,6 +62,10 @@ public static class InfrastructureServiceCollectionExtensions
         builder.Services.AddScoped<IUserLibraryGameRepository, UserLibraryGameRepository>();
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<IUserWishListRepository, UserWishListRepository>();
+
+        builder.Services.AddScoped<IFAQRepository, FAQRepository>();
+        builder.Services.AddScoped<ISupportTicketRepository, SupportTicketRepository>();
+        builder.Services.AddScoped<ITicketMessageRepository, TicketMessageRepository>();
             
         return builder;
     }

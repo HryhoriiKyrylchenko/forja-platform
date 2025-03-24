@@ -1,5 +1,3 @@
-
-
 namespace Forja.Application;
 
 public static class ApplicationServiceCollectionExtensions
@@ -41,6 +39,10 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<IUserLibraryService, UserLibraryService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IUserWishListService, UserWishListService>();
+
+        services.AddScoped<IFAQService, FAQService>();
+        services.AddScoped<ISupportTicketService, SupportTicketService>();
+        services.AddScoped<ITicketMessageService, TicketMessageService>();
         
         return services;
     }
