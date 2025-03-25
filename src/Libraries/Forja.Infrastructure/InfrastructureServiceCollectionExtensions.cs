@@ -1,3 +1,4 @@
+using Forja.Infrastructure.Repositories.Common;
 using Forja.Infrastructure.Repositories.Support;
 
 namespace Forja.Infrastructure;
@@ -29,6 +30,9 @@ public static class InfrastructureServiceCollectionExtensions
             );
         });
 
+        builder.Services.AddScoped<ILegalDocumentRepository, LegalDocumentRepository>();
+        builder.Services.AddScoped<INewsArticleRepository, NewsArticleRepository>();
+        
         builder.Services.AddScoped<ITestPaymentService, TestPaymentService>();
         
         builder.Services.AddScoped<IBundleRepository, BundleRepository>();
