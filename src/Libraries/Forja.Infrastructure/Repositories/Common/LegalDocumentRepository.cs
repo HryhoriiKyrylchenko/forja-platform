@@ -84,4 +84,15 @@ public class LegalDocumentRepository : ILegalDocumentRepository
         _legalDocuments.Remove(document);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<LegalDocument?> GetLegalDocumentsByTitleAsync(string title)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            throw new ArgumentException("Invalid title.", nameof(title));
+        }
+        
+        var document = await _legalDocuments.FirstOrDefaultAsync(ld => ld.Title == title);
+        return document;
+    }
 }

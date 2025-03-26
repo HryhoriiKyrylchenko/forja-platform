@@ -44,3 +44,6 @@ global using Forja.Domain.Repositories.Support;
 global using Forja.Application.Services.Support;
 global using Forja.Application.DTOs.Common;
 global using Forja.Application.Requests.Common;
+global using Forja.Application.Interfaces.Common;
+global using Forja.Domain.Entities.Common;
+global using Forja.Domain.Repositories.Common;

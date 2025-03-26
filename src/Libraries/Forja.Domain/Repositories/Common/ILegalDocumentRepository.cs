@@ -36,4 +36,11 @@ public interface ILegalDocumentRepository
     /// </summary>
     /// <param name="documentId">The unique identifier of the legal document.</param>
     Task DeleteLegalDocumentAsync(Guid documentId);
+
+    /// <summary>
+    /// Retrieves a legal document by its title.
+    /// </summary>
+    /// <param name="title">The title of the legal document.</param>
+    /// <returns>A legal document if a match is found; otherwise, null.</returns>
+    Task<LegalDocument?> GetLegalDocumentsByTitleAsync(string title);
 }

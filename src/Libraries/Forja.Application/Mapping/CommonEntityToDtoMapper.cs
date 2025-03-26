@@ -4,7 +4,7 @@ namespace Forja.Application.Mapping;
 
 public static class CommonEntityToDtoMapper
 {
-    public static LegalDocumentDto MapToLegalDocumentDto(this LegalDocument entity)
+    public static LegalDocumentDto MapToLegalDocumentDto(LegalDocument entity)
     {
         return new LegalDocumentDto
         {
@@ -16,7 +16,7 @@ public static class CommonEntityToDtoMapper
         };
     }
 
-    public static NewsArticleDto MapToNewsArticleDto(this NewsArticle entity)
+    public static NewsArticleDto MapToNewsArticleDto(NewsArticle entity)
     {
         return new NewsArticleDto
         {
