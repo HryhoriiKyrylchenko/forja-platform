@@ -22,3 +22,5 @@ global using Forja.Application.Interfaces.Store;
 global using Forja.Application.Interfaces.Support;
 global using Forja.Application.Requests.Store;
 global using Forja.Application.Requests.Support;
+global using Forja.Application.Interfaces.Common;
+global using Forja.Application.Requests.Common;
