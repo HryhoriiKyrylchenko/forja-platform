@@ -10,7 +10,7 @@ public class AnalyticsAggregate
     /// Gets or sets the unique identifier for the analytics aggregate.
     /// </summary>
     [Key]
-    public int Id { get; set; }
+    public Guid Id { get; set; }
 
     /// <summary>
     /// Gets or sets the date of the analytics data.

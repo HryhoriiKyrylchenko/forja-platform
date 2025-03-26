@@ -1,3 +1,4 @@
+using Forja.Infrastructure.Repositories.Analytics;
 using Forja.Infrastructure.Repositories.Common;
 using Forja.Infrastructure.Repositories.Support;
 
@@ -29,6 +30,11 @@ public static class InfrastructureServiceCollectionExtensions
                 minioConfig.UseSSL
             );
         });
+
+        builder.Services.AddScoped<IAnalyticsAggregateRepository, AnalyticsAggregateRepository>();
+        builder.Services.AddScoped<IAnalyticsEventRepository, AnalyticsEventRepository>();
+        builder.Services.AddScoped<IAnalyticsSessionRepository, AnalyticsSessionRepository>();
+        builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 
         builder.Services.AddScoped<ILegalDocumentRepository, LegalDocumentRepository>();
         builder.Services.AddScoped<INewsArticleRepository, NewsArticleRepository>();
