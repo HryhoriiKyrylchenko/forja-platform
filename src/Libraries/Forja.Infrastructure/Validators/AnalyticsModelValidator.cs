@@ -47,10 +47,9 @@ public static class AnalyticsModelValidator
             return false;
         }
 
-        if (string.IsNullOrWhiteSpace(model.Metadata))
+        if (model.Metadata == null)
         {
-            error = "Metadata is required.";
-            return false;
+            throw new ArgumentNullException(nameof(model.Metadata));
         }
 
         return true;
@@ -77,10 +76,9 @@ public static class AnalyticsModelValidator
             return false;
         }
 
-        if (string.IsNullOrWhiteSpace(model.Metadata))
+        if (model.Metadata == null)
         {
-            error = "Metadata is required.";
-            return false;
+            throw new ArgumentNullException(nameof(model.Metadata));
         }
 
         return true;
@@ -119,10 +117,9 @@ public static class AnalyticsModelValidator
             return false;
         }
 
-        if (string.IsNullOrWhiteSpace(model.Details))
+        if (model.Details == null)
         {
-            error = "Details are required.";
-            return false;
+            throw new ArgumentNullException(nameof(model.Details));
         }
 
         return true;

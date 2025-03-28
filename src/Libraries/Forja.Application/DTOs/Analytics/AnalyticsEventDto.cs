@@ -6,5 +6,5 @@ public class AnalyticsEventDto
     public string EventType { get; set; } = string.Empty;
     public Guid? UserId { get; set; }
     public DateTime Timestamp { get; set; }
-    public string Metadata { get; set; } = string.Empty;
+    public Dictionary<string, string> Metadata { get; set; } = [];
 }

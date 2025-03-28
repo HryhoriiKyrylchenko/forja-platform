@@ -8,5 +8,5 @@ public class AuditLogDto
     public string ActionType { get; set; } = string.Empty;
     public Guid? UserId { get; set; }
     public DateTime ActionDate { get; set; }
-    public string Details { get; set; } = string.Empty;
+    public Dictionary<string, string> Details { get; set; } = [];
 }

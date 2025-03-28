@@ -7,14 +7,17 @@ public class OrderController : ControllerBase
     private readonly IOrderService _orderService;
     private readonly IUserService _userService;
     private readonly ICartService _cartService;
+    private readonly IAnalyticsEventService _analyticsEventService;
 
     public OrderController(IOrderService orderService, 
         IUserService userService,
-        ICartService cartService)
+        ICartService cartService,
+        IAnalyticsEventService analyticsEventService)
     {
         _orderService = orderService;
         _userService = userService;
         _cartService = cartService;
+        _analyticsEventService = analyticsEventService;
     }
 
     // ------------------- Order Endpoints -------------------
@@ -98,6 +101,25 @@ public class OrderController : ControllerBase
             }
                 
             var order = await _orderService.AddOrderAsync(request);
+            if (order == null) return BadRequest(new { error = "Order creation failed." });
+            
+            try
+            {
+                await _analyticsEventService.AddEventAsync(AnalyticEventType.Purchase,
+                    user.Id,
+                    new Dictionary<string, string>
+                    {
+                        { "OrderId", order.Id.ToString() },
+                        { "CartId", request.CartId.ToString() },
+                        { "OrderDate", order.OrderDate.ToString(CultureInfo.InvariantCulture) },
+                        { "OrderStatus", order.Status }
+                    });
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Analytics event creation failed.");
+            }
+            
             return CreatedAtAction(nameof(GetOrderById), new { orderId = order?.Id }, order);
         }
         catch (Exception ex)

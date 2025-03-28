@@ -49,3 +49,6 @@ global using Forja.Domain.Entities.Common;
 global using Forja.Domain.Repositories.Common;
 global using Forja.Application.DTOs.Analytics;
 global using Forja.Domain.Entities.Analytics;
+global using Forja.Application.Interfaces.Analytics;
+global using Forja.Domain.Repositories.Analytics;
+global using Forja.Application.Requests.Analytics;

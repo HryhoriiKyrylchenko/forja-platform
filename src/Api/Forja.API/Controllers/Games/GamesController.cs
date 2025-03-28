@@ -9,11 +9,15 @@ public class GamesController : ControllerBase
 {
     private readonly IGameService _gameService;
     private readonly IGameAddonService _gameAddonService;
+    private readonly IAnalyticsEventService _analyticsEventService;
 
-    public GamesController(IGameService gameService, IGameAddonService gameAddonService)
+    public GamesController(IGameService gameService, 
+        IGameAddonService gameAddonService,
+        IAnalyticsEventService analyticsEventService)
     {
         _gameService = gameService;
         _gameAddonService = gameAddonService;
+        _analyticsEventService = analyticsEventService;
     }
 
     #region Games Endpoints
@@ -27,9 +31,24 @@ public class GamesController : ControllerBase
         try
         {
             var games = await _gameService.GetAllAsync();
-            if (!games.Any())
-                return NoContent();
-
+            
+            try
+            {
+                await _analyticsEventService.AddEventAsync(AnalyticEventType.PageView,
+                    null,
+                    new Dictionary<string, string>
+                    {
+                        { "Page", "AllGames" },
+                        { "Date", DateTime.UtcNow.ToString(CultureInfo.InvariantCulture) }
+                    });
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Analytics event creation failed.");
+            }
+    
+            if (!games.Any()) return NoContent();
+            
             return Ok(games);
         }
         catch (Exception e)
@@ -71,8 +90,24 @@ public class GamesController : ControllerBase
         try
         {
             var game = await _gameService.GetByIdAsync(id);
-            if (game == null)
-                return NotFound(new { error = $"Game with ID {id} not found." });
+            if (game == null) return NotFound(new { error = $"Game with ID {id} not found." });
+            
+            try
+            {
+                await _analyticsEventService.AddEventAsync(AnalyticEventType.PageView,
+                    null,
+                    new Dictionary<string, string>
+                    {
+                        { "Page", "Game" },
+                        { "GameId", game.Id.ToString() },
+                        { "GameTitle", game.Title },
+                        { "Date", DateTime.UtcNow.ToString(CultureInfo.InvariantCulture) }
+                    });
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Analytics event creation failed.");
+            }
 
             return Ok(game);
         }
@@ -166,8 +201,23 @@ public class GamesController : ControllerBase
         try
         {
             var addons = await _gameAddonService.GetAllAsync();
-            if (!addons.Any())
-                return NoContent();
+            
+            try
+            {
+                await _analyticsEventService.AddEventAsync(AnalyticEventType.PageView,
+                    null,
+                    new Dictionary<string, string>
+                    {
+                        { "Page", "AllAddons" },
+                        { "Date", DateTime.UtcNow.ToString(CultureInfo.InvariantCulture) }
+                    });
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Analytics event creation failed.");
+            }
+            
+            if (!addons.Any()) return NoContent();
 
             return Ok(addons);
         }
@@ -189,10 +239,62 @@ public class GamesController : ControllerBase
         try
         {
             var addon = await _gameAddonService.GetByIdAsync(id);
-            if (addon == null)
-                return NotFound(new { error = $"GameAddon with ID {id} not found." });
+            if (addon == null) return NotFound(new { error = $"GameAddon with ID {id} not found." });
+            
+            try
+            {
+                await _analyticsEventService.AddEventAsync(AnalyticEventType.PageView,
+                    null,
+                    new Dictionary<string, string>
+                    {
+                        { "Page", "Addon" },
+                        { "AddonId", addon.Id.ToString() },
+                        { "AddonTitle", addon.Title },
+                        { "RelatedGameId", addon.GameId.ToString() },
+                        { "Date", DateTime.UtcNow.ToString(CultureInfo.InvariantCulture) }
+                    });
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Analytics event creation failed.");
+            }
 
             return Ok(addon);
+        }
+        catch (Exception e)
+        {
+            return BadRequest(new { error = e.Message });
+        }
+    }
+    
+    [HttpGet("game-addons/games/{id}")]
+    public async Task<IActionResult> GetGameAddonsByGameIdAsync([FromRoute] Guid id)
+    {
+        if (id == Guid.Empty)
+            return BadRequest(new { error = "Game ID cannot be empty." });
+
+        try
+        {
+            var addons = await _gameAddonService.GetByGameIdAsync(id);
+            
+            try
+            {
+                await _analyticsEventService.AddEventAsync(AnalyticEventType.PageView,
+                    null,
+                    new Dictionary<string, string>
+                    {
+                        { "Page", "AllAddonsByGame" },
+                        { "GameId", id.ToString() },
+                        { "Date", DateTime.UtcNow.ToString(CultureInfo.InvariantCulture) }
+                    });
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Analytics event creation failed.");
+            }
+
+            if (!addons.Any()) return NoContent();
+            return Ok(addons);
         }
         catch (Exception e)
         {

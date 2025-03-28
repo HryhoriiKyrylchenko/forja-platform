@@ -8,30 +8,14 @@ namespace Forja.API.Controllers.UserProfile;
 [Route("api/[controller]")]
 public class ReviewController : ControllerBase
 {
-    /// <summary>
-    /// Provides access to review-related operations such as adding, updating, deleting,
-    /// restoring reviews, and retrieving reviews based on various criteria.
-    /// </summary>
-    /// <remarks>
-    /// This field represents the service abstraction for managing and interacting with user reviews.
-    /// It is used to delegate operations related to reviews to an implementation of the
-    /// <see cref="IReviewService"/> interface.
-    /// </remarks>
     private readonly IReviewService _reviewService;
+    private readonly IAnalyticsEventService _analyticsEventService;
 
-    /// <summary>
-    /// Represents the controller for managing reviews including CRUD operations and retrieval of various review-related data.
-    /// </summary>
-    /// <remarks>
-    /// This controller handles the creation, retrieval, updating, restoration, and deletion of reviews.
-    /// It also provides endpoints for fetching reviews specific to users, products, and different statuses (e.g., deleted or not approved).
-    /// </remarks>
-    /// <example>
-    /// Example usage includes fetching all reviews for a specific product, restoring a deleted review, or retrieving all pending reviews for approval.
-    /// </example>
-    public ReviewController(ReviewService reviewService)
+    public ReviewController(ReviewService reviewService,
+        IAnalyticsEventService analyticsEventService)
     {
         _reviewService = reviewService;
+        _analyticsEventService = analyticsEventService;
     }
 
     /// <summary>
@@ -53,6 +37,31 @@ public class ReviewController : ControllerBase
         try
         {
             var result = await _reviewService.AddReviewAsync(request);
+
+            if (result == null)
+            {
+                return BadRequest(new { error = "Failed to create review." });
+            }
+            
+            try
+            {
+                await _analyticsEventService.AddEventAsync(AnalyticEventType.ReviewSubmitted,
+                    result.UserId,
+                    new Dictionary<string, string>
+                {
+                    { "ReviewId", result.Id.ToString() },
+                    { "ProductId", request.ProductId.ToString() },
+                    { "UserId", request.UserId.ToString() },
+                    { "Rating", request.PositiveRating.ToString() },
+                    { "Comment", request.Comment },
+                    { "CreatedAt", result.CreatedAt.ToString(CultureInfo.InvariantCulture) }
+                });
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Analytics event failed to create");
+            }
+
             return Ok(result);
         }
         catch (Exception ex)

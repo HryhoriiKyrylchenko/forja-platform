@@ -6,5 +6,5 @@ public class AnalyticsSessionDto
     public Guid? UserId { get; set; }
     public DateTime StartTime { get; set; }
     public DateTime? EndTime { get; set; }
-    public string Metadata { get; set; } = string.Empty;
+    public Dictionary<string, string> Metadata { get; set; } = [];
 }

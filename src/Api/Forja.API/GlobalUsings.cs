@@ -24,3 +24,5 @@ global using Forja.Application.Requests.Store;
 global using Forja.Application.Requests.Support;
 global using Forja.Application.Interfaces.Common;
 global using Forja.Application.Requests.Common;
+global using Forja.Application.Interfaces.Analytics;
+global using System.Globalization;
