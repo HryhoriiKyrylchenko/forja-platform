@@ -13,12 +13,17 @@ public class AuthController : ControllerBase
     private readonly IUserAuthService _authService;
     private readonly IUserService _userService;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IAnalyticsSessionService _analyticsSessionService;
 
-    public AuthController(IUserAuthService authService, IUserService userService, IHttpContextAccessor httpContextAccessor)
+    public AuthController(IUserAuthService authService, 
+        IUserService userService, 
+        IHttpContextAccessor httpContextAccessor,
+        IAnalyticsSessionService analyticsSessionService)
     {
         _authService = authService;
         _userService = userService;
         _httpContextAccessor = httpContextAccessor;
+        _analyticsSessionService = analyticsSessionService;
     }
 
     /// <summary>
@@ -56,7 +61,6 @@ public class AuthController : ControllerBase
 
             var httpContext = _httpContextAccessor.HttpContext ?? throw new InvalidOperationException("HTTP Context is unavailable.");
 
-            // set `access_token` & `refresh_token` in the HttpOnly Cookies**
             var accessTokenOptions = new CookieOptions
             {
                 HttpOnly = true,
@@ -75,6 +79,48 @@ public class AuthController : ControllerBase
 
             httpContext.Response.Cookies.Append("access_token", tokenResponse.AccessToken, accessTokenOptions);
             httpContext.Response.Cookies.Append("refresh_token", tokenResponse.RefreshToken, refreshTokenOptions);
+
+            try
+            {
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString(); 
+                var userAgent = Request.Headers["User-Agent"].ToString(); 
+                var authorizationHeader = Request.Headers["Authorization"].ToString();
+                var customHeader = Request.Headers["X-Custom-Header"].ToString();
+
+                var metadata = new Dictionary<string, string>
+                {
+                    { "User-Agent", userAgent },
+                    { "IpAddress", ipAddress ?? "Unknown" },
+                    { "Authorization", authorizationHeader },
+                    { "CustomHeader", customHeader }
+                };
+
+                var keycloakUserId = await _authService.GetKeycloakUserIdAsync(tokenResponse.AccessToken);
+                var user = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
+                if (user == null)
+                {
+                    throw new Exception("User not found");
+                }
+                
+                var session = await _analyticsSessionService.AddSessionAsync(user.Id, metadata);
+                if (session == null)
+                {
+                    throw new Exception("Session not found");
+                }
+
+                var backendSessionOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict
+                };
+                
+                httpContext.Response.Cookies.Append("backend_session", session.SessionId.ToString(), refreshTokenOptions);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Failed create a session: {e.Message}");
+            }
 
             return Ok(tokenResponse);
         }
@@ -107,6 +153,21 @@ public class AuthController : ControllerBase
             Response.Cookies.Delete("access_token");
             Response.Cookies.Delete("refresh_token");
 
+            try
+            {
+                if (Request.Cookies.TryGetValue("backend_session", out var sessionIdString)
+                    && Guid.TryParse(sessionIdString, out var sessionId))
+                {
+                    await _analyticsSessionService.EndSessionAsync(sessionId);
+
+                    Response.Cookies.Delete("backend_session");
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Failed to delete session: {e.Message}");
+            }
+
             return Ok(new { message = "Logout successful" });
         }
         catch (Exception ex)
@@ -114,8 +175,7 @@ public class AuthController : ControllerBase
             return BadRequest(new { error = ex.Message });
         }
     }
-
-
+    
     /// <summary>
     /// Refreshes the authentication token for a user using a provided refresh token.
     /// </summary>

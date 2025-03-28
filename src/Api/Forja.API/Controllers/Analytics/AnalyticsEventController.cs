@@ -1,6 +1,3 @@
-using Forja.Application.Interfaces.Analytics;
-using Forja.Application.Requests.Analytics;
-
 namespace Forja.API.Controllers.Analytics;
 
 [Route("api/[controller]")]
@@ -14,6 +11,7 @@ public class AnalyticsEventController : ControllerBase
         _analyticsEventService = analyticsEventService;
     }
 
+    [Authorize(Policy = "AdminPolicy")]
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById([FromRoute] Guid id)
     {
@@ -31,6 +29,7 @@ public class AnalyticsEventController : ControllerBase
         }
     }
 
+    [Authorize(Policy = "AdminPolicy")]
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -45,6 +44,7 @@ public class AnalyticsEventController : ControllerBase
         }
     }
 
+    [Authorize(Policy = "AdminPolicy")]
     [HttpGet("user/{userId:guid}")]
     public async Task<IActionResult> GetByUserId([FromRoute] Guid userId)
     {
@@ -60,24 +60,7 @@ public class AnalyticsEventController : ControllerBase
         }
     }
 
-    [HttpPut]
-    public async Task<IActionResult> Update([FromBody] AnalyticsEventUpdateRequest request)
-    {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
-
-        try
-        {
-            var updatedEvent = await _analyticsEventService.UpdateEventAsync(request);
-            if (updatedEvent == null) return NotFound();
-
-            return Ok(updatedEvent);
-        }
-        catch (Exception e)
-        {
-            return BadRequest(new { error = e.Message });
-        }
-    }
-
+    [Authorize(Policy = "AdminPolicy")]
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete([FromRoute] Guid id)
     {
