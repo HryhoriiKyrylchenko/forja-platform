@@ -40,7 +40,7 @@ public class NewsArticle
     /// <summary>
     /// Indicates whether the entity's identifier holds priority or is given precedence.
     /// </summary>
-    public bool IdPrioritized { get; set; }
+    public bool IsPrioritized { get; set; }
 
     /// <summary>
     /// Gets or sets the date and time when the entity was created.

@@ -1,3 +1,6 @@
+using Forja.Application.Interfaces.Common;
+using Forja.Application.Services.Common;
+
 namespace Forja.Application;
 
 public static class ApplicationServiceCollectionExtensions
@@ -8,6 +11,9 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<IUserAuthService, UserAuthService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddTransient<IClaimsTransformation, KeycloakRolesClaimsTransformer>();
+
+        services.AddScoped<ILegalDocumentService, LegalDocumentService>();
+        services.AddScoped<INewsArticleService, NewsArticleService>();
 
         services.AddScoped<IBundleProductService, BundleProductService>();
         services.AddScoped<IBundleService, BundleService>();
