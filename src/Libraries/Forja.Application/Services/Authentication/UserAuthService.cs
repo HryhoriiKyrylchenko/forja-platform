@@ -58,20 +58,10 @@ public class UserAuthService : IUserAuthService
         var result = await _userRepository.AddAsync(appUser);
         
         var user = await _userRepository.GetByKeycloakIdAsync(keycloakId);
-        bool emailSent = false;
 
         if (user != null)
         {
-            try
-            {
-                await SendEmailConfirmationAsync(keycloakId);
-                emailSent = true;
-
-                await _userRepository.UpdateAsync(appUser);
-            }
-            catch (Exception ex)
-            {
-            }
+            await SendEmailConfirmationAsync(keycloakId);            
         }
         
         return result == null ? null : UserProfileEntityToDtoMapper.MapToUserProfileDto(result);
@@ -378,9 +368,13 @@ public class UserAuthService : IUserAuthService
     
         var token = _tokenService.GenerateEmailConfirmationToken(Guid.Parse(keycloakUserId), user.Email);
 
-        var confirmationLink = $"/api/Auth/users/{keycloakUserId}/confirm-email?token={token}";
+        //var confirmationLink = $"/api/Auth/users/{keycloakUserId}/confirm-email?token={token}";
+        var confirmationLink = $"/verify-email?token={token}";
 
         await _emailService.SendEmailConfirmationAsync(user.Email, user.Username, confirmationLink);
+
+        user.IsEmailSent = true;
+        await _userRepository.UpdateAsync(user);
     }
     
     /// <inheritdoc />
@@ -405,6 +399,9 @@ public class UserAuthService : IUserAuthService
         }
 
         await _keycloakClient.ConfirmUserEmailAsync(user.KeycloakUserId);
+
+        user.IsEmailConfirmed = true;
+        await _userRepository.UpdateAsync(user);
     }
     
     /// <summary>

@@ -3,7 +3,7 @@ namespace Forja.Infrastructure.Services;
 public class EmailService : IEmailService
 {
     // Necessary to configure the right frontend and backend URLs
-    private readonly string _frontendBaseUrl = "https://localhost:3000";
+    private readonly string _frontendBaseUrl = "https://localhost:3003";
     private readonly string _backBaseUrl = "https://localhost:7052";
     
     private readonly string _smtpHost;
@@ -37,14 +37,14 @@ public class EmailService : IEmailService
     /// <inheritdoc />
     public async Task SendEmailConfirmationAsync(string email, string username, string confirmationLink)
     {
-        var fullConfirmationLink = _backBaseUrl + confirmationLink;
+        var fullConfirmationLink = _frontendBaseUrl + confirmationLink;
         
         var emailBody = $@"
         <html>
         <body>
             <p>Hi {username},</p>
             <p>Thank you for registering! To complete your registration, please confirm your email address by clicking the link below:</p>
-            <a href='{fullConfirmationLink}'>Confirm Email</a>
+            <a href='{fullConfirmationLink}' target='_blank' rel='noopener noreferrer'>Confirm Email</a>
             <p>If you did not register, you can ignore this email.</p>
         </body>
         </html>";

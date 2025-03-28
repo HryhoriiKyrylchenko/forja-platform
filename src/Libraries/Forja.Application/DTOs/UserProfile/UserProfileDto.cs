@@ -151,4 +151,12 @@ public class UserProfileDto
     /// their email address, while <c>false</c> indicates the email address has not been confirmed.
     /// </remarks>
     public bool IsEmailConfirmed { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the email confirmation message has been sent to the user.
+    /// </summary>
+    /// <remarks>
+    /// This property indicates whether the email confirmation message has been successfully sent to the user.
+    /// </remarks>
+    public bool IsEmailSent { get; set; }
 }
