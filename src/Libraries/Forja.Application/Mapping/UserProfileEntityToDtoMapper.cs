@@ -133,12 +133,14 @@ public static class UserProfileEntityToDtoMapper
             PurchaseDate = userLibraryAddon.PurchaseDate
         };
     }
-    
+
     /// <summary>
-    /// Maps a <see cref="User"/> domain entity to a <see cref="UserProfileDto"/> data transfer object.
+    /// Maps a <see cref="User"/> domain entity to a <see cref="UserProfileDto"/> data transfer object,
+    /// optionally including the status of email confirmation message delivery.
     /// </summary>
     /// <param name="user">The <see cref="User"/> instance to map.</param>
-    /// <returns>A <see cref="UserProfileDto"/> that represents the mapped user information.</returns>
+    /// <param name="emailSent">Indicates whether the email confirmation message has been sent.</param>
+    /// <returns>A <see cref="UserProfileDto"/> containing user profile information.</returns>
     public static UserProfileDto MapToUserProfileDto(User user)
     {
         return new UserProfileDto
@@ -159,10 +161,23 @@ public static class UserProfileEntityToDtoMapper
             CreatedAt = user.CreatedAt,
             CustomUrl = user.CustomUrl,
             ProfileHatVariant = user.ProfileHatVariant,
-            IsEmailConfirmed = user.IsEmailConfirmed
+            IsEmailConfirmed = user.IsEmailConfirmed,
+            IsEmailSent = user.IsEmailSent,
         };
     }
-    
+
+    /// <summary>
+    /// Maps a <see cref="User"/> domain entity to a <see cref="UserProfileDto"/> data transfer object,
+    /// using the <c>User.IsEmailSent</c> property to populate the corresponding field in the DTO.
+    /// </summary>
+    /// <param name="user">The <see cref="User"/> instance to map.</param>
+    /// <returns>A <see cref="UserProfileDto"/> that represents the mapped user information.</returns>
+    //public static UserProfileDto MapToUserProfileDto(User user)
+    //{
+    //    return MapToUserProfileDto(user);
+    //}
+
+
     /// <summary>
     /// Maps a UserWishList entity to a UserWishListDTO.
     /// </summary>

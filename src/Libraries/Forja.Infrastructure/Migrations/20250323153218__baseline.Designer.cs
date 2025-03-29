@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Forja.Infrastructure.Migrations
 {
     [DbContext(typeof(ForjaDbContext))]
-    [Migration("20250322133418_AddedUserEmailConfirmatonFieldAndValidationforProfileHatVariant")]
-    partial class AddedUserEmailConfirmatonFieldAndValidationforProfileHatVariant
+    [Migration("20250323153218__baseline")]
+    partial class _baseline
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

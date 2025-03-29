@@ -7,14 +7,20 @@ namespace Forja.Application.Services.UserProfile;
     public class UserWishListService : IUserWishListService
     {
         private readonly IUserWishListRepository _userWishListRepository;
+        private readonly IProductRepository _productRepository;
+        private readonly IUserRepository _userRepository;
 
-        public UserWishListService(IUserWishListRepository userWishListRepository)
-        {
-            _userWishListRepository = userWishListRepository;
-        }
+    public UserWishListService( IUserWishListRepository userWishListRepository, 
+                                IProductRepository      productRepository, 
+                                IUserRepository         userRepository)
+    {
+        _userWishListRepository = userWishListRepository;
+        _productRepository = productRepository;
+        _userRepository = userRepository;
+    }
 
-        /// <inheritdoc />
-        public async Task<List<UserWishListDto>> GetAllAsync()
+    /// <inheritdoc />
+    public async Task<List<UserWishListDto>> GetAllAsync()
         {
             var wishLists = await _userWishListRepository.GetAllAsync();
             return wishLists.Select(UserProfileEntityToDtoMapper.MapToUserWishListDto).ToList();
@@ -46,6 +52,22 @@ namespace Forja.Application.Services.UserProfile;
             };
 
             var createdWishList = await _userWishListRepository.AddAsync(userWishList);
+
+            if (createdWishList != null)
+            {
+                var product = await _productRepository.GetByIdAsync(createdWishList.ProductId);
+                if (product != null)
+                {
+                    createdWishList.Product = product;
+                }
+
+                var user = await _userRepository.GetByIdAsync(createdWishList.UserId);
+                if (user != null)
+                {
+                    createdWishList.User = user;
+                }
+            }
+
             return createdWishList == null ? null : UserProfileEntityToDtoMapper.MapToUserWishListDto(createdWishList);
         }
 
