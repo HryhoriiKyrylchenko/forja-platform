@@ -154,6 +154,9 @@ public class UserLibraryAddonRepository : IUserLibraryAddonRepository
         await _userLibraryAddons.AddAsync(userLibraryAddon);
         await _context.SaveChangesAsync();
 
+        var loadUserLibraryAddon = _userLibraryAddons.Include(ga => ga.GameAddon)
+            .FirstOrDefaultAsync(ga => ga.Id == userLibraryAddon.Id);
+
         return userLibraryAddon;
     }
 

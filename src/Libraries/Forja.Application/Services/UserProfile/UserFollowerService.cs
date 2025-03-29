@@ -99,6 +99,8 @@ public class UserFollowerService : IUserFollowerService
         }
         
         var followers = await _userFollowerRepository.GetFollowersByUserIdAsync(userId);
+
+        
         return followers.Select(UserProfileEntityToDtoMapper.MapToUserFollowerDto).ToList();
     }
 
