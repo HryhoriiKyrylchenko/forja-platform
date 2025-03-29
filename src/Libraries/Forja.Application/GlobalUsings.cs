@@ -52,3 +52,7 @@ global using Forja.Domain.Entities.Analytics;
 global using Forja.Application.Interfaces.Analytics;
 global using Forja.Domain.Repositories.Analytics;
 global using Forja.Application.Requests.Analytics;
+global using Microsoft.Extensions.Logging;
+global using System.Security.Authentication;
+global using Microsoft.EntityFrameworkCore;
+global using Forja.Application.Logging;

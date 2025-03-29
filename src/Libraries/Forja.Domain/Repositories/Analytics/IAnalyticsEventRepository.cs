@@ -13,10 +13,13 @@ public interface IAnalyticsEventRepository
     Task<AnalyticsEvent?> GetByIdAsync(Guid eventId);
 
     /// <summary>
-    /// Retrieves all analytics events.
+    /// Retrieves all analytics events, optionally filtered by date range and event type.
     /// </summary>
-    /// <returns>A list of all analytics events.</returns>
-    Task<IEnumerable<AnalyticsEvent>> GetAllAsync();
+    /// <param name="startDate">The optional starting date for filtering the events.</param>
+    /// <param name="endDate">The optional ending date for filtering the events.</param>
+    /// <param name="eventType">The optional type of analytics events to filter by.</param>
+    /// <returns>A list of analytics events matching the specified criteria.</returns>
+    Task<IEnumerable<AnalyticsEvent>> GetAllAsync(DateTime? startDate = null, DateTime? endDate = null, AnalyticEventType? eventType = null);
 
     /// <summary>
     /// Retrieves all analytics events for a specific user.

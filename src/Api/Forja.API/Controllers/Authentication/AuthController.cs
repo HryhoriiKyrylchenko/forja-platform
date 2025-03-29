@@ -1,5 +1,3 @@
-using Exception = System.Exception;
-
 namespace Forja.API.Controllers.Authentication;
 
 /// <summary>
@@ -14,16 +12,19 @@ public class AuthController : ControllerBase
     private readonly IUserService _userService;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IAnalyticsSessionService _analyticsSessionService;
+    private readonly IAuditLogService _auditLogService;
 
     public AuthController(IUserAuthService authService, 
         IUserService userService, 
         IHttpContextAccessor httpContextAccessor,
-        IAnalyticsSessionService analyticsSessionService)
+        IAnalyticsSessionService analyticsSessionService,
+        IAuditLogService auditLogService)
     {
         _authService = authService;
         _userService = userService;
         _httpContextAccessor = httpContextAccessor;
         _analyticsSessionService = analyticsSessionService;
+        _auditLogService = auditLogService;
     }
 
     /// <summary>
@@ -37,11 +38,61 @@ public class AuthController : ControllerBase
     {
         try
         {
-            await _authService.RegisterUserAsync(request);
+            var result = await _authService.RegisterUserAsync(request);
+            if (result == null)
+            {
+                return BadRequest(new { error = "Registration failed" });
+            }
+            
+            try
+            {
+                var logEntry = new LogEntry<UserProfileDto>
+                {
+                    State = result,
+                    UserId = result.Id,
+                    Exception = null,
+                    ActionType = AuditActionType.Create,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Information,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", "User created successfully" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            
             return Ok(new { Message = "Registration successful" });
         }
         catch(Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Create,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", "Failed to create user" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -80,6 +131,13 @@ public class AuthController : ControllerBase
             httpContext.Response.Cookies.Append("access_token", tokenResponse.AccessToken, accessTokenOptions);
             httpContext.Response.Cookies.Append("refresh_token", tokenResponse.RefreshToken, refreshTokenOptions);
 
+            var keycloakUserId = await _authService.GetKeycloakUserIdAsync(tokenResponse.AccessToken);
+            var user = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
+            if (user == null)
+            {
+                throw new Exception("User not found");
+            }
+            
             try
             {
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString(); 
@@ -94,13 +152,6 @@ public class AuthController : ControllerBase
                     { "Authorization", authorizationHeader },
                     { "CustomHeader", customHeader }
                 };
-
-                var keycloakUserId = await _authService.GetKeycloakUserIdAsync(tokenResponse.AccessToken);
-                var user = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
-                if (user == null)
-                {
-                    throw new Exception("User not found");
-                }
                 
                 var session = await _analyticsSessionService.AddSessionAsync(user.Id, metadata);
                 if (session == null)
@@ -115,17 +166,62 @@ public class AuthController : ControllerBase
                     SameSite = SameSiteMode.Strict
                 };
                 
-                httpContext.Response.Cookies.Append("backend_session", session.SessionId.ToString(), refreshTokenOptions);
+                httpContext.Response.Cookies.Append("backend_session", session.SessionId.ToString(), backendSessionOptions);
             }
             catch (Exception e)
             {
                 Console.WriteLine($"Failed create a session: {e.Message}");
+            }
+            
+            try
+            {
+                var logEntry = new LogEntry<TokenResponse>
+                {
+                    State = tokenResponse,
+                    UserId = user.Id,
+                    Exception = null,
+                    ActionType = AuditActionType.Login,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Information,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", "User logged in successfully" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
             }
 
             return Ok(tokenResponse);
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Login,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", "Failed to log in user" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -167,11 +263,64 @@ public class AuthController : ControllerBase
             {
                 Console.WriteLine($"Failed to delete session: {e.Message}");
             }
+            
+            try
+            {
+                UserProfileDto? user = null;
+                Request.Cookies.TryGetValue("access_token", out var accessToken);
+                if (!string.IsNullOrEmpty(accessToken))
+                {
+                    var keycloakUserId = await _authService.GetKeycloakUserIdAsync(accessToken);
+                     user = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
+                }
+                
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Success",
+                    UserId = user?.Id ?? null,
+                    Exception = null,
+                    ActionType = AuditActionType.Login,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Information,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", "User logged out successfully" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
 
             return Ok(new { message = "Logout successful" });
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Logout,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", "Failed to log out user" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -215,6 +364,28 @@ public class AuthController : ControllerBase
         }
         catch(Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.AuthenticationError,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", "Failed to refresh tokens" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -238,6 +409,28 @@ public class AuthController : ControllerBase
         }
         catch(Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", "Failed to create keycloak role" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -262,6 +455,28 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", "Failed to create keycloak roles" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
         
@@ -296,6 +511,28 @@ public class AuthController : ControllerBase
         }
         catch(Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", "Failed to get all keycloak roles" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -321,6 +558,28 @@ public class AuthController : ControllerBase
         }
         catch(Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", "Failed to get keycloak role by name" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -342,6 +601,28 @@ public class AuthController : ControllerBase
         }
         catch(Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get keycloak user {userId} roles" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -364,6 +645,28 @@ public class AuthController : ControllerBase
         }
         catch(Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to check keycloak user {userId} role {roleName}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -385,6 +688,28 @@ public class AuthController : ControllerBase
         }
         catch(Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to assign roles to keycloak user {userId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -407,6 +732,28 @@ public class AuthController : ControllerBase
         }
         catch(Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to assign role {role.Name} to keycloak user {userId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -429,6 +776,28 @@ public class AuthController : ControllerBase
         }
         catch(Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to delete roles from keycloak user {userId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -451,6 +820,28 @@ public class AuthController : ControllerBase
         }
         catch(Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to delete role {role.Name} from keycloak user {userId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -490,6 +881,28 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = accessToken,
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", "Failed to delete roles from keycloak user" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -511,9 +924,31 @@ public class AuthController : ControllerBase
             var action = request.Enable ? "enabled" : "disabled";
             return Ok(new { Message = $"User has been {action} successfully." });
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to enable/disable keycloak user {request.KeycloakUserId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
     
@@ -539,6 +974,28 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to confirm email to keycloak user {keycloakUserId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message }); 
         }
     }
@@ -565,6 +1022,28 @@ public class AuthController : ControllerBase
         }
         catch (ArgumentException ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to reset keycloak user {request.KeycloakUserId} password" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message }); 
         }
     }
@@ -587,13 +1066,57 @@ public class AuthController : ControllerBase
         {
             await _authService.TriggerForgotPasswordAsync(request.Email);
         }
-        catch (KeyNotFoundException)
+        catch (KeyNotFoundException ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to trigger forgot password for email {request.Email}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return Ok(new { Message = "Password reset email sent successfully." });
         }
         catch (Exception ex)
         {
-            return BadRequest(ex.Message);
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to trigger forgot password for email {request.Email}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
         
         return Ok(new { Message = "Password reset email sent successfully." });
@@ -622,6 +1145,29 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", "Failed to validate reset token" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -650,6 +1196,29 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", "Failed to send email confirmation on email" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            
             return BadRequest( new { error = ex.Message });
         }
     }

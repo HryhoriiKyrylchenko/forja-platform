@@ -5,18 +5,9 @@ namespace Forja.Domain.Enums;
 /// </summary>
 public enum AuditEntityType
 {
-    /// <summary>
-    /// Represents a game entity.
-    /// </summary>
-    Game,
-
-    /// <summary>
-    /// Represents a game addon entity.
-    /// </summary>
-    GameAddon,
-
-    /// <summary>
-    /// Represents a bundle entity.
-    /// </summary>
-    Bundle,
+    User,
+    Product,
+    Order,
+    Payment,
+    Other
 }

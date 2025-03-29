@@ -11,6 +11,8 @@ public static class ApplicationServiceCollectionExtensions
         // Register your application services here
         services.AddScoped<IAnalyticsEventService, AnalyticsEventService>();
         services.AddScoped<IAnalyticsSessionService, AnalyticsSessionService>();
+        services.AddScoped<IAnalyticsAggregaseService, AnalyticsAggregaseService>();
+        services.AddScoped<IAuditLogService, AuditLogService>();
         
         services.AddScoped<IUserAuthService, UserAuthService>();
         services.AddScoped<ITokenService, TokenService>();

@@ -13,10 +13,12 @@ public interface IAnalyticsAggregateRepository
     Task<AnalyticsAggregate?> GetByIdAsync(Guid id);
 
     /// <summary>
-    /// Gets all analytics aggregates.
+    /// Retrieves all analytics aggregates, optionally filtered by a date range.
     /// </summary>
-    /// <returns>A list of all analytics aggregates.</returns>
-    Task<IEnumerable<AnalyticsAggregate>> GetAllAsync();
+    /// <param name="startDate">The start date for filtering the analytics aggregates. If null, no start date filter is applied.</param>
+    /// <param name="endDate">The end date for filtering the analytics aggregates. If null, no end date filter is applied.</param>
+    /// <returns>A collection of analytics aggregates matching the specified criteria.</returns>
+    Task<IEnumerable<AnalyticsAggregate>> GetAllAsync(DateTime? startDate = null, DateTime? endDate = null);
 
     /// <summary>
     /// Adds a new analytics aggregate to the database.

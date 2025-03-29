@@ -27,9 +27,21 @@ public class AnalyticsAggregateRepository : IAnalyticsAggregateRepository
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<AnalyticsAggregate>> GetAllAsync()
+    public async Task<IEnumerable<AnalyticsAggregate>> GetAllAsync(DateTime? startDate = null, DateTime? endDate = null)
     {
-        return await _analyticsAggregates.ToListAsync();
+        IQueryable<AnalyticsAggregate> query = _analyticsAggregates;
+
+        if (startDate.HasValue)
+        {
+            query = query.Where(aa => aa.Date >= startDate.Value);
+        }
+
+        if (endDate.HasValue)
+        {
+            query = query.Where(aa => aa.Date <= endDate.Value);
+        }
+
+        return await query.ToListAsync();
     }
 
     /// <inheritdoc />

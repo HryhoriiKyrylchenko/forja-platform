@@ -29,11 +29,33 @@ public class AnalyticsSessionRepository : IAnalyticsSessionRepository
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<AnalyticsSession>> GetAllAsync()
+    public async Task<IEnumerable<AnalyticsSession>> GetAllAsync(DateTime? startDate = null, DateTime? endDate = null)
     {
-        return await _analyticsSessions
-            .Include(s => s.User)
-            .ToListAsync();
+        var query = _analyticsSessions.AsQueryable();
+
+        if (startDate.HasValue)
+        {
+            query = query.Where(s => s.StartTime >= startDate.Value);
+        }
+
+        if (endDate.HasValue)
+        {
+            query = query.Where(s => s.EndTime <= endDate.Value);
+        }
+
+        return await query.ToListAsync();
+    }
+
+    public async Task<int> GetSessionCountAsync(DateTime startDate, DateTime endDate)
+    {
+        if (startDate > endDate)
+        {
+            throw new ArgumentException("Start date must be before end date.");
+        }
+        
+        return await _context.AnalyticsSessions
+            .Where(session => session.StartTime >= startDate && session.EndTime <= endDate)
+            .CountAsync();
     }
 
     /// <inheritdoc />

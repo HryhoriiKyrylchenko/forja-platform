@@ -28,10 +28,26 @@ public class AnalyticsEventRepository : IAnalyticsEventRepository
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<AnalyticsEvent>> GetAllAsync()
+    public async Task<IEnumerable<AnalyticsEvent>> GetAllAsync(DateTime? startDate = null, DateTime? endDate = null, AnalyticEventType? eventType = null)
     {
-        return await _analyticsEvents
-            .ToListAsync();
+        var query = _analyticsEvents.AsQueryable();
+
+        if (startDate.HasValue)
+        {
+            query = query.Where(e => e.Timestamp >= startDate.Value);
+        }
+
+        if (endDate.HasValue)
+        {
+            query = query.Where(e => e.Timestamp <= endDate.Value);
+        }
+
+        if (eventType.HasValue)
+        {
+            query = query.Where(e => e.EventType == eventType.Value);
+        }
+
+        return await query.ToListAsync();
     }
 
     /// <inheritdoc />

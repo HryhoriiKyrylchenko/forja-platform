@@ -8,10 +8,13 @@ namespace Forja.API.Controllers.Analytics;
 public class AnalyticsSessionController : ControllerBase
 {
     private readonly IAnalyticsSessionService _analyticsSessionService;
+    private readonly IAuditLogService _auditLogService;
 
-    public AnalyticsSessionController(IAnalyticsSessionService analyticsSessionService)
+    public AnalyticsSessionController(IAnalyticsSessionService analyticsSessionService,
+        IAuditLogService auditLogService)
     {
         _analyticsSessionService = analyticsSessionService;
+        _auditLogService = auditLogService;
     }
 
     /// <summary>
@@ -51,6 +54,28 @@ public class AnalyticsSessionController : ControllerBase
         }
         catch (ArgumentException ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get analytics session by id: {sessionId}." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(ex.Message);
         }
     }
@@ -75,6 +100,28 @@ public class AnalyticsSessionController : ControllerBase
         }
         catch (ArgumentException ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get analytics session by user id: {userId}." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(ex.Message);
         }
     }
@@ -99,6 +146,28 @@ public class AnalyticsSessionController : ControllerBase
         }
         catch (ArgumentException ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to end analytics session with id: {sessionId}." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(ex.Message);
         }
         catch (KeyNotFoundException ex)
@@ -127,6 +196,28 @@ public class AnalyticsSessionController : ControllerBase
         }
         catch (ArgumentException ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Delete,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to delete analytics session with id: {sessionId}." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(ex.Message);
         }
     }

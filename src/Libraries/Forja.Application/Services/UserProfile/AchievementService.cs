@@ -306,7 +306,7 @@ public class AchievementService : IAchievementService
     }
 
     /// <inheritdoc />
-    public async Task<List<UserAchievementDto>> GetNumAchievementsByUserIdAsync(Guid userId, int num)
+    public async Task<List<UserAchievementDto>> GetNumberOfAchievementsByUserIdAsync(Guid userId, int num)
     {
         var userAchievements = await _userAchievementRepository.GetNumByUserIdAsync(userId, num);
 

@@ -26,3 +26,5 @@ global using Forja.Application.Interfaces.Common;
 global using Forja.Application.Requests.Common;
 global using Forja.Application.Interfaces.Analytics;
 global using System.Globalization;
+global using Forja.Application.Logging;
+global using Forja.Application.DTOs.Store;
