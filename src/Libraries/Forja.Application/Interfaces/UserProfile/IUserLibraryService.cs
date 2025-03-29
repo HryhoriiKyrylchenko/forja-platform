@@ -88,7 +88,7 @@ public interface IUserLibraryService
     /// <param name="userId">The unique ID of the user whose deleted library games are to be retrieved.</param>
     /// <returns>A Task representing the result of the asynchronous operation. The task result contains a list of UserLibraryGameDto objects for the deleted library games associated with the specified Keycloak ID.</returns>
     Task<List<UserLibraryGameDto>> GetAllDeletedUserLibraryGamesByUserIdAsync(Guid userId);
-    
+
     // UserLibraryAddonRepository
     /// <summary>
     /// Adds a new library addon to the user's library.
@@ -174,4 +174,18 @@ public interface IUserLibraryService
     /// <param name="gameId">The unique identifier of the game for which the deleted user library addons are to be retrieved.</param>
     /// <returns>A Task representing the result of the asynchronous operation. The task result contains a list of UserLibraryAddonDto objects associated with the specified game ID.</returns>
     Task<List<UserLibraryAddonDto>> GetAllDeletedUserLibraryAddonsByGameIdAsync(Guid gameId);
+
+    /// <summary>
+    /// Retrieves the count of games associated with a specific user.
+    /// </summary>
+    /// <param name="userId">The unique identifier for the user whose game count is being retrieved.</param>
+    /// <returns>An asynchronous task that returns the number of games for the specified user.</returns>
+    Task<int> GetUsersGamesCountAsync(Guid userId);
+
+    /// <summary>
+    /// Asynchronously retrieves the count of addons associated with a specific user.
+    /// </summary>
+    /// <param name="userId">The unique identifier for the user whose addons count is being retrieved.</param>
+    /// <returns>An integer representing the total number of addons for the specified user.</returns>
+    Task<int> GetUsersAddonsCountAsync(Guid userId);
 }

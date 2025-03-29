@@ -1,3 +1,5 @@
+using Forja.Application.Interfaces.UserProfile;
+using Forja.Application.Services.UserProfile;
 using System.Security.Claims;
 
 namespace Forja.API.Controllers.UserProfile;
@@ -15,13 +17,23 @@ namespace Forja.API.Controllers.UserProfile;
 [Route("api/[controller]")]
 public class UserController : ControllerBase
 {
-    private readonly IUserService _userService;
-    private readonly IKeycloakClient _keycloakClient;
+    private readonly IUserService           _userService;
+    private readonly IKeycloakClient        _keycloakClient;
+    private readonly IUserFollowerService   _userFollowerService;
+    private readonly IUserWishListService   _userWishListService;
+    private readonly IUserLibraryService    _userLibraryService;
 
-    public UserController(IUserService userService, IKeycloakClient keycloakClient)
+    public UserController(  IUserService            userService, 
+                            IKeycloakClient         keycloakClient, 
+                            IUserFollowerService    userFollowerService, 
+                            IUserWishListService    userWishListService, 
+                            IUserLibraryService     userLibraryService)
     {
-        _userService = userService;
-        _keycloakClient = keycloakClient;
+        _userService            = userService;
+        _keycloakClient         = keycloakClient;
+        _userFollowerService    = userFollowerService;
+        _userWishListService    = userWishListService;
+        _userLibraryService     = userLibraryService;  
     }
 
     /// <summary>
@@ -619,5 +631,25 @@ public class UserController : ControllerBase
         }
 
         return null;
+    }
+
+    [Authorize]
+    [HttpGet("statistics/{userId}")]
+    public async Task<IActionResult> GetUserStatistics([FromRoute] Guid userId)
+    { 
+        var gamesOwnedCount = await _userLibraryService.GetUsersGamesCountAsync(userId);
+        var dlcOwnedCount = await _userLibraryService.GetUsersAddonsCountAsync(userId);
+        var followersCount = await _userFollowerService.GetFollowersCountAsync(userId);
+        var wishlistCount = await _userWishListService.GetWishListCountAsync(userId);
+
+        var statsDTO = new UserStatisticsDto
+        {
+            GamesOwned = gamesOwnedCount,
+            DlcOwned = dlcOwnedCount,
+            Follows = followersCount,
+            Whishlisted = wishlistCount
+        };
+
+        return Ok(statsDTO);
     }
 }

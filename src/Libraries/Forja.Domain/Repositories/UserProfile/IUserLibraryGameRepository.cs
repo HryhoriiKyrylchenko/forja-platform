@@ -115,4 +115,11 @@ public interface IUserLibraryGameRepository
     /// <see cref="UserLibraryGame"/> object if restoration is successful.
     /// </returns>
     Task<UserLibraryGame?> RestoreAsync(Guid id);
+
+    /// <summary>
+    /// Retrieves the total number of games associated with a specific user.
+    /// </summary>
+    /// <param name="userId">The unique identifier for the user whose game count is being retrieved.</param>
+    /// <returns>An asynchronous task that returns the count of games as an integer.</returns>
+    Task<int> GetAllGamesCountByUserIdAsync(Guid userId);
 }

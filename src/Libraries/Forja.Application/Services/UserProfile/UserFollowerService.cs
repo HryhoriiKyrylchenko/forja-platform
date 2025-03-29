@@ -91,7 +91,7 @@ public class UserFollowerService : IUserFollowerService
     }
 
     /// <inheritdoc />
-    public async Task<List<UserFollowerDto>> GetFollowersByUserIdAsync(Guid userId)
+    public async Task<List<UserFollowerDto>> GetFollowersByUserIdAsync(Guid userId) // підписані на мене
     {
         if (userId == Guid.Empty)
         {
@@ -103,7 +103,7 @@ public class UserFollowerService : IUserFollowerService
     }
 
     /// <inheritdoc />
-    public async Task<List<UserFollowerDto>> GetFollowedByUserIdAsync(Guid userId)
+    public async Task<List<UserFollowerDto>> GetFollowedByUserIdAsync(Guid userId) // я підписан
     {
         if (userId == Guid.Empty)
         {
@@ -113,4 +113,26 @@ public class UserFollowerService : IUserFollowerService
         var followedUsers = await _userFollowerRepository.GetFollowedByUserIdAsync(userId);
         return followedUsers.Select(UserProfileEntityToDtoMapper.MapToUserFollowerDto).ToList();
     }
+
+    #region User Statistics Methods
+    /// <summary>
+    ///  Retrieves the count of followers for a specified user and updates the provided statistics object.
+    /// </summary>
+    /// <param name="userId">Identifies the user for whom the follower count is being retrieved.</param>
+    /// <param name="statisticsDto">Holds the statistics data that will be updated with the follower count.</param>
+    /// <returns>Returns the updated statistics object containing the follower count.</returns>
+    /// <exception cref="ArgumentException">Thrown when the identifier for the user is empty.</exception>
+    public async Task<int> GetFollowersCountAsync(Guid userId)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("Id cannot be empty.", nameof(userId));
+        }
+
+        var followers = await _userFollowerRepository.GetFollowersCountByUserIdAsync(userId);
+
+        return followers;
+    }
+
+    #endregion
 }

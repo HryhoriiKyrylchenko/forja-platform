@@ -89,6 +89,24 @@ public class UserLibraryAddonRepository : IUserLibraryAddonRepository
             .ToListAsync();
     }
 
+    /// <inheritdoc />
+    public async Task<IEnumerable<UserLibraryAddon>> GetAllByUserIdAsync(Guid userId)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User id cannot be empty.", nameof(userId));
+        }
+
+        return await _userLibraryAddons
+            .Where(ula => !ula.IsDeleted)
+            .Include(ula => ula.UserLibraryGame)
+            .Include(ula => ula.GameAddon)
+                .ThenInclude(ga => ga.Game)
+            .Where(ula => ula.UserLibraryGame.UserId == userId)
+            .ToListAsync();
+    }
+
+    /// <inheritdoc />
     public async Task<IEnumerable<UserLibraryAddon>> GetAllDeletedByGameIdAsync(Guid gameId)
     {
         if (gameId == Guid.Empty)
@@ -190,5 +208,18 @@ public class UserLibraryAddonRepository : IUserLibraryAddonRepository
         await _context.SaveChangesAsync();
         
         return deletedUserLibraryAddon;
+    }
+
+    /// <inheritdoc />
+    public async Task<int> GetAllAddonsCountByUserIdAsync(Guid userId)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User id cannot be empty.", nameof(userId));
+        }
+
+        return await _userLibraryAddons
+            .Where(ula => !ula.IsDeleted)
+            .CountAsync(ula => ula.UserLibraryGame.UserId == userId);
     }
 }
