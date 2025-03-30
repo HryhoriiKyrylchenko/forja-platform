@@ -8,14 +8,13 @@ namespace Forja.API.Controllers.Support;
 public class SupportTicketController : ControllerBase
 {
     private readonly ISupportTicketService _ticketService;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SupportTicketController"/> class.
-    /// </summary>
-    /// <param name="ticketService">The service for managing support tickets.</param>
-    public SupportTicketController(ISupportTicketService ticketService)
+    private readonly IAuditLogService _auditLogService;
+    
+    public SupportTicketController(ISupportTicketService ticketService,
+        IAuditLogService auditLogService)
     {
         _ticketService = ticketService;
+        _auditLogService = auditLogService;
     }
 
     /// <summary>
@@ -33,6 +32,28 @@ public class SupportTicketController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all tickets" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -56,6 +77,28 @@ public class SupportTicketController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get ticket by id: {id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -78,6 +121,28 @@ public class SupportTicketController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get ticket by user id: {userId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -100,6 +165,28 @@ public class SupportTicketController : ControllerBase
         }
         catch (ArgumentException ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Create,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to create ticket with subject: {request.Subject}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -123,10 +210,54 @@ public class SupportTicketController : ControllerBase
         }
         catch (ArgumentException ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to update ticket with id: {request.Id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
         catch (KeyNotFoundException ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to update ticket with id: {request.Id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return NotFound(new { error = ex.Message });
         }
     }
@@ -149,10 +280,54 @@ public class SupportTicketController : ControllerBase
         }
         catch (KeyNotFoundException ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Delete,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to delete ticket with id: {id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return NotFound(new { error = ex.Message });
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Delete,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to delete ticket with id: {id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }

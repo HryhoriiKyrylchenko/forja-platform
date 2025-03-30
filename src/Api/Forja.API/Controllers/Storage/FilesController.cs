@@ -9,24 +9,26 @@ public class FilesController : ControllerBase
     private readonly IGameService _gameService;
     private readonly IGameAddonService _gameAddonService;
     private readonly IUserLibraryService _userLibraryService;
+    private readonly IAuditLogService _auditLogService;
 
     public FilesController(IFileManagerService fileManagerService, 
         IUserService userService, 
         IGameService gameService, 
         IGameAddonService gameAddonService,
-        IUserLibraryService userLibraryService)
+        IUserLibraryService userLibraryService,
+        IAuditLogService auditLogService)
     {
         _fileManagerService = fileManagerService;
         _userService = userService;
         _gameService = gameService;
         _gameAddonService = gameAddonService;
         _userLibraryService = userLibraryService;
+        _auditLogService = auditLogService;
     }
 
     [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("games/upload")]
-    public async Task<IActionResult> UploadGameFiles([FromBody] GameFilesUploadRequest request
-    )
+    public async Task<IActionResult> UploadGameFiles([FromBody] GameFilesUploadRequest request)
     {
         if (!ModelState.IsValid)
         {
@@ -40,6 +42,28 @@ public class FilesController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to upload game files from: {request.FolderPath}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return StatusCode(500, $"An error occurred while uploading game files: {ex.Message}");
         }
     }
@@ -83,9 +107,31 @@ public class FilesController : ControllerBase
             await _fileManagerService.DownloadGameFilesAsync(request);
             return Ok("Game files successfully downloaded.");
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return StatusCode(500, $"An error occurred while downloading game files: {e.Message}");
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to download game files from: {request.SourcePath}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return StatusCode(500, $"An error occurred while downloading game files: {ex.Message}");
         }
     }
 
@@ -103,9 +149,31 @@ public class FilesController : ControllerBase
             await _fileManagerService.DeleteGameFilesAsync(request);
             return Ok($"Game files for source path '{request.SourcePath}' successfully deleted.");
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return StatusCode(500, $"An error occurred while deleting game files: {e.Message}");
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to delete game files from: {request.SourcePath}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return StatusCode(500, $"An error occurred while deleting game files: {ex.Message}");
         }
     }
     
@@ -123,9 +191,31 @@ public class FilesController : ControllerBase
             var resultPath = await _fileManagerService.UploadAddonFilesAsync(request);
             return Ok(new { Message = "Addon files successfully uploaded.", Path = resultPath });
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return StatusCode(500, $"An error occurred while uploading addon files: {e.Message}");
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to upload addon files from: {request.FolderPath}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return StatusCode(500, $"An error occurred while uploading addon files: {ex.Message}");
         }
     }
 
@@ -168,9 +258,31 @@ public class FilesController : ControllerBase
             await _fileManagerService.DownloadAddonFilesAsync(request);
             return Ok("Addon files successfully downloaded.");
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return StatusCode(500, $"An error occurred while downloading addon files: {e.Message}");
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to download addon files from: {request.SourcePath}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return StatusCode(500, $"An error occurred while downloading addon files: {ex.Message}");
         }
     }
 
@@ -188,9 +300,31 @@ public class FilesController : ControllerBase
             await _fileManagerService.DeleteAddonFilesAsync(request);
             return Ok($"Addon files for source path '{request.SourcePath}' successfully deleted.");
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return StatusCode(500, $"An error occurred while deleting addon files: {e.Message}");
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to delete addon files from: {request.SourcePath}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return StatusCode(500, $"An error occurred while deleting addon files: {ex.Message}");
         }
     }
 
@@ -208,9 +342,31 @@ public class FilesController : ControllerBase
             var resultPath = await _fileManagerService.UploadImageFileAsync(request);
             return Ok(new { Message = "Image file successfully uploaded.", Path = resultPath });
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return StatusCode(500, $"An error occurred while uploading image file: {e.Message}");
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to upload image file from: {request.FilePath}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return StatusCode(500, $"An error occurred while uploading image file: {ex.Message}");
         }
     }
 
@@ -228,9 +384,31 @@ public class FilesController : ControllerBase
             await _fileManagerService.DownloadImageFileAsync(request);
             return Ok("Image file successfully downloaded.");
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return StatusCode(500, $"An error occurred while downloading image file: {e.Message}");
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to download image file from: {request.SourcePath}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return StatusCode(500, $"An error occurred while downloading image file: {ex.Message}");
         }
     }
 
@@ -248,9 +426,31 @@ public class FilesController : ControllerBase
             await _fileManagerService.DeleteImageFileAsync(request);
             return Ok($"Image file at source path '{request.SourcePath}' successfully deleted.");
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return StatusCode(500, $"An error occurred while deleting image file: {e.Message}");
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to delete image file from: {request.SourcePath}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return StatusCode(500, $"An error occurred while deleting image file: {ex.Message}");
         }
     }
     
@@ -326,9 +526,31 @@ public class FilesController : ControllerBase
             
             return Ok(new { Message = "Image file successfully uploaded.", Path = resultPath });
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return StatusCode(500, new { error = $"An error occurred while uploading image file: {e.Message}" });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to upload user image file from: {request.FilePath}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return StatusCode(500, new { error = $"An error occurred while uploading image file: {ex.Message}" });
         }
     }
 
@@ -364,9 +586,31 @@ public class FilesController : ControllerBase
             await _fileManagerService.DeleteImageFileAsync(request);
             return Ok($"Image file at source path '{request.SourcePath}' successfully deleted.");
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return StatusCode(500, $"An error occurred while deleting image file: {e.Message}");
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to delete user image file from: {request.SourcePath}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return StatusCode(500, $"An error occurred while deleting image file: {ex.Message}");
         }
     }
     
@@ -389,9 +633,31 @@ public class FilesController : ControllerBase
             string url = await _fileManagerService.GetPresignedUrlAsync(objectPath);
             return Ok(new { url });
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return StatusCode(500, $"Error generating image URL: {e.Message}");
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get image url from: {objectPath}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return StatusCode(500, $"Error generating image URL: {ex.Message}");
         }
     }
     
@@ -409,9 +675,31 @@ public class FilesController : ControllerBase
             var resultPath = await _fileManagerService.UploadProfileHatVariantFileAsync(request);
             return Ok(new { Message = $"Profile hat variant '{request.ProfileHatVariantId}' file successfully uploaded.", Path = resultPath });
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return StatusCode(500, new { error = $"An error occurred while uploading image file: {e.Message}" });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to profile hat variant file from: {request.FilePath}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return StatusCode(500, new { error = $"An error occurred while uploading image file: {ex.Message}" });
         }
     }
     
@@ -429,9 +717,31 @@ public class FilesController : ControllerBase
             await _fileManagerService.DeleteProfileHatVariantFileAsync(request);
             return Ok($"Profile hat variant '{request.ProfileHatVariantId}' successfully deleted.");
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return StatusCode(500, $"An error occurred while deleting image file: {e.Message}");
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to profile hat variant file with id: {request.ProfileHatVariantId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return StatusCode(500, $"An error occurred while deleting image file: {ex.Message}");
         }
     }
     
@@ -448,9 +758,31 @@ public class FilesController : ControllerBase
             string url = await _fileManagerService.GetPresignedProfileHatVariantUrlAsync(request);
             return Ok(new { url });
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return StatusCode(500, $"Error generating image URL: {e.Message}");
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get profile hat variant url with id: {request.ProfileHatVariantId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return StatusCode(500, $"Error generating image URL: {ex.Message}");
         }
     }
 }

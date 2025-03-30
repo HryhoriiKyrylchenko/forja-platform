@@ -9,11 +9,15 @@ public class GenresController : ControllerBase
 {
     private readonly IGenreService _genreService;
     private readonly IProductGenresService _productGenresService;
+    private readonly IAuditLogService _auditLogService;
 
-    public GenresController(IGenreService genreService, IProductGenresService productGenresService)
+    public GenresController(IGenreService genreService, 
+        IProductGenresService productGenresService,
+        IAuditLogService auditLogService)
     {
         _genreService = genreService;
         _productGenresService = productGenresService;
+        _auditLogService = auditLogService;
     }
 
     #region Genres Endpoints
@@ -34,9 +38,31 @@ public class GenresController : ControllerBase
 
             return Ok(genres);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed get all genres" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -57,9 +83,31 @@ public class GenresController : ControllerBase
 
             return Ok(genres);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed get all deleted genres" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -80,9 +128,31 @@ public class GenresController : ControllerBase
 
             return Ok(genre);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed get genre by id: {id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -101,9 +171,31 @@ public class GenresController : ControllerBase
             var createdGenre = await _genreService.CreateAsync(request);
             return createdGenre != null ? Ok(createdGenre) : BadRequest(new { error = "Failed to create genre." });
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Create,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed create genre: {request.Name}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -125,9 +217,31 @@ public class GenresController : ControllerBase
 
             return Ok(updatedGenre);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed update genre with id: {request.Id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
             
     }
@@ -151,9 +265,31 @@ public class GenresController : ControllerBase
             await _genreService.DeleteAsync(id);
             return NoContent();
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Delete,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed delete genre with id: {id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -177,9 +313,31 @@ public class GenresController : ControllerBase
 
             return Ok(productGenres);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed get all product genres" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -200,9 +358,31 @@ public class GenresController : ControllerBase
 
             return Ok(productGenre);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed get product genre by id: {id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -223,9 +403,31 @@ public class GenresController : ControllerBase
 
             return Ok(productGenres);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed get product genre by product id: {productId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -246,9 +448,31 @@ public class GenresController : ControllerBase
 
             return Ok(productGenres);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed get product genre by genre id: {genreId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
             
     }
@@ -269,9 +493,31 @@ public class GenresController : ControllerBase
             
             return createdProductGenre != null ? Ok(createdProductGenre) : BadRequest(new { error = "Failed to create product-genre association." });
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Create,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed create product genre with product id: {request.ProductId} genre id: {request.GenreId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -279,23 +525,47 @@ public class GenresController : ControllerBase
     /// Updates an existing product-genre association.
     /// </summary>
     [Authorize(Policy = "ContentManagePolicy")]
-    [HttpPut("product-genres/{id}")]
-    public async Task<IActionResult> UpdateProductGenreAsync([FromBody] ProductGenresUpdateRequest request, [FromRoute] Guid id)
+    [HttpPut("product-genres")]
+    public async Task<IActionResult> UpdateProductGenreAsync([FromBody] ProductGenresUpdateRequest request)
     {
-        if (id != request.Id)
-            return BadRequest(new { error = "ProductGenre ID mismatch between URL and request body." });
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
 
         try
         {
             var updatedProductGenre = await _productGenresService.UpdateAsync(request);
             if (updatedProductGenre == null)
-                return NotFound(new { error = $"ProductGenre with ID {id} not found." });
+                return NotFound(new { error = $"ProductGenre with ID {request.Id} not found." });
 
             return Ok(updatedProductGenre);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed update product genre with id: {request.Id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
         
     }
@@ -319,9 +589,31 @@ public class GenresController : ControllerBase
             await _productGenresService.DeleteAsync(id);
             return NoContent();
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Delete,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed delete product genre with id: {id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 

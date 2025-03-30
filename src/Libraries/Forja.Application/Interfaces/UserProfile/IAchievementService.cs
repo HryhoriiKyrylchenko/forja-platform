@@ -121,7 +121,7 @@ public interface IAchievementService
     /// </summary>
     /// <param name="userId"></param>
     /// <returns></returns>
-    Task<List<UserAchievementDto>> GetNumAchievementsByUserIdAsync(Guid userId, int num);
+    Task<List<UserAchievementDto>> GetNumberOfAchievementsByUserIdAsync(Guid userId, int num);
 
     /// <summary>
     /// Retrieves all user achievements associated with the specified game ID.

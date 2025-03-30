@@ -9,11 +9,15 @@ public class MechanicsController : ControllerBase
 {
     private readonly IMechanicService _mechanicService;
     private readonly IGameMechanicService _gameMechanicService;
+    private readonly IAuditLogService _auditLogService;
 
-    public MechanicsController(IMechanicService mechanicService, IGameMechanicService gameMechanicService)
+    public MechanicsController(IMechanicService mechanicService, 
+        IGameMechanicService gameMechanicService,
+        IAuditLogService auditLogService)
     {
         _mechanicService = mechanicService;
         _gameMechanicService = gameMechanicService;
+        _auditLogService = auditLogService;
     }
 
     #region Mechanics Endpoints
@@ -34,9 +38,31 @@ public class MechanicsController : ControllerBase
 
             return Ok(mechanics);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all mechanics" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -57,9 +83,31 @@ public class MechanicsController : ControllerBase
 
             return Ok(deletedMechanics);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all deleted mechanics" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -80,9 +128,31 @@ public class MechanicsController : ControllerBase
 
             return Ok(mechanic);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get mechanic by id: {id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -101,9 +171,31 @@ public class MechanicsController : ControllerBase
             var createdMechanic = await _mechanicService.CreateAsync(request);
             return createdMechanic != null ? Ok(createdMechanic) : BadRequest(new { error = "Failed to create mechanic." });
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Create,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to create mechanic: {request.Name}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -125,9 +217,31 @@ public class MechanicsController : ControllerBase
 
             return Ok(updatedMechanic);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to update mechanic with Id: {request.Id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -150,9 +264,31 @@ public class MechanicsController : ControllerBase
             await _mechanicService.DeleteAsync(id);
             return NoContent();
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Delete,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to delete mechanic with Id: {id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -176,9 +312,31 @@ public class MechanicsController : ControllerBase
 
             return Ok(gameMechanics);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all mechanics" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -199,9 +357,31 @@ public class MechanicsController : ControllerBase
 
             return Ok(gameMechanic);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all game mechanic by id: {id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -222,9 +402,31 @@ public class MechanicsController : ControllerBase
 
             return Ok(gameMechanics);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get game mechanic by game id: {gameId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
         
     }
@@ -246,9 +448,31 @@ public class MechanicsController : ControllerBase
 
             return Ok(gameMechanics);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get game mechanic by mechanic id: {mechanicId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
         
     }
@@ -268,9 +492,31 @@ public class MechanicsController : ControllerBase
             var createdGameMechanic = await _gameMechanicService.CreateAsync(request);
             return createdGameMechanic != null ? Ok(createdGameMechanic) : BadRequest(new { error = "Failed to create game-mechanic association." });
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Create,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to create game mechanic: {request.MechanicId} for game: {request.GameId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -292,9 +538,31 @@ public class MechanicsController : ControllerBase
 
             return Ok(updatedGameMechanic);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to update game mechanic with id: {request.Id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -317,9 +585,31 @@ public class MechanicsController : ControllerBase
             await _gameMechanicService.DeleteAsync(id);
             return NoContent();
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Delete,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to delete game mechanic with id: {id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 

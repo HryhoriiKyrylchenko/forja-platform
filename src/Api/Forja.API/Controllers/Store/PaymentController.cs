@@ -5,10 +5,13 @@ namespace Forja.API.Controllers.Store;
 public class PaymentController : ControllerBase
 {
     private readonly IPaymentService _paymentService;
+    private readonly IAuditLogService _auditLogService;
 
-    public PaymentController(IPaymentService paymentService)
+    public PaymentController(IPaymentService paymentService,
+        IAuditLogService auditLogService)
     {
         _paymentService = paymentService;
+        _auditLogService = auditLogService;
     }
     
     [Authorize(Policy = "StoreManagePolicy")]
@@ -25,6 +28,28 @@ public class PaymentController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Payment,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get payment by id: {paymentId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -43,6 +68,28 @@ public class PaymentController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Payment,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get payment by transaction id: {transactionId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -60,6 +107,28 @@ public class PaymentController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Payment,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get payment by order id: {orderId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -72,10 +141,56 @@ public class PaymentController : ControllerBase
         try
         {
             var transactionId = await _paymentService.ExecutePaymentAsync(request);
+            
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = transactionId,
+                    UserId = null,
+                    Exception = null,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.Payment,
+                    LogLevel = LogLevel.Information,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Payment created successfully. Transaction ID: {transactionId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            
             return Ok(new { transactionId });
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Create,
+                    EntityType = AuditEntityType.Payment,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to execute payment with order id: {request.OrderId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -93,10 +208,56 @@ public class PaymentController : ControllerBase
             {
                 return NotFound(new { error = $"Payment with ID {statusRequest.Id} not found." });
             }
+            
+            try
+            {
+                var logEntry = new LogEntry<PaymentDto>
+                {
+                    State = updatedPayment,
+                    UserId = null,
+                    Exception = null,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.Payment,
+                    LogLevel = LogLevel.Information,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Payment updated successfully. Payment ID: {updatedPayment.Id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            
             return Ok(updatedPayment);
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.Payment,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to update payment with order id: {statusRequest.Id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -108,10 +269,56 @@ public class PaymentController : ControllerBase
         try
         {
             await _paymentService.DeletePaymentAsync(paymentId);
+            
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "deleted",
+                    UserId = null,
+                    Exception = null,
+                    ActionType = AuditActionType.Delete,
+                    EntityType = AuditEntityType.Payment,
+                    LogLevel = LogLevel.Information,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Payment with id: {paymentId} - deleted successfully" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            
             return NoContent();
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Delete,
+                    EntityType = AuditEntityType.Payment,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to delete payment with id: {paymentId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }

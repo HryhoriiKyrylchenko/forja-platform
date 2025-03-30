@@ -1,4 +1,5 @@
 using Forja.Application.Interfaces.Common;
+using Forja.Application.Services.Analytics;
 using Forja.Application.Services.Common;
 
 namespace Forja.Application;
@@ -8,6 +9,11 @@ public static class ApplicationServiceCollectionExtensions
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         // Register your application services here
+        services.AddScoped<IAnalyticsEventService, AnalyticsEventService>();
+        services.AddScoped<IAnalyticsSessionService, AnalyticsSessionService>();
+        services.AddScoped<IAnalyticsAggregateService, AnalyticsAggregateService>();
+        services.AddScoped<IAuditLogService, AuditLogService>();
+        
         services.AddScoped<IUserAuthService, UserAuthService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddTransient<IClaimsTransformation, KeycloakRolesClaimsTransformer>();
