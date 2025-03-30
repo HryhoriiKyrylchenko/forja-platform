@@ -249,4 +249,14 @@ public interface IKeycloakClient
     /// <exception cref="HttpRequestException">Thrown when there is an error during the HTTP request to Keycloak.</exception>
     /// <exception cref="Exception">Thrown when there is an issue obtaining the access token or with the email confirmation process.</exception>
     Task ConfirmUserEmailAsync(string keycloakUserId);
+
+    /// <summary>
+    /// Deletes a user in Keycloak based on the provided Keycloak user ID.
+    /// </summary>
+    /// <param name="keycloakId">The ID of the Keycloak user to delete.</param>
+    /// <returns>A boolean value indicating whether the user was successfully deleted.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the provided Keycloak user ID is null or empty.</exception>
+    /// <exception cref="HttpRequestException">Thrown when the Keycloak server is unreachable or the delete request fails.</exception>
+    /// <exception cref="Exception">Thrown when the user deletion process encounters an unexpected error.</exception>
+    Task<bool> DeleteUserAsync(string keycloakId);
 }

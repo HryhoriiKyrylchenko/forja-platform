@@ -41,4 +41,11 @@ public interface ITokenService
     /// <param name="token">The email confirmation token from which the email will be extracted.</param>
     /// <returns>Returns a string representing the email if the token is valid; otherwise, returns null.</returns>
     Task<string?> GetEmailFromEmailConfirmationToken(string token);
+
+    /// <summary>
+    /// Extracts the user ID from the specified token.
+    /// </summary>
+    /// <param name="token">The token from which the user ID will be extracted.</param>
+    /// <returns>Returns a nullable GUID representing the extracted user ID, or null if the token is invalid.</returns>
+    string GetUserIdFromToken(string token);
 }
