@@ -1,5 +1,3 @@
-using Minio.ApiEndpoints;
-
 namespace Forja.Infrastructure.Services;
 
 public class StorageService : IStorageService, IDisposable
@@ -91,7 +89,7 @@ public class StorageService : IStorageService, IDisposable
         }
     }
 
-    public async Task UploadFileAsync(string destinationObjectPath, string filePath)
+    public async Task<PutObjectResponse> UploadFileAsync(string destinationObjectPath, string filePath)
     {
         if (!File.Exists(filePath))
         {
@@ -105,7 +103,7 @@ public class StorageService : IStorageService, IDisposable
         
         try
         {
-            await _minioClient.PutObjectAsync(new PutObjectArgs()
+            return await _minioClient.PutObjectAsync(new PutObjectArgs()
                 .WithBucket(_bucketName)
                 .WithObject(destinationObjectPath)
                 .WithFileName(filePath)
@@ -125,7 +123,7 @@ public class StorageService : IStorageService, IDisposable
         }
         
         try
-        {
+        { 
             await _minioClient.GetObjectAsync(new GetObjectArgs()
                 .WithBucket(_bucketName)
                 .WithObject(objectPath)
@@ -156,22 +154,24 @@ public class StorageService : IStorageService, IDisposable
         }
     }
     
-    public async Task UploadFolderAsync(string destinationPath, string folderPath)
+    public async Task<List<PutObjectResponse>> UploadFolderAsync(string destinationPath, string folderPath)
     {
         if (!Directory.Exists(folderPath)) throw new DirectoryNotFoundException($"Folder '{folderPath}' not found");
         
         var files = Directory.GetFiles(folderPath, "*", SearchOption.AllDirectories);
 
+        List<PutObjectResponse> result = [];
         foreach (var file in files)
         {
             string relativePath = Path.GetRelativePath(folderPath, file).Replace("\\", "/");
             string objectName = $"{destinationPath}{relativePath}";
-            await _minioClient.PutObjectAsync(new PutObjectArgs()
+            result.Add(await _minioClient.PutObjectAsync(new PutObjectArgs()
                 .WithBucket(_bucketName)
                 .WithObject(objectName)
                 .WithFileName(file)
-                .WithContentType("application/octet-stream"));
+                .WithContentType("application/octet-stream"))); 
         }
+        return result;
     }
 
     public async Task DownloadFolderAsync(string sourcePath, string destinationFolderPath)

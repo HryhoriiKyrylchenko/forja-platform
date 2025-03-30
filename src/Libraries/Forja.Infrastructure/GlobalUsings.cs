@@ -40,3 +40,4 @@ global using Forja.Domain.Repositories.Support;
 global using Forja.Domain.Repositories.Common;
 global using Forja.Domain.Repositories.Analytics;
 global using InvalidOperationException = System.InvalidOperationException;
+global using Minio.DataModel.Response;
