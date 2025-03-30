@@ -46,7 +46,13 @@ public class UserFollowerRepository : IUserFollowerRepository
         }
         await _userFollowers.AddAsync(userFollower);
         await _context.SaveChangesAsync();
-        return userFollower;
+
+        var loadedUserFollower = await _userFollowers.Include(uf => uf.Follower)
+                                            .Include(uf => uf.Followed)
+                                            .FirstOrDefaultAsync(uf => uf.Id == userFollower.Id);
+                                                    
+
+        return loadedUserFollower;
     }
 
     /// <inheritdoc />
@@ -74,28 +80,36 @@ public class UserFollowerRepository : IUserFollowerRepository
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<UserFollower>> GetFollowersByUserIdAsync(Guid userId)
+    public async Task<IEnumerable<UserFollower>> GetFollowersByUserIdAsync(Guid userId) // підписані на мене
     {
         if (userId == Guid.Empty)
         {
             throw new ArgumentException("User id cannot be empty.", nameof(userId));
         }
-        return await _userFollowers
+
+        var loadedUserFollowers = await _userFollowers
             .Where(uf => uf.FollowedId == userId)
             .Include(uf => uf.Follower)
+            .Include(u => u.Followed)
             .ToListAsync();
+
+        return loadedUserFollowers;
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<UserFollower>> GetFollowedByUserIdAsync(Guid userId)
+    public async Task<IEnumerable<UserFollower>> GetFollowedByUserIdAsync(Guid userId) // на кого я підписан
     {
         if (userId == Guid.Empty)
         {
             throw new ArgumentException("User id cannot be empty.", nameof(userId));
         }
-        return await _userFollowers
-            .Where(uf => uf.FollowerId == userId)
+
+        var loadedFollowedByUser = await _userFollowers
+            .Where(uf => uf.FollowerId == userId)            
             .Include(uf => uf.Followed)
+            .Include(u => u.Follower)
             .ToListAsync();
+
+        return loadedFollowedByUser;
     }
 }

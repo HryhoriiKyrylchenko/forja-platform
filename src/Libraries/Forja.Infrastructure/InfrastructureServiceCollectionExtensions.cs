@@ -11,7 +11,6 @@ public static class InfrastructureServiceCollectionExtensions
         builder.Services.AddDbContext<ForjaDbContext>(options =>
             options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection")));
 
-
         // Register repositories or other infrastructure services here
         builder.Services.AddSingleton<IEmailService, EmailService>();
         builder.Services.AddHttpClient<IKeycloakClient, KeycloakClient>();

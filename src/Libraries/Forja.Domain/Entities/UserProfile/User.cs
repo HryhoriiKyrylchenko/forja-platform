@@ -90,8 +90,13 @@ public class User : SoftDeletableEntity
     /// <summary>
     /// Gets or sets a value indicating whether the user's email address has been confirmed.
     /// </summary>
-    public bool IsEmailConfirmed { get; set; }
-    
+    public bool IsEmailConfirmed { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether email has been sent to the user.
+    /// </summary>
+    public bool IsEmailSent { get; set; } = false;
+
     /// <summary>
     /// Gets or sets the date and time when the user was created.
     /// </summary>
@@ -110,8 +115,7 @@ public class User : SoftDeletableEntity
     /// <summary>
     /// Gets or sets the variant of the user's profile hat.
     /// </summary>
-    [Range(1, 5)]
-    public short ProfileHatVariant { get; set; }
+    public short ProfileHatVariant { get; set; } = 0;
 
     /// <summary>
     /// Gets or sets the cart associated with the user.

@@ -236,7 +236,7 @@ public class UserLibraryService : IUserLibraryService
         };
         
         var result = await _userLibraryAddonRepository.AddAsync(userLibraryAddon);
-        
+    
         return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(result);
     }
 
@@ -356,10 +356,10 @@ public class UserLibraryService : IUserLibraryService
         var allUserLibraryAddons = await _userLibraryAddonRepository.GetAllAsync();
         
         var userLibraryAddons = allUserLibraryAddons.ToList();
-        if (!userLibraryAddons.Any())
-        {
-            throw new KeyNotFoundException("No user library addons were found.");
-        }
+        //if (!userLibraryAddons.Any())
+        //{
+        //    throw new KeyNotFoundException("No user library addons were found.");
+        //}
 
         return userLibraryAddons.Select(UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto).ToList();
     }

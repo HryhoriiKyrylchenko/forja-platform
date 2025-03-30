@@ -43,4 +43,8 @@ public class UserCreateRequest
     public string? CustomUrl { get; set; }
     
     public short ProfileHatVariant { get; set; }
+
+    public bool IsEmailConfirmed { get; set; }
+
+    public bool IsEmailSent { get; set; } 
 }

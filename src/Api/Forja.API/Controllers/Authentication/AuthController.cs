@@ -242,8 +242,16 @@ public class AuthController : ControllerBase
         {
             await _authService.LogoutUserAsync(logoutRequest);
 
-            Response.Cookies.Delete("access_token");
-            Response.Cookies.Delete("refresh_token");
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Path = "/" 
+            };
+
+            Response.Cookies.Delete("access_token", cookieOptions);
+            Response.Cookies.Delete("refresh_token", cookieOptions);
 
             try
             {
@@ -951,11 +959,10 @@ public class AuthController : ControllerBase
     /// <summary>
     /// Confirms a Keycloak user's email.
     /// </summary>
-    /// <param name="keycloakUserId">The Keycloak user ID whose email is to be confirmed.</param>
     /// <param name="token">The email confirmation token required to confirm email.</param>
     /// <returns>An IActionResult representing the result of the operation.</returns>
     [HttpPut("users/{keycloakUserId}/confirm-email")]
-    public async Task<IActionResult> ConfirmEmail([FromRoute]string keycloakUserId, [FromQuery] string token)
+    public async Task<IActionResult> ConfirmEmail([FromQuery] string token)
     {
         if (string.IsNullOrWhiteSpace(keycloakUserId))
         {
@@ -965,7 +972,7 @@ public class AuthController : ControllerBase
         try
         {
             await _authService.ConfirmUserEmailAsync(token);
-            await _userService.ConfirmEmailAsync(keycloakUserId, true);
+            //await _userService.ConfirmEmailAsync(keycloakUserId, true);
             return NoContent();
         }
         catch (Exception ex)
@@ -992,7 +999,7 @@ public class AuthController : ControllerBase
             {
                 Console.WriteLine($"Error logging audit log entry: {e.Message}");
             }
-            return BadRequest(new { error = ex.Message }); 
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -1171,13 +1178,17 @@ public class AuthController : ControllerBase
     /// <summary>
     /// Sends an email confirmation to the user associated with the provided access token.
     /// </summary>
-    /// <param name="token">The access token of the user for whom the email confirmation will be sent.</param>
     /// <returns>An <see cref="IActionResult"/> indicating the outcome of the operation.
     /// Returns an Ok response with a success message if the email is sent successfully, or a Bad Request response with an error message if the operation fails.</returns>
     [Authorize]
     [HttpPost("send-email-confirmation")]
-    public async Task<IActionResult> SendEmailConfirmation([FromHeader] string token)
+    public async Task<IActionResult> SendEmailConfirmation()
     {
+        if (!Request.Cookies.TryGetValue("access_token", out var token) || string.IsNullOrWhiteSpace(token))
+        {
+            return BadRequest(new { error = "Access token not found in cookies." });
+        }
+
         try
         {
             var keycloakUserId = await _authService.GetKeycloakUserIdAsync(token); 
@@ -1188,7 +1199,7 @@ public class AuthController : ControllerBase
             
             await _authService.SendEmailConfirmationAsync(keycloakUserId);
 
-            return Ok("Email confirmation sent successfully.");
+            return Ok(new { message = "Email confirmation sent successfully." });
         }
         catch (Exception ex)
         {
@@ -1218,4 +1229,25 @@ public class AuthController : ControllerBase
             return BadRequest( new { error = ex.Message });
         }
     }
+
+    /// <summary>
+    /// Confirms a Keycloak user's email.
+    /// </summary>    
+    /// <param name="token">The email confirmation token required to confirm email.</param>
+    /// <returns>An IActionResult representing the result of the operation.</returns>
+    [HttpPut("users/confirm-email")]
+    public async Task<IActionResult> ConfirmEmail([FromQuery] string token)
+    {
+        try
+        {
+            await _authService.ConfirmUserEmailAsync(token);
+            //await _userService.ConfirmEmailAsync(keycloakUserId, true);
+            return Ok(new { message = "Email confirmed successfully." });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message }); 
+        }
+    }
 }
+
