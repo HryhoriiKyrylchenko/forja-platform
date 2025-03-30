@@ -47,12 +47,13 @@ public class UserFollowerRepository : IUserFollowerRepository
         await _userFollowers.AddAsync(userFollower);
         await _context.SaveChangesAsync();
 
-        var loadedUserFollower = await _userFollowers.Include(uf => uf.Follower)
+        var addedUserFollower = await _userFollowers
+                                            .Include(uf => uf.Follower)
                                             .Include(uf => uf.Followed)
                                             .FirstOrDefaultAsync(uf => uf.Id == userFollower.Id);
                                                     
 
-        return loadedUserFollower;
+        return addedUserFollower;
     }
 
     /// <inheritdoc />
@@ -65,7 +66,13 @@ public class UserFollowerRepository : IUserFollowerRepository
         _userFollowers.Update(userFollower);
         await _context.SaveChangesAsync();
         
-        return userFollower;
+        var updatedUserFollower = await _userFollowers
+                                                .Include(uf => uf.Follower)
+                                                .Include(uf => uf.Followed)
+                                                .FirstOrDefaultAsync(uf => uf.Id == userFollower.Id);
+                                                    
+
+        return updatedUserFollower;
     }
 
     /// <inheritdoc />
@@ -80,7 +87,7 @@ public class UserFollowerRepository : IUserFollowerRepository
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<UserFollower>> GetFollowersByUserIdAsync(Guid userId) // підписані на мене
+    public async Task<IEnumerable<UserFollower>> GetFollowersByUserIdAsync(Guid userId) // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ
     {
         if (userId == Guid.Empty)
         {
@@ -97,7 +104,7 @@ public class UserFollowerRepository : IUserFollowerRepository
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<UserFollower>> GetFollowedByUserIdAsync(Guid userId) // на кого я підписан
+    public async Task<IEnumerable<UserFollower>> GetFollowedByUserIdAsync(Guid userId) // пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     {
         if (userId == Guid.Empty)
         {

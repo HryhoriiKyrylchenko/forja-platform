@@ -22,6 +22,11 @@ public class UserFollowerDto
     public string FollowerUsername { get; set; } = string.Empty;
 
     /// <summary>
+    /// Represents the URL of the avatar for the follower in the UserFollower entry.
+    /// </summary>
+    public string? FollowerAvatarUrl { get; set; }
+
+    /// <summary>
     /// Represents the unique tag associated with the follower, used for display or identification purposes.
     /// </summary>
     public string? FollowerTag { get; set; } = string.Empty;
@@ -35,6 +40,11 @@ public class UserFollowerDto
     /// The name of the user who is being followed.
     /// </summary>
     public string FollowedUsername { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Represents the URL of the avatar associated with the followed user.
+    /// </summary>
+    public string? FollowedAvatarUrl { get; set; }
 
     /// <summary>
     /// Represents the unique tag associated with the followed user.
