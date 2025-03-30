@@ -94,9 +94,11 @@ public static class UserProfileEntityToDtoMapper
             Id = userFollower.Id,
             FollowerId = userFollower.FollowerId,
             FollowerUsername = userFollower.Follower.Username,
+            FollowerAvatarUrl = userFollower.Follower.AvatarUrl,
             FollowerTag = userFollower.Follower.CustomUrl,
             FollowedId = userFollower.FollowedId,
             FollowedUsername = userFollower.Followed.Username,
+            FollowedAvatarUrl = userFollower.Followed.AvatarUrl,
             FollowedTag = userFollower.Followed.CustomUrl
         };
     }
