@@ -45,4 +45,12 @@ public interface IAnalyticsEventRepository
     /// </summary>
     /// <param name="eventId">The ID of the analytics event to delete.</param>
     Task DeleteAsync(Guid eventId);
+
+    /// <summary>
+    /// Retrieves the count of analytics events for a specific date and event type.
+    /// </summary>
+    /// <param name="date">The date for which to count the analytics events.</param>
+    /// <param name="eventType">The type of analytics events to count.</param>
+    /// <returns>The count of analytics events matching the specified criteria.</returns>
+    Task<int> GetEventsCountAsync(DateTime date, AnalyticEventType eventType);
 }

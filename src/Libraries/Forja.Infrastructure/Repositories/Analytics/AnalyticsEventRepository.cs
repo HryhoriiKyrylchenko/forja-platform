@@ -109,4 +109,15 @@ public class AnalyticsEventRepository : IAnalyticsEventRepository
         _analyticsEvents.Remove(analyticsEvent);
         await _context.SaveChangesAsync();
     }
+
+    /// <inheritdoc />
+    public async Task<int> GetEventsCountAsync(DateTime date, AnalyticEventType eventType)
+    {
+        if (date > DateTime.UtcNow)
+        {
+            throw new ArgumentException("Date cannot be in the future.", nameof(date));
+        }
+        
+        return await _analyticsEvents.CountAsync(e => e.Timestamp.Date == date.Date && e.EventType == eventType);
+    }
 }

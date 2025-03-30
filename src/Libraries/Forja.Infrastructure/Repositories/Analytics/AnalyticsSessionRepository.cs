@@ -46,15 +46,15 @@ public class AnalyticsSessionRepository : IAnalyticsSessionRepository
         return await query.ToListAsync();
     }
 
-    public async Task<int> GetSessionCountAsync(DateTime startDate, DateTime endDate)
+    public async Task<int> GetSessionCountAsync(DateTime date)
     {
-        if (startDate > endDate)
+        if (date > DateTime.UtcNow)
         {
-            throw new ArgumentException("Start date must be before end date.");
+            throw new ArgumentException("Date cannot be in the future.", nameof(date));
         }
         
         return await _context.AnalyticsSessions
-            .Where(session => session.StartTime >= startDate && session.EndTime <= endDate)
+            .Where(session => session.StartTime.Date == date.Date)
             .CountAsync();
     }
 

@@ -80,13 +80,14 @@ public class AuditLogService : IAuditLogService
     }
     
     /// <inheritdoc />
-    public async Task<IEnumerable<AuditLog>> GetAllLogsAsync()
+    public async Task<List<AuditLogDto>> GetAllLogsAsync()
     {
-        return await _auditLogRepository.GetAllAsync();
+        var logs = await _auditLogRepository.GetAllAsync();
+        return logs.Select(AnalyticsEntityToDtoMapper.MapToAuditLogDto).ToList();
     }
     
     /// <inheritdoc />
-    public async Task<IEnumerable<AuditLog>> GetLogsByFilterAsync(
+    public async Task<List<AuditLogDto>> GetLogsByFilterAsync(
         Guid? userId = null,
         AuditEntityType? entityType = null,
         AuditActionType? actionType = null)
@@ -108,7 +109,7 @@ public class AuditLogService : IAuditLogService
             logs = logs.Where(log => log.ActionType == actionType.Value);
         }
 
-        return logs;
+        return logs.Select(AnalyticsEntityToDtoMapper.MapToAuditLogDto).ToList();
     }
     
     /// <inheritdoc />

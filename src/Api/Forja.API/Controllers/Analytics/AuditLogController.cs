@@ -19,7 +19,7 @@ public class AuditLogController : ControllerBase
     /// <returns>A list of all audit logs.</returns>
     [Authorize(Policy = "AdminPolicy")]
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<AuditLog>>> GetAllLogsAsync()
+    public async Task<ActionResult> GetAllLogsAsync()
     {
         var logs = await _auditLogService.GetAllLogsAsync();
         return Ok(logs); 
@@ -34,7 +34,7 @@ public class AuditLogController : ControllerBase
     /// <returns>A filtered list of audit logs.</returns>
     [Authorize(Policy = "AdminPolicy")]
     [HttpGet("filter")]
-    public async Task<ActionResult<IEnumerable<AuditLog>>> GetLogsByFilterAsync(
+    public async Task<ActionResult> GetLogsByFilterAsync(
         [FromQuery] Guid? userId = null,
         [FromQuery] AuditEntityType? entityType = null,
         [FromQuery] AuditActionType? actionType = null)

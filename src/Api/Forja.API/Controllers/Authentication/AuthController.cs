@@ -142,15 +142,11 @@ public class AuthController : ControllerBase
             {
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString(); 
                 var userAgent = Request.Headers["User-Agent"].ToString(); 
-                var authorizationHeader = Request.Headers["Authorization"].ToString();
-                var customHeader = Request.Headers["X-Custom-Header"].ToString();
 
                 var metadata = new Dictionary<string, string>
                 {
                     { "User-Agent", userAgent },
                     { "IpAddress", ipAddress ?? "Unknown" },
-                    { "Authorization", authorizationHeader },
-                    { "CustomHeader", customHeader }
                 };
                 
                 var session = await _analyticsSessionService.AddSessionAsync(user.Id, metadata);

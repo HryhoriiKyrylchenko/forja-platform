@@ -32,7 +32,6 @@ public class AuditLogRepository : IAuditLogRepository
     public async Task<IEnumerable<AuditLog>> GetAllAsync()
     {
         return await _auditLogs
-            .Include(a => a.User)
             .ToListAsync();
     }
 

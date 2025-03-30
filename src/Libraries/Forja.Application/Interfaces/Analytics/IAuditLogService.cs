@@ -26,7 +26,7 @@ public interface IAuditLogService : ILogger
     /// A task that represents the asynchronous operation.
     /// The task result contains an enumerable collection of <see cref="AuditLog"/> objects.
     /// </returns>
-    Task<IEnumerable<AuditLog>> GetAllLogsAsync();
+    Task<List<AuditLogDto>> GetAllLogsAsync();
 
     /// <summary>
     /// Retrieves audit logs based on the specified filter criteria.
@@ -38,7 +38,7 @@ public interface IAuditLogService : ILogger
     /// A task that represents the asynchronous operation.
     /// The task result contains an enumerable collection of <see cref="AuditLog"/> objects that meet the filter criteria.
     /// </returns>
-    Task<IEnumerable<AuditLog>> GetLogsByFilterAsync(
+    Task<List<AuditLogDto>> GetLogsByFilterAsync(
         Guid? userId = null,
         AuditEntityType? entityType = null,
         AuditActionType? actionType = null);

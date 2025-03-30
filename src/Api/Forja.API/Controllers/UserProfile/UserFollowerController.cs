@@ -166,12 +166,11 @@ public class UserFollowerController : ControllerBase
     /// <summary>
     /// Updates an existing UserFollower relationship.
     /// </summary>
-    /// <param name="id">The unique identifier of the UserFollower entry to update.</param>
     /// <param name="request">The UserFollowerUpdateRequest containing the updated IDs.</param>
     /// <returns>No content if update is successful.</returns>
     [Authorize]
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] UserFollowerUpdateRequest request)
+    [HttpPut]
+    public async Task<IActionResult> Update([FromBody] UserFollowerUpdateRequest request)
     {
         if (!ModelState.IsValid)
         {

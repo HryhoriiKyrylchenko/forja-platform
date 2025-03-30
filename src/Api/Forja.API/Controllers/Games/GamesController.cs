@@ -13,16 +13,19 @@ public class GamesController : ControllerBase
     private readonly IGameAddonService _gameAddonService;
     private readonly IAnalyticsEventService _analyticsEventService;
     private readonly IAuditLogService _auditLogService;
+    private readonly IUserService _userService;
 
     public GamesController(IGameService gameService, 
         IGameAddonService gameAddonService,
         IAnalyticsEventService analyticsEventService,
-        IAuditLogService auditLogService)
+        IAuditLogService auditLogService,
+        IUserService userService)
     {
         _gameService = gameService;
         _gameAddonService = gameAddonService;
         _analyticsEventService = analyticsEventService;
         _auditLogService = auditLogService;
+        _userService = userService;
     }
 
     #region Games Endpoints
@@ -39,8 +42,14 @@ public class GamesController : ControllerBase
             
             try
             {
+                var keycloakUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                UserProfileDto? user = null;
+                if (!string.IsNullOrEmpty(keycloakUserId))
+                {
+                    user = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
+                }
                 await _analyticsEventService.AddEventAsync(AnalyticEventType.PageView,
-                    null,
+                    user?.Id,
                     new Dictionary<string, string>
                     {
                         { "Page", "AllGames" },
@@ -143,8 +152,15 @@ public class GamesController : ControllerBase
             
             try
             {
+                var keycloakUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                UserProfileDto? user = null;
+                if (!string.IsNullOrEmpty(keycloakUserId))
+                {
+                    user = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
+                }
+                
                 await _analyticsEventService.AddEventAsync(AnalyticEventType.PageView,
-                    null,
+                    user?.Id,
                     new Dictionary<string, string>
                     {
                         { "Page", "Game" },
@@ -415,8 +431,14 @@ public class GamesController : ControllerBase
             
             try
             {
+                var keycloakUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                UserProfileDto? user = null;
+                if (!string.IsNullOrEmpty(keycloakUserId))
+                {
+                    user = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
+                }
                 await _analyticsEventService.AddEventAsync(AnalyticEventType.PageView,
-                    null,
+                    user?.Id,
                     new Dictionary<string, string>
                     {
                         { "Page", "AllAddons" },
@@ -476,8 +498,14 @@ public class GamesController : ControllerBase
             
             try
             {
+                var keycloakUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                UserProfileDto? user = null;
+                if (!string.IsNullOrEmpty(keycloakUserId))
+                {
+                    user = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
+                }
                 await _analyticsEventService.AddEventAsync(AnalyticEventType.PageView,
-                    null,
+                    user?.Id,
                     new Dictionary<string, string>
                     {
                         { "Page", "Addon" },
@@ -534,8 +562,14 @@ public class GamesController : ControllerBase
             
             try
             {
+                var keycloakUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                UserProfileDto? user = null;
+                if (!string.IsNullOrEmpty(keycloakUserId))
+                {
+                    user = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
+                }
                 await _analyticsEventService.AddEventAsync(AnalyticEventType.PageView,
-                    null,
+                    user?.Id,
                     new Dictionary<string, string>
                     {
                         { "Page", "AllAddonsByGame" },

@@ -1,12 +1,12 @@
 namespace Forja.Application.Services.Analytics;
 
-public class AnalyticsAggregaseService : IAnalyticsAggregaseService
+public class AnalyticsAggregateService : IAnalyticsAggregateService
 {
     private readonly IAnalyticsAggregateRepository _analyticsAggregateRepository;
     private readonly IAnalyticsEventRepository _analyticsEventRepository;
     private readonly IAnalyticsSessionRepository _analyticsSessionRepository;
 
-    public AnalyticsAggregaseService(IAnalyticsAggregateRepository analyticsAggregateRepository,
+    public AnalyticsAggregateService(IAnalyticsAggregateRepository analyticsAggregateRepository,
         IAnalyticsEventRepository analyticsEventRepository,
         IAnalyticsSessionRepository analyticsSessionRepository)
     {
@@ -15,18 +15,26 @@ public class AnalyticsAggregaseService : IAnalyticsAggregaseService
         _analyticsSessionRepository = analyticsSessionRepository;
     }
     
-    public async Task<List<AnalyticsAggregateDto>> GetAnalyticsAggregateOfSessionsAsync(DateTime? startDate = null, DateTime? endDate = null)
+    /// <inheritdoc />
+    public async Task<List<AnalyticsAggregateDto>> GetAnalyticsAggregateOfSessionsAsync(DateTime startDate, DateTime? endDate = null)
     {
-        if (!startDate.HasValue && !endDate.HasValue && startDate > endDate)
+        if (startDate > DateTime.UtcNow)
+        {
+            throw new ArgumentException("Invalid start date. Ensure start date is not in the future.");
+        }
+
+        if (endDate.HasValue && startDate.Date > endDate.Value.Date)
         {
             throw new ArgumentException("Invalid date range. Ensure both start and end dates are provided and startDate <= endDate.");
+        }
+
+        if ((endDate.HasValue && endDate.Value > DateTime.UtcNow) || endDate == null)
+        {
+            endDate = DateTime.UtcNow;
         }
         
         const string metricNameSessions = "Sessions";
         
-        var startDateValue = startDate ?? DateTime.UtcNow;
-        var endDateValue = endDate ?? DateTime.UtcNow;
-
         var existingAggregates = await _analyticsAggregateRepository.GetAllAsync(startDate, endDate);
 
         if (existingAggregates == null)
@@ -40,25 +48,38 @@ public class AnalyticsAggregaseService : IAnalyticsAggregaseService
         
         var results = new List<AnalyticsAggregateDto>();
         
-        for (var date = startDateValue.Date; date <= endDateValue.Date; date = date.AddDays(1))
+        for (var date = startDate.Date; date <= endDate.Value.Date; date = date.AddDays(1))
         {
             if (dateToAggregateMap.TryGetValue(date, out var existingAggregate))
             {
+                if (date == DateTime.UtcNow.Date)
+                {
+                    var newSessionsCount = await _analyticsSessionRepository.GetSessionCountAsync(date);
+                    if (newSessionsCount != existingAggregate.Value)
+                    {
+                        existingAggregate.Value = newSessionsCount;
+                        existingAggregate = await _analyticsAggregateRepository.UpdateAsync(existingAggregate);
+                        if (existingAggregate == null)
+                        {
+                            throw new Exception($"Failed to update aggregate for date {date:yyyy-MM-dd}.");
+                        }
+                    }
+                }
                 results.Add(AnalyticsEntityToDtoMapper.MapToAnalyticsAggregateDto(existingAggregate));
             }
             else
             {
-                var sessionsCount = await _analyticsSessionRepository.GetSessionCountAsync(date, date);
-                var newAggregate = new AnalyticsAggregate
-                {
-                    Id = Guid.NewGuid(),
-                    Date = date,
-                    MetricName = metricNameSessions,
-                    Value = sessionsCount
-                };
-
                 try
                 {
+                    var sessionsCount = await _analyticsSessionRepository.GetSessionCountAsync(date);
+                    var newAggregate = new AnalyticsAggregate
+                    {
+                        Id = Guid.NewGuid(),
+                        Date = date,
+                        MetricName = metricNameSessions,
+                        Value = sessionsCount
+                    };
+                    
                     var addedAggregate = await _analyticsAggregateRepository.AddAsync(newAggregate);
                     if (addedAggregate == null)
                     {
@@ -77,17 +98,25 @@ public class AnalyticsAggregaseService : IAnalyticsAggregaseService
         return results;
     }
 
-    public async Task<List<AnalyticsAggregateDto>> GetAnalyticsAggregateOfEventsAsync(AnalyticEventType eventType, DateTime? startDate = null, DateTime? endDate = null)
+    /// <inheritdoc />
+    public async Task<List<AnalyticsAggregateDto>> GetAnalyticsAggregateOfEventsAsync(AnalyticEventType eventType, DateTime startDate, DateTime? endDate = null)
     {
-        if (startDate.HasValue && endDate.HasValue && startDate > endDate)
+        if (startDate > DateTime.UtcNow)
+        {
+            throw new ArgumentException("Invalid start date. Ensure start date is not in the future.");
+        }
+
+        if (endDate.HasValue && startDate.Date > endDate.Value.Date)
         {
             throw new ArgumentException("Invalid date range. Ensure both start and end dates are provided and startDate <= endDate.");
         }
 
-        var metricName = eventType.ToString();
+        if ((endDate.HasValue && endDate.Value > DateTime.UtcNow) || endDate == null)
+        {
+            endDate = DateTime.UtcNow;
+        }
 
-        var startDateValue = startDate ?? DateTime.UtcNow.Date;
-        var endDateValue = endDate ?? DateTime.UtcNow.Date; 
+        var metricName = eventType.ToString();
 
         var existingAggregates = await _analyticsAggregateRepository.GetAllAsync(startDate, endDate);
 
@@ -102,34 +131,39 @@ public class AnalyticsAggregaseService : IAnalyticsAggregaseService
 
         var results = new List<AnalyticsAggregateDto>();
 
-        for (var date = startDateValue; date <= endDateValue; date = date.AddDays(1))
+        for (var date = startDate.Date; date <= endDate.Value.Date; date = date.AddDays(1))
         {
             if (dateToAggregateMap.TryGetValue(date, out var existingAggregate))
             {
+                if (date == DateTime.UtcNow.Date)
+                {
+                    var newEventCount = await _analyticsEventRepository.GetEventsCountAsync(date, eventType);
+                    if (newEventCount != existingAggregate.Value)
+                    {
+                        existingAggregate.Value = newEventCount;
+                        existingAggregate = await _analyticsAggregateRepository.UpdateAsync(existingAggregate);
+                        if (existingAggregate == null)
+                        {
+                            throw new Exception($"Failed to update aggregate for date {date:yyyy-MM-dd}.");
+                        }
+                    }
+                }
                 results.Add(AnalyticsEntityToDtoMapper.MapToAnalyticsAggregateDto(existingAggregate));
             }
             else
             {
-                var eventsForDate = await _analyticsEventRepository.GetAllAsync(
-                    startDate: date,
-                    endDate: date.AddDays(1),
-                    eventType: eventType
-                );
-
-                var eventCount = eventsForDate?.Count() ?? 0;
-
-                var newAggregate = new AnalyticsAggregate
-                {
-                    Id = Guid.NewGuid(),
-                    Date = date,
-                    MetricName = metricName,
-                    Value = eventCount
-                };
-
                 try
                 {
+                    var eventCount = await _analyticsEventRepository.GetEventsCountAsync(date, eventType);
+                    var newAggregate = new AnalyticsAggregate
+                    {
+                        Id = Guid.NewGuid(),
+                        Date = date,
+                        MetricName = metricName,
+                        Value = eventCount
+                    };
+                    
                     var addedAggregate = await _analyticsAggregateRepository.AddAsync(newAggregate);
-
                     if (addedAggregate == null)
                     {
                         throw new Exception($"Failed to add a new aggregate for date {date:yyyy-MM-dd}, eventType {metricName}.");

@@ -20,13 +20,13 @@ public interface IAnalyticsSessionRepository
     /// <returns>A list of analytics sessions matching the specified criteria.</returns>
     Task<IEnumerable<AnalyticsSession>> GetAllAsync(DateTime? startDate = null, DateTime? endDate = null);
 
+
     /// <summary>
-    /// Retrieves the total count of analytics sessions within the specified date range.
+    /// Retrieves the count of analytics sessions for a specific date.
     /// </summary>
-    /// <param name="startDate">The start date of the range.</param>
-    /// <param name="endDate">The end date of the range.</param>
-    /// <returns>The total count of analytics sessions within the specified date range.</returns>
-    Task<int> GetSessionCountAsync(DateTime startDate, DateTime endDate);
+    /// <param name="date">The date for which to count the analytic sessions.</param>
+    /// <returns>The total number of analytics sessions on the specified date.</returns>
+    Task<int> GetSessionCountAsync(DateTime date);
 
     /// <summary>
     /// Retrieves analytics sessions by user ID.
