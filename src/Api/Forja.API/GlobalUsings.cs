@@ -28,3 +28,7 @@ global using Forja.Application.Interfaces.Analytics;
 global using System.Globalization;
 global using Forja.Application.Logging;
 global using Forja.Application.DTOs.Store;
+global using Microsoft.AspNetCore.Authentication.JwtBearer;
+global using Microsoft.Extensions.Caching.Distributed;
+global using System.Text.Json;
+global using Forja.Application.DTOs.Games;

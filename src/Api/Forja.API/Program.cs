@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using System.Security.Claims;
-
 var builder = WebApplication.CreateBuilder(args);
 
 if (builder.Environment.IsDevelopment())
@@ -13,6 +10,12 @@ builder.AddServiceDefaults();
 builder.AddInfrastructureServices();
 
 // Add services to the container.
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = "localhost:6379";
+    options.InstanceName = "RedisInstance";
+});
 
 builder.Services.AddCors(options =>
 {
