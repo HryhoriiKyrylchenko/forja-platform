@@ -1,3 +1,5 @@
+using Forja.Application.DTOs.Games;
+
 namespace Forja.API.Controllers.Games;
 
 /// <summary>
@@ -9,11 +11,21 @@ public class GamesController : ControllerBase
 {
     private readonly IGameService _gameService;
     private readonly IGameAddonService _gameAddonService;
+    private readonly IAnalyticsEventService _analyticsEventService;
+    private readonly IAuditLogService _auditLogService;
+    private readonly IUserService _userService;
 
-    public GamesController(IGameService gameService, IGameAddonService gameAddonService)
+    public GamesController(IGameService gameService, 
+        IGameAddonService gameAddonService,
+        IAnalyticsEventService analyticsEventService,
+        IAuditLogService auditLogService,
+        IUserService userService)
     {
         _gameService = gameService;
         _gameAddonService = gameAddonService;
+        _analyticsEventService = analyticsEventService;
+        _auditLogService = auditLogService;
+        _userService = userService;
     }
 
     #region Games Endpoints
@@ -27,14 +39,57 @@ public class GamesController : ControllerBase
         try
         {
             var games = await _gameService.GetAllAsync();
-            if (!games.Any())
-                return NoContent();
-
+            
+            try
+            {
+                var keycloakUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                UserProfileDto? user = null;
+                if (!string.IsNullOrEmpty(keycloakUserId))
+                {
+                    user = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
+                }
+                await _analyticsEventService.AddEventAsync(AnalyticEventType.PageView,
+                    user?.Id,
+                    new Dictionary<string, string>
+                    {
+                        { "Page", "AllGames" },
+                        { "Date", DateTime.UtcNow.ToString(CultureInfo.InvariantCulture) }
+                    });
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Analytics event creation failed.");
+            }
+    
+            if (!games.Any()) return NoContent();
+            
             return Ok(games);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all games" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -53,9 +108,31 @@ public class GamesController : ControllerBase
 
             return Ok(deletedGames);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all deleted games" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -71,14 +148,59 @@ public class GamesController : ControllerBase
         try
         {
             var game = await _gameService.GetByIdAsync(id);
-            if (game == null)
-                return NotFound(new { error = $"Game with ID {id} not found." });
+            if (game == null) return NotFound(new { error = $"Game with ID {id} not found." });
+            
+            try
+            {
+                var keycloakUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                UserProfileDto? user = null;
+                if (!string.IsNullOrEmpty(keycloakUserId))
+                {
+                    user = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
+                }
+                
+                await _analyticsEventService.AddEventAsync(AnalyticEventType.PageView,
+                    user?.Id,
+                    new Dictionary<string, string>
+                    {
+                        { "Page", "Game" },
+                        { "GameId", game.Id.ToString() },
+                        { "GameTitle", game.Title },
+                        { "Date", DateTime.UtcNow.ToString(CultureInfo.InvariantCulture) }
+                    });
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Analytics event creation failed.");
+            }
 
             return Ok(game);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get game by id: {id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -95,12 +217,61 @@ public class GamesController : ControllerBase
         try
         {
             var createdGame = await _gameService.AddAsync(request);
+            if (createdGame == null)
+            {
+                return BadRequest(new { error = "Failed to create game." });
+            }
             
-            return createdGame != null ? Ok(createdGame) : BadRequest(new { error = "Failed to create game." });
+            try
+            {
+                var logEntry = new LogEntry<GameDto>
+                {
+                    State = createdGame,
+                    UserId = null,
+                    Exception = null,
+                    ActionType = AuditActionType.Create,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Information,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", "Game created successfully" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            
+            return Ok(createdGame);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Create,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to create game with title: {request.Title}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -120,11 +291,56 @@ public class GamesController : ControllerBase
             if (updatedGame == null)
                 return NotFound(new { error = $"Game with ID {request.Id} not found." });
 
+            try
+            {
+                var logEntry = new LogEntry<GameDto>
+                {
+                    State = updatedGame,
+                    UserId = null,
+                    Exception = null,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Information,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", "Game updated successfully" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            
             return Ok(updatedGame);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to update game with id: {request.Id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -145,11 +361,57 @@ public class GamesController : ControllerBase
                 return NotFound(new { error = $"Game with ID {id} not found." });
 
             await _gameService.DeleteAsync(id);
+            
+            try
+            {
+                var logEntry = new LogEntry<GameDto>
+                {
+                    State = game,
+                    UserId = null,
+                    Exception = null,
+                    ActionType = AuditActionType.Delete,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Information,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Game with id: {id} deleted successfully" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            
             return NoContent();
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Delete,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to delete game with id: {id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -166,14 +428,57 @@ public class GamesController : ControllerBase
         try
         {
             var addons = await _gameAddonService.GetAllAsync();
-            if (!addons.Any())
-                return NoContent();
+            
+            try
+            {
+                var keycloakUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                UserProfileDto? user = null;
+                if (!string.IsNullOrEmpty(keycloakUserId))
+                {
+                    user = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
+                }
+                await _analyticsEventService.AddEventAsync(AnalyticEventType.PageView,
+                    user?.Id,
+                    new Dictionary<string, string>
+                    {
+                        { "Page", "AllAddons" },
+                        { "Date", DateTime.UtcNow.ToString(CultureInfo.InvariantCulture) }
+                    });
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Analytics event creation failed.");
+            }
+            
+            if (!addons.Any()) return NoContent();
 
             return Ok(addons);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all game addons" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -189,14 +494,122 @@ public class GamesController : ControllerBase
         try
         {
             var addon = await _gameAddonService.GetByIdAsync(id);
-            if (addon == null)
-                return NotFound(new { error = $"GameAddon with ID {id} not found." });
+            if (addon == null) return NotFound(new { error = $"GameAddon with ID {id} not found." });
+            
+            try
+            {
+                var keycloakUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                UserProfileDto? user = null;
+                if (!string.IsNullOrEmpty(keycloakUserId))
+                {
+                    user = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
+                }
+                await _analyticsEventService.AddEventAsync(AnalyticEventType.PageView,
+                    user?.Id,
+                    new Dictionary<string, string>
+                    {
+                        { "Page", "Addon" },
+                        { "AddonId", addon.Id.ToString() },
+                        { "AddonTitle", addon.Title },
+                        { "RelatedGameId", addon.GameId.ToString() },
+                        { "Date", DateTime.UtcNow.ToString(CultureInfo.InvariantCulture) }
+                    });
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Analytics event creation failed.");
+            }
 
             return Ok(addon);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get game addon by id: {id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+    
+    [HttpGet("game-addons/games/{id}")]
+    public async Task<IActionResult> GetGameAddonsByGameIdAsync([FromRoute] Guid id)
+    {
+        if (id == Guid.Empty)
+            return BadRequest(new { error = "Game ID cannot be empty." });
+
+        try
+        {
+            var addons = await _gameAddonService.GetByGameIdAsync(id);
+            
+            try
+            {
+                var keycloakUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                UserProfileDto? user = null;
+                if (!string.IsNullOrEmpty(keycloakUserId))
+                {
+                    user = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
+                }
+                await _analyticsEventService.AddEventAsync(AnalyticEventType.PageView,
+                    user?.Id,
+                    new Dictionary<string, string>
+                    {
+                        { "Page", "AllAddonsByGame" },
+                        { "GameId", id.ToString() },
+                        { "Date", DateTime.UtcNow.ToString(CultureInfo.InvariantCulture) }
+                    });
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Analytics event creation failed.");
+            }
+
+            if (!addons.Any()) return NoContent();
+            return Ok(addons);
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get game addon by game id: {id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -213,12 +626,61 @@ public class GamesController : ControllerBase
         try
         {
             var createdAddon = await _gameAddonService.CreateAsync(request);
-            
-            return createdAddon != null ? Ok(createdAddon) : BadRequest(new { error = "Failed to create game addon." });
+            if (createdAddon == null)
+            {
+                return BadRequest(new { error = "Failed to create game addon." });
+            }
+
+            try
+            {
+                var logEntry = new LogEntry<GameAddonDto>
+                {
+                    State = createdAddon,
+                    UserId = null,
+                    Exception = null,
+                    ActionType = AuditActionType.Create,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Information,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", "Game addon created successfully" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+
+            return Ok(createdAddon);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Create,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to create game addon: {request.Title}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -238,11 +700,56 @@ public class GamesController : ControllerBase
             if (updatedAddon == null)
                 return NotFound(new { error = $"GameAddon with ID {request.Id} not found." });
 
+            try
+            {
+                var logEntry = new LogEntry<GameAddonDto>
+                {
+                    State = updatedAddon,
+                    UserId = null,
+                    Exception = null,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Information,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", "Game addon updated successfully" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            
             return Ok(updatedAddon);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to update game addon with id: {request.Id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -263,11 +770,57 @@ public class GamesController : ControllerBase
                 return NotFound($"GameAddon with ID {id} not found.");
 
             await _gameAddonService.DeleteAsync(id);
+            
+            try
+            {
+                var logEntry = new LogEntry<GameAddonDto>
+                {
+                    State = addon,
+                    UserId = null,
+                    Exception = null,
+                    ActionType = AuditActionType.Delete,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Information,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Game addon with id: {id} deleted successfully" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            
             return NoContent();
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Delete,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to delete game addon with id: {id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 

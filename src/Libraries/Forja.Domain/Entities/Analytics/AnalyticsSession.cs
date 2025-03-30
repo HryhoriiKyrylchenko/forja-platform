@@ -31,7 +31,7 @@ public class AnalyticsSession
     /// <summary>
     /// Gets or sets the metadata associated with the session.
     /// </summary>
-    public string Metadata { get; set; } = string.Empty;
+    public Dictionary<string, string> Metadata { get; set; } = [];
     
     /// <summary>
     /// Gets or sets the user associated with the session.

@@ -5,18 +5,20 @@ namespace Forja.Domain.Enums;
 /// </summary>
 public enum AuditActionType
 {
-    /// <summary>
-    /// Indicates that an entity was created.
-    /// </summary>
     Create,
-
-    /// <summary>
-    /// Indicates that an entity was updated.
-    /// </summary>
     Update,
-
-    /// <summary>
-    /// Indicates that an entity was deleted.
-    /// </summary>
     Delete,
+    View,
+    Login,
+    Logout,
+    UnauthorizedAccess,
+    SystemTriggeredEvent,
+    
+    ValidationError,
+    SystemError,
+    DatabaseError,
+    ApiError,
+    AuthenticationError,
+    BusinessLogicError,
+    Miscellaneous
 }

@@ -47,7 +47,7 @@ public class StoreEntityToDtoMapper
             Id = order.Id,
             CartId = order.CartId,
             OrderDate = order.OrderDate,
-            Status = order.Status
+            Status = order.Status.ToString()
         };
     }
 

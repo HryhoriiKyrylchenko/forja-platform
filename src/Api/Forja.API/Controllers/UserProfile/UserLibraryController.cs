@@ -8,19 +8,14 @@ namespace Forja.API.Controllers.UserProfile;
 [Route("api/[controller]")]
 public class UserLibraryController : ControllerBase
 {
-    /// <summary>
-    /// An instance of the IUserLibraryService interface used to handle operations
-    /// related to user library management, including adding, updating, deleting,
-    /// restoring, and retrieving user library games and addons.
-    /// </summary>
     private readonly IUserLibraryService _userLibraryService;
+    private readonly IAuditLogService _auditLogService;
 
-    /// <summary>
-    /// Handles operations related to a user's library, including managing games and addons.
-    /// </summary>
-    public UserLibraryController(IUserLibraryService userLibraryService)
+    public UserLibraryController(IUserLibraryService userLibraryService,
+        IAuditLogService auditLogService)
     {
         _userLibraryService = userLibraryService;
+        _auditLogService = auditLogService;
     }
 
     /// <summary>
@@ -45,6 +40,28 @@ public class UserLibraryController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Create,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to add user library game for dame with id: {request.GameId} for user with id: {request.UserId}." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -73,6 +90,28 @@ public class UserLibraryController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to update user library game with id: {request.Id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -97,6 +136,28 @@ public class UserLibraryController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Delete,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to delete user library game with id: {userLibraryGameId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -124,6 +185,28 @@ public class UserLibraryController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to restore user library game with id: {userLibraryGameId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -150,6 +233,28 @@ public class UserLibraryController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get user library game by id: {userLibraryGameId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
 
@@ -177,6 +282,28 @@ public class UserLibraryController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get deleted user library game by id: {userLibraryGameId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
 
@@ -197,6 +324,28 @@ public class UserLibraryController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all user library games" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
 
@@ -216,6 +365,28 @@ public class UserLibraryController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all deleted user library games" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -240,6 +411,28 @@ public class UserLibraryController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all user library games by user id: {userId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
 
@@ -264,6 +457,28 @@ public class UserLibraryController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all deleted user library games by user id: {userId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -291,6 +506,28 @@ public class UserLibraryController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Create,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to add user library addon for game with is: {request.UserLibraryGameId} and addon with id: {request.AddonId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -317,6 +554,28 @@ public class UserLibraryController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to update user library addon with is: {request.Id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -342,6 +601,28 @@ public class UserLibraryController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Delete,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to delete user library addon with is: {userLibraryAddonId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
 
@@ -370,6 +651,28 @@ public class UserLibraryController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to restore user library addon with is: {userLibraryAddonId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -394,6 +697,28 @@ public class UserLibraryController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get user library addon by is: {userLibraryAddonId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -421,6 +746,28 @@ public class UserLibraryController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get deleted user library addon by is: {userLibraryAddonId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -439,6 +786,28 @@ public class UserLibraryController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all user library addons" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -462,6 +831,28 @@ public class UserLibraryController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all deleted user library addons" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -486,6 +877,28 @@ public class UserLibraryController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all user library addons by game id: {gameId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -510,6 +923,28 @@ public class UserLibraryController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all deleted user library addons by game id: {gameId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }

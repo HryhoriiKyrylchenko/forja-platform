@@ -1,5 +1,3 @@
-using Forja.Application.Interfaces.UserProfile;
-using Forja.Application.Services.UserProfile;
 using System.Security.Claims;
 
 namespace Forja.API.Controllers.UserProfile;
@@ -17,23 +15,13 @@ namespace Forja.API.Controllers.UserProfile;
 [Route("api/[controller]")]
 public class UserController : ControllerBase
 {
-    private readonly IUserService           _userService;
-    private readonly IKeycloakClient        _keycloakClient;
-    private readonly IUserFollowerService   _userFollowerService;
-    private readonly IUserWishListService   _userWishListService;
-    private readonly IUserLibraryService    _userLibraryService;
+    private readonly IUserService _userService;
+    private readonly IKeycloakClient _keycloakClient;
 
-    public UserController(  IUserService            userService, 
-                            IKeycloakClient         keycloakClient, 
-                            IUserFollowerService    userFollowerService, 
-                            IUserWishListService    userWishListService, 
-                            IUserLibraryService     userLibraryService)
+    public UserController(IUserService userService, IKeycloakClient keycloakClient)
     {
-        _userService            = userService;
-        _keycloakClient         = keycloakClient;
-        _userFollowerService    = userFollowerService;
-        _userWishListService    = userWishListService;
-        _userLibraryService     = userLibraryService;  
+        _userService = userService;
+        _keycloakClient = keycloakClient;
     }
 
     /// <summary>
@@ -63,6 +51,28 @@ public class UserController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get user by id: {userId}." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -99,6 +109,28 @@ public class UserController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get deleted user by id: {userId}." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -130,6 +162,28 @@ public class UserController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get user by keycloak id: {keycloakId}." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -162,6 +216,28 @@ public class UserController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get deleted user by keycloak id: {keycloakId}." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -194,6 +270,28 @@ public class UserController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get user by email: {email}." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -225,6 +323,28 @@ public class UserController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get deleted user by email: {email}." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -264,6 +384,28 @@ public class UserController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get self user profile." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return StatusCode(500, new { error = "An internal error occurred.", details = ex.Message });
         }
     }
@@ -308,6 +450,28 @@ public class UserController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get user by id (for manager): {userId}." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -339,10 +503,56 @@ public class UserController : ControllerBase
             {
                 return BadRequest(new { error = "Unable to create user." });
             }
+            
+            try
+            {
+                var logEntry = new LogEntry<UserProfileDto>
+                {
+                    State = user,
+                    UserId = user.Id,
+                    Exception = null,
+                    ActionType = AuditActionType.Create,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Information,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"User with email: {request.Email} added successfully." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            
             return CreatedAtAction(nameof(GetUserById), new { userId = user.Id }, user);
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Create,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to add user with email: {request.Email}." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -389,11 +599,61 @@ public class UserController : ControllerBase
                 return Unauthorized(new { error = "You are not authorized to update this user's profile." });
             }
         
-            await _userService.UpdateUserAsync(request);
+            var updatedUser = await _userService.UpdateUserAsync(request);
+            if (updatedUser == null)
+            {
+                return BadRequest(new { error = "Unable to update user." });
+            }
+            
+            try
+            {
+                var logEntry = new LogEntry<UserProfileDto>
+                {
+                    State = updatedUser,
+                    UserId = updatedUser.Id,
+                    Exception = null,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Information,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"User with id: {request.Id} updated successfully." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            
             return NoContent();
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to update user profile for user with id: {request.Id}." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -412,11 +672,61 @@ public class UserController : ControllerBase
 
         try
         {
-            await _userService.UpdateUserAsync(request);
+            var updatedUser = await _userService.UpdateUserAsync(request);
+            if (updatedUser == null)
+            {
+                return BadRequest(new { error = "Unable to update user." });
+            }
+            
+            try
+            {
+                var logEntry = new LogEntry<UserProfileDto>
+                {
+                    State = updatedUser,
+                    UserId = updatedUser.Id,
+                    Exception = null,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Information,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"User with id: {request.Id} updated successfully." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            
             return NoContent();
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to update user profile for user with id (for manager): {request.Id}." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -464,9 +774,31 @@ public class UserController : ControllerBase
             
             return userProfile == null ? BadRequest( new { error = "Failed to update user profile hat variant."}) : Ok(userProfile);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return BadRequest(new { error = e.Message });
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to update user profile hat variant for user with id: {request.UserId}." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -500,10 +832,56 @@ public class UserController : ControllerBase
             }
         
             await _userService.DeleteUserAsync(keycloakUserId);
+            
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "deleted",
+                    UserId = null,
+                    Exception = null,
+                    ActionType = AuditActionType.Delete,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Information,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"User with keycloak id: {keycloakUserId} deleted successfully." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            
             return NoContent();
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Delete,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to delete self user profile." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
         
@@ -530,10 +908,56 @@ public class UserController : ControllerBase
         try
         {
             await _userService.DeleteUserAsync(keycloakId);
+            
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "deleted",
+                    UserId = null,
+                    Exception = null,
+                    ActionType = AuditActionType.Delete,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Information,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"User with keycloak id: {keycloakId} deleted successfully." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            
             return NoContent();
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Delete,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to delete user with keycloak id: {keycloakId}." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -570,6 +994,28 @@ public class UserController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to restore user with id: {userId}." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -590,6 +1036,28 @@ public class UserController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all users." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -612,6 +1080,28 @@ public class UserController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all deleted users." }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }

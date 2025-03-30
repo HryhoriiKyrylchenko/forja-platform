@@ -5,7 +5,11 @@ namespace Forja.Application.Interfaces.Authentication;
 /// </summary>
 public interface IUserAuthService
 {
-
+    /// <summary>
+    /// Registers a new user with the provided registration details.
+    /// </summary>
+    /// <param name="request">The registration request containing the user's information required for account creation.</param>
+    /// <returns>A <see cref="UserProfileDto"/> containing the newly registered user's profile information, or null if the registration fails.</returns>
     Task<UserProfileDto?> RegisterUserAsync(RegisterUserRequest request);
 
     /// <summary>
@@ -193,4 +197,11 @@ public interface IUserAuthService
     /// <param name="token">The email confirmation token provided to the user.</param>
     /// <returns>A task representing the asynchronous email confirmation operation.</returns>
     Task ConfirmUserEmailAsync(string token);
+
+    /// <summary>
+    /// Extracts the user ID from the provided token.
+    /// </summary>
+    /// <param name="token">The token containing encoded user information.</param>
+    /// <returns>A <see cref="Guid"/> representing the user's ID if successfully extracted; otherwise, null.</returns>
+    Task<string> GetUserIdFromToken(string token);
 }

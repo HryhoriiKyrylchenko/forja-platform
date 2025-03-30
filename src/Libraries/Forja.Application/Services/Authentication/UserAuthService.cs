@@ -9,16 +9,19 @@ public class UserAuthService : IUserAuthService
     private readonly IEmailService _emailService;
     private readonly IKeycloakClient _keycloakClient;
     private readonly IUserRepository _userRepository;
+    private readonly IAuditLogService _auditLogService;
     
     public UserAuthService(ITokenService tokenService, 
         IEmailService emailService,
         IKeycloakClient keycloakClient, 
-        IUserRepository userRepository)
+        IUserRepository userRepository,
+        IAuditLogService auditLogService)
     {
         _tokenService = tokenService;
         _emailService = emailService;
         _keycloakClient = keycloakClient;
         _userRepository = userRepository;
+        _auditLogService = auditLogService;
     }
     
     /// <inheritdoc />
@@ -29,42 +32,86 @@ public class UserAuthService : IUserAuthService
             throw new ArgumentException("Invalid register user request.");
         }
         
-        string keycloakId = await _keycloakClient.CreateUserAsync(new KeycloakUser
-        {
-            Email = request.Email,
-            Password = request.Password
-        });
+        var cleanupActions = new Stack<Func<Task>>();
 
-        if (string.IsNullOrWhiteSpace(keycloakId))
+        try
         {
-            throw new Exception("Failed to create user in Keycloak.");
+            string keycloakId = await _keycloakClient.CreateUserAsync(new KeycloakUser
+            {
+                Email = request.Email,
+                Password = request.Password
+            });
+
+            if (string.IsNullOrWhiteSpace(keycloakId))
+            {
+                throw new Exception("Failed to create user in Keycloak.");
+            }
+        
+            await AssignRoleToUserAsync(keycloakId, UserRole.User);
+            
+            cleanupActions.Push(async () => await _keycloakClient.DeleteUserAsync(keycloakId));
+            
+            var baseUsername = request.Email.Split('@')[0];
+            var username = await GenerateUniqueUsernameAsync(baseUsername);
+        
+            var appUser = new User
+            {
+                Id = Guid.NewGuid(),
+                KeycloakUserId = keycloakId,
+                Username = username,
+                Email = request.Email,
+                CreatedAt = DateTime.UtcNow,
+                IsEmailConfirmed = false
+            };
+
+            var user = await _userRepository.AddAsync(appUser);
+            if (user == null)
+            {
+                throw new Exception("Failed to create user in database.");
+            }
+            
+            cleanupActions.Push(async () => await _userRepository.DeleteAsync(user.Id));
+            
+            return UserProfileEntityToDtoMapper.MapToUserProfileDto(user);
         }
-        
-        await AssignRoleToUserAsync(keycloakId, UserRole.User);
-
-        var baseUsername = request.Email.Split('@')[0];
-        var username = await GenerateUniqueUsernameAsync(baseUsername);
-        
-        var appUser = new User
+        catch (Exception ex)
         {
-            Id = Guid.NewGuid(),
-            KeycloakUserId = keycloakId,
-            Username = username,
-            Email = request.Email,
-            CreatedAt = DateTime.UtcNow,
-            IsEmailConfirmed = false
-        };
+            while (cleanupActions.Count > 0)
+            {
+                var cleanupAction = cleanupActions.Pop();
+                try
+                {
+                    await cleanupAction();
+                }
+                catch (Exception cleanupEx)
+                {
+                    try
+                    {
+                        var logEntry = new LogEntry<string>
+                        {
+                            State = "Error",
+                            UserId = null,
+                            Exception = cleanupEx,
+                            ActionType = AuditActionType.Create,
+                            EntityType = AuditEntityType.User,
+                            LogLevel = LogLevel.Error,
+                            Details = new Dictionary<string, string>
+                            {
+                                { "Message", "Failed to cleanup user registration." }
+                            }
+                        };
+                
+                        await _auditLogService.LogWithLogEntryAsync(logEntry);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"Error logging audit log entry: {e.Message}");
+                    }
+                }
+            }
 
-        var result = await _userRepository.AddAsync(appUser);
-        
-        var user = await _userRepository.GetByKeycloakIdAsync(keycloakId);
-
-        if (user != null)
-        {
-            await SendEmailConfirmationAsync(keycloakId);            
+            throw new Exception("User registration failed. See inner exception for details.", ex);
         }
-        
-        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserProfileDto(result);
     }
     
     /// <inheritdoc />
@@ -368,13 +415,9 @@ public class UserAuthService : IUserAuthService
     
         var token = _tokenService.GenerateEmailConfirmationToken(Guid.Parse(keycloakUserId), user.Email);
 
-        //var confirmationLink = $"/api/Auth/users/{keycloakUserId}/confirm-email?token={token}";
         var confirmationLink = $"/verify-email?token={token}";
 
         await _emailService.SendEmailConfirmationAsync(user.Email, user.Username, confirmationLink);
-
-        user.IsEmailSent = true;
-        await _userRepository.UpdateAsync(user);
     }
     
     /// <inheritdoc />
@@ -402,6 +445,17 @@ public class UserAuthService : IUserAuthService
 
         user.IsEmailConfirmed = true;
         await _userRepository.UpdateAsync(user);
+    }
+
+    /// <inheritdoc />
+    public async Task<string> GetUserIdFromToken(string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            throw new ArgumentException("Token must not be null or empty.");
+        }
+
+        return await Task.Run(() => _tokenService.GetUserIdFromToken(token));
     }
     
     /// <summary>

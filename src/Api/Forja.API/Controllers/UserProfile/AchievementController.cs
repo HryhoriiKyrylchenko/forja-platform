@@ -5,10 +5,13 @@ namespace Forja.API.Controllers.UserProfile;
 public class AchievementController : ControllerBase
 {
     private readonly IAchievementService _achievementService;
+    private readonly IAuditLogService _auditLogService;
 
-    public AchievementController(IAchievementService achievementService)
+    public AchievementController(IAchievementService achievementService,
+        IAuditLogService auditLogService)
     {
         _achievementService = achievementService;
+        _auditLogService = auditLogService;
     }
 
     /// <summary>
@@ -37,6 +40,28 @@ public class AchievementController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Create,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to add achievement with name: {request.Name}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -72,6 +97,28 @@ public class AchievementController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get achievement by id: {achievementId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -103,6 +150,28 @@ public class AchievementController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to update achievement with id: {request.Id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -134,6 +203,28 @@ public class AchievementController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Delete,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to delete achievement with id: {achievementId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -165,6 +256,28 @@ public class AchievementController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to restore achievement with id: {achievementId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -196,6 +309,28 @@ public class AchievementController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all game achievements: {gameId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -227,6 +362,28 @@ public class AchievementController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all deleted game achievements: {gameId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -250,6 +407,28 @@ public class AchievementController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all achievements" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -272,6 +451,28 @@ public class AchievementController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all deleted achievements" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -302,6 +503,28 @@ public class AchievementController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Create,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to add user achievement with user id: {request.UserId} and achievement id: {request.AchievementId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -337,6 +560,28 @@ public class AchievementController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get user achievement by id: {userAchievementId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -368,6 +613,28 @@ public class AchievementController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to update user achievement with id: {request.Id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -399,6 +666,28 @@ public class AchievementController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Delete,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to delete user achievement with id: {userAchievementId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -422,6 +711,28 @@ public class AchievementController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all user achievements" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { message = ex.Message });
         }
     }
@@ -453,6 +764,28 @@ public class AchievementController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all user achievements by user keycloak id: {keycloakId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { message = ex.Message });
         }
     }
@@ -483,6 +816,28 @@ public class AchievementController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all user achievements by user id: {userId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -494,35 +849,57 @@ public class AchievementController : ControllerBase
     /// <param name="userId">
     /// The unique identifier of the user.
     /// </param>
-    /// <param name="num">
+    /// <param name="number">
     /// The number of most recent achievements to retrieve.
     /// </param>
     /// <returns>
-    /// A list of up to <paramref name="num"/> achievements associated with the user, sorted by the most recent first.
+    /// A list of up to <paramref name="number"/> achievements associated with the user, sorted by the most recent first.
     /// Returns 200 (OK) if successful, 400 (Bad Request) if the user ID is invalid or if an error occurs.
     /// </returns>
 
     [Authorize]
-    [HttpGet("user/{userId}/achievements/{num}")]
-    public async Task<ActionResult<List<AchievementDto>>> GetNumAchievementsByUserId([FromRoute] Guid userId, int num)
+    [HttpGet("user/{userId}/achievements/{number}")]
+    public async Task<ActionResult<List<AchievementDto>>> GetNumberOfAchievementsByUserId([FromRoute] Guid userId, int number)
     {
         if (userId == Guid.Empty)
         {
             return BadRequest(new { error = "Invalid user ID." });
         }
 
-        if (num <= 0)
+        if (number <= 0)
         {
             return BadRequest(new { error = "The number of achievements must be greater than zero." });
         }
 
         try
         {
-            var result = await _achievementService.GetNumAchievementsByUserIdAsync(userId, num);
+            var result = await _achievementService.GetNumberOfAchievementsByUserIdAsync(userId, number);
             return Ok(result);
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get numder of user achievements by user id: {userId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -555,6 +932,28 @@ public class AchievementController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all user achievements by game id: {gameId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }

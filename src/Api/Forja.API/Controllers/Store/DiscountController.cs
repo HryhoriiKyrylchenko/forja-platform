@@ -5,10 +5,13 @@ namespace Forja.API.Controllers.Store;
 public class DiscountController : ControllerBase
 {
     private readonly IDiscountService _discountService;
+    private readonly IAuditLogService _auditLogService;
 
-    public DiscountController(IDiscountService discountService)
+    public DiscountController(IDiscountService discountService,
+        IAuditLogService auditLogService)
     {
         _discountService = discountService;
+        _auditLogService = auditLogService;
     }
 
     [HttpGet("{discountId:guid}")]
@@ -24,6 +27,28 @@ public class DiscountController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed get discount by id: {discountId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -39,6 +64,28 @@ public class DiscountController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed get all discounts" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -55,6 +102,28 @@ public class DiscountController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed get active discounts" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -72,6 +141,28 @@ public class DiscountController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Create,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed add discount: {request.Name}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -88,10 +179,54 @@ public class DiscountController : ControllerBase
         }
         catch (KeyNotFoundException ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed update discount with id: {request.Id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return NotFound(new { error = ex.Message });
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed update discount with id: {request.Id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -108,6 +243,28 @@ public class DiscountController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Delete,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed delete discount with id: {discountId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -127,6 +284,28 @@ public class DiscountController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed get product discount by id: {productDiscountId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -143,6 +322,28 @@ public class DiscountController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed get product discount by product id: {productId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -159,6 +360,28 @@ public class DiscountController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed get product discount by discount id: {discountId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -176,6 +399,28 @@ public class DiscountController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Create,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed add product discount with discount id: {request.DiscountId} and product id: {request.ProductId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -192,10 +437,54 @@ public class DiscountController : ControllerBase
         }
         catch (KeyNotFoundException ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed update product discount with id: {request.Id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return NotFound(new { error = ex.Message });
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Update,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed update product discount with id: {request.Id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }
@@ -212,6 +501,28 @@ public class DiscountController : ControllerBase
         }
         catch (Exception ex)
         {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Delete,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed delete product discount with id: {productDiscountId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
             return BadRequest(new { error = ex.Message });
         }
     }

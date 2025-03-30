@@ -44,7 +44,7 @@ public class AuditLog
     /// <summary>
     /// Gets or sets additional details about the action.
     /// </summary>
-    public string Details { get; set; } = string.Empty;
+    public Dictionary<string, string> Details { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the user who performed the action.
