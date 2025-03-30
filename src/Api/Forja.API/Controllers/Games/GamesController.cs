@@ -1,5 +1,3 @@
-using Forja.Application.DTOs.Games;
-
 namespace Forja.API.Controllers.Games;
 
 /// <summary>
@@ -14,18 +12,21 @@ public class GamesController : ControllerBase
     private readonly IAnalyticsEventService _analyticsEventService;
     private readonly IAuditLogService _auditLogService;
     private readonly IUserService _userService;
+    private readonly IDistributedCache _cache;
 
     public GamesController(IGameService gameService, 
         IGameAddonService gameAddonService,
         IAnalyticsEventService analyticsEventService,
         IAuditLogService auditLogService,
-        IUserService userService)
+        IUserService userService,
+        IDistributedCache cache)
     {
         _gameService = gameService;
         _gameAddonService = gameAddonService;
         _analyticsEventService = analyticsEventService;
         _auditLogService = auditLogService;
         _userService = userService;
+        _cache = cache;
     }
 
     #region Games Endpoints
@@ -38,7 +39,23 @@ public class GamesController : ControllerBase
     {
         try
         {
+            var cachedGames = await _cache.GetStringAsync("all_games");
+            if (!string.IsNullOrWhiteSpace(cachedGames))
+            {
+                var allGames = JsonSerializer.Deserialize<List<GameDto>>(cachedGames);
+                return Ok(allGames);
+            }
+
             var games = await _gameService.GetAllAsync();
+            var gamesList = games.ToList();
+            if (!gamesList.Any()) return NoContent();
+            
+            var serializedData = JsonSerializer.Serialize(gamesList);
+
+            await _cache.SetStringAsync("all_games", serializedData, new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+            });
             
             try
             {
@@ -60,8 +77,6 @@ public class GamesController : ControllerBase
             {
                 Console.WriteLine("Analytics event creation failed.");
             }
-    
-            if (!games.Any()) return NoContent();
             
             return Ok(games);
         }
@@ -142,13 +157,34 @@ public class GamesController : ControllerBase
     [HttpGet("games/{id}")]
     public async Task<IActionResult> GetGameByIdAsync([FromRoute] Guid id)
     {
-        if (id == Guid.Empty)
-            return BadRequest("Game ID cannot be empty.");
+        if (id == Guid.Empty) return BadRequest("Game ID cannot be empty.");
 
         try
         {
+            var cachedGame = await _cache.GetStringAsync($"game_{id}");
+            if (!string.IsNullOrWhiteSpace(cachedGame))
+            {
+                var gameDto = JsonSerializer.Deserialize<GameDto>(cachedGame);
+                return Ok(gameDto);
+            }
+            
+            var cachedGames = await _cache.GetStringAsync("all_games");
+            if (!string.IsNullOrWhiteSpace(cachedGames))
+            {
+                var allGames = JsonSerializer.Deserialize<List<GameDto>>(cachedGames);
+                var gameDto = allGames?.FirstOrDefault(g => g.Id == id);
+                if (gameDto != null) return Ok(gameDto);
+            }
+            
             var game = await _gameService.GetByIdAsync(id);
             if (game == null) return NotFound(new { error = $"Game with ID {id} not found." });
+            
+            var serializedData = JsonSerializer.Serialize(game);
+
+            await _cache.SetStringAsync($"game_{id}", serializedData, new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
+            });
             
             try
             {
@@ -427,8 +463,24 @@ public class GamesController : ControllerBase
     {
         try
         {
+            var cachedGameAddons = await _cache.GetStringAsync("all_game_addons");
+            if (!string.IsNullOrWhiteSpace(cachedGameAddons))
+            {
+                var allGameAddons = JsonSerializer.Deserialize<List<GameAddonDto>>(cachedGameAddons);
+                return Ok(allGameAddons);
+            }
+
             var addons = await _gameAddonService.GetAllAsync();
+            var gameAddonsList = addons.ToList();
+            if (!gameAddonsList.Any()) return NoContent();
             
+            var serializedData = JsonSerializer.Serialize(gameAddonsList);
+
+            await _cache.SetStringAsync("all_game_addons", serializedData, new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+            });
+
             try
             {
                 var keycloakUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -449,8 +501,6 @@ public class GamesController : ControllerBase
             {
                 Console.WriteLine("Analytics event creation failed.");
             }
-            
-            if (!addons.Any()) return NoContent();
 
             return Ok(addons);
         }
@@ -488,13 +538,34 @@ public class GamesController : ControllerBase
     [HttpGet("game-addons/{id}")]
     public async Task<IActionResult> GetGameAddonByIdAsync([FromRoute] Guid id)
     {
-        if (id == Guid.Empty)
-            return BadRequest(new { error = "GameAddon ID cannot be empty." });
+        if (id == Guid.Empty) return BadRequest(new { error = "GameAddon ID cannot be empty." });
 
         try
         {
+            var cachedAddon = await _cache.GetStringAsync($"addon_{id}");
+            if (!string.IsNullOrWhiteSpace(cachedAddon))
+            {
+                var addonDto = JsonSerializer.Deserialize<GameDto>(cachedAddon);
+                return Ok(addonDto);
+            }
+            
+            var cachedAddons = await _cache.GetStringAsync("all_game_addons");
+            if (!string.IsNullOrWhiteSpace(cachedAddons))
+            {
+                var allAddons = JsonSerializer.Deserialize<List<GameAddonDto>>(cachedAddons);
+                var addonDto = allAddons?.FirstOrDefault(a => a.Id == id);
+                if (addonDto != null) return Ok(addonDto);
+            }
+            
             var addon = await _gameAddonService.GetByIdAsync(id);
             if (addon == null) return NotFound(new { error = $"GameAddon with ID {id} not found." });
+            
+            var serializedData = JsonSerializer.Serialize(addon);
+
+            await _cache.SetStringAsync($"addon_{id}", serializedData, new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
+            });
             
             try
             {
