@@ -101,10 +101,10 @@ public interface IUserService
     /// <summary>
     /// Confirms the email address associated with the specified user.
     /// </summary>
-    /// <param name="keycloakUserId">The unique identifier of the keycloak user.</param>
+    /// <param name="userId">The unique identifier of the user.</param>
     /// <param name="confirmed">A boolean value indicating whether the email has been confirmed.</param>
     /// <returns>A task representing the asynchronous operation, containing the updated <see cref="UserProfileDto"/> object if successful, or null if the user does not exist.</returns>
-    Task<UserProfileDto?> ConfirmEmailAsync(string keycloakUserId, bool confirmed);
+    Task<UserProfileDto?> ConfirmEmailAsync(string userId, bool confirmed);
 
     /// <summary>
     /// Deletes a user identified by the given Keycloak ID.
@@ -133,4 +133,11 @@ public interface IUserService
     /// <param name="user">The user profile containing data to be sanitized.</param>
     /// <returns>A <see cref="UserProfileDto"/> object with personal information removed or hidden.</returns>
     UserProfileDto HidePersonalData(UserProfileDto user);
+
+    /// <summary>
+    /// Retrieves the Keycloak user ID associated with the specified unique identifier.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user.</param>
+    /// <returns>The Keycloak user ID as a string if found, or null if the user does not exist.</returns>
+    string? GetKeycloakUserIdById(Guid userId);
 }

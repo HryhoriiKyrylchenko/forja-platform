@@ -250,14 +250,14 @@ public class UserService : IUserService
     }
 
     /// <inheritdoc />
-    public async Task<UserProfileDto?> ConfirmEmailAsync(string keycloakUserId, bool confirmed)
+    public async Task<UserProfileDto?> ConfirmEmailAsync(string userId, bool confirmed)
     {
-        if (string.IsNullOrWhiteSpace(keycloakUserId))
+        if (string.IsNullOrWhiteSpace(userId))
         {
-            throw new ArgumentNullException(nameof(keycloakUserId), "User Keycloak ID cannot be null or empty.");
+            throw new ArgumentNullException(nameof(userId), "User ID cannot be null or empty.");
         }
         
-        var user = await _userRepository.GetByKeycloakIdAsync(keycloakUserId);
+        var user = await _userRepository.GetByKeycloakIdAsync(userId);
         if (user == null)
         {
             throw new KeyNotFoundException("User not found.");
@@ -265,9 +265,13 @@ public class UserService : IUserService
         
         user.IsEmailConfirmed = confirmed;
         
-        await _userRepository.UpdateAsync(user);
+        var result = await _userRepository.UpdateAsync(user);
+        if (result == null)
+        {
+            throw new KeyNotFoundException("User not found.");
+        }
         
-        return UserProfileEntityToDtoMapper.MapToUserProfileDto(user);
+        return UserProfileEntityToDtoMapper.MapToUserProfileDto(result);
     }
 
     /// <inheritdoc />
@@ -349,6 +353,23 @@ public class UserService : IUserService
         }
         
         return user;
+    }
+
+    /// <inheritdoc />
+    public string? GetKeycloakUserIdById(Guid userId)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User ID cannot be an empty Guid.", nameof(userId));
+        }
+        
+        var user = _userRepository.GetByIdAsync(userId).Result;
+        if (user == null)
+        {
+            throw new KeyNotFoundException("User not found.");
+        }
+        
+        return user.KeycloakUserId;
     }
 
     /// <summary>

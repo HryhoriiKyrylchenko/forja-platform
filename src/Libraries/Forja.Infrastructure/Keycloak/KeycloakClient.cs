@@ -950,7 +950,38 @@ public class KeycloakClient : IKeycloakClient
         var response = await HttpRetryHelper.ExecuteWithRetryAsync(_httpClient, request);
         response.EnsureSuccessStatusCode();
     }
-    
+
+    /// <inheritdoc />
+    public async Task<bool> DeleteUserAsync(string keycloakId)
+    {
+        if (string.IsNullOrWhiteSpace(keycloakId))
+        {
+            throw new ArgumentException("Keycloak user ID must be provided.", nameof(keycloakId));
+        }
+
+        string accessToken;
+        try
+        {
+            accessToken = await ObtainAdminToken();
+        }
+        catch (Exception ex)
+        {
+            throw new HttpRequestException("Failed to obtain admin token.", ex);
+        }
+
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"/admin/realms/{_realm}/users/{keycloakId}");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        var response = await HttpRetryHelper.ExecuteWithRetryAsync(_httpClient, request);
+        if (response.IsSuccessStatusCode)
+        {
+            return true;
+        }
+        
+        string responseContent = await response.Content.ReadAsStringAsync();
+        throw new InvalidOperationException($"Failed to delete user. Status Code: {response.StatusCode}, Details: {responseContent}");
+    }
+
     /// <inheritdoc />
     [Obsolete("This method uses Keycloak UI to send the required action email. It is deprecated and will be removed in a future release.")]
     public async Task SendRequiredActionEmailAsync(

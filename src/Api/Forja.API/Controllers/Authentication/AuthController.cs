@@ -66,8 +66,26 @@ public class AuthController : ControllerBase
             {
                 Console.WriteLine($"Error logging audit log entry: {e.Message}");
             }
+
+            try
+            {
+                var keycloakId = _userService.GetKeycloakUserIdById(result.Id);
+                if (string.IsNullOrEmpty(keycloakId))
+                {
+                    throw new Exception("Keycloak user id is null or empty");
+                }
+                await _authService.SendEmailConfirmationAsync(keycloakId);
             
-            return Ok(new { Message = "Registration successful" });
+                return Ok(new { Message = "Registration successful. Confirmation email sent." });
+            }
+            catch (Exception e)
+            {
+                return Ok(new
+                {
+                    Message = $"Registration successful, but email confirmation failed. Error: {e.Message}",
+                    IsEmailConfirmtionSent = false
+                });
+            }
         }
         catch(Exception ex)
         {
@@ -275,7 +293,7 @@ public class AuthController : ControllerBase
                 if (!string.IsNullOrEmpty(accessToken))
                 {
                     var keycloakUserId = await _authService.GetKeycloakUserIdAsync(accessToken);
-                     user = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
+                    user = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
                 }
                 
                 var logEntry = new LogEntry<string>
@@ -955,24 +973,25 @@ public class AuthController : ControllerBase
             return BadRequest(new { error = ex.Message });
         }
     }
-    
+
     /// <summary>
     /// Confirms a Keycloak user's email.
     /// </summary>
     /// <param name="token">The email confirmation token required to confirm email.</param>
     /// <returns>An IActionResult representing the result of the operation.</returns>
-    [HttpPut("users/{keycloakUserId}/confirm-email")]
+    [HttpPut("users/confirm-email")]
     public async Task<IActionResult> ConfirmEmail([FromQuery] string token)
     {
-        if (string.IsNullOrWhiteSpace(keycloakUserId))
+        var userId = await _authService.GetUserIdFromToken(token);
+        if (string.IsNullOrWhiteSpace(userId))
         {
-            return BadRequest(new { error = "Keycloak User ID must be provided." });
+            return BadRequest(new { error = "Invalid token." });
         }
 
         try
         {
             await _authService.ConfirmUserEmailAsync(token);
-            //await _userService.ConfirmEmailAsync(keycloakUserId, true);
+            await _userService.ConfirmEmailAsync(userId, true);
             return NoContent();
         }
         catch (Exception ex)
@@ -989,7 +1008,7 @@ public class AuthController : ControllerBase
                     LogLevel = LogLevel.Error,
                     Details = new Dictionary<string, string>
                     {
-                        { "Message", $"Failed to confirm email to keycloak user {keycloakUserId}" }
+                        { "Message", $"Failed to confirm email to user with id {userId}" }
                     }
                 };
                 
@@ -1229,25 +1248,4 @@ public class AuthController : ControllerBase
             return BadRequest( new { error = ex.Message });
         }
     }
-
-    /// <summary>
-    /// Confirms a Keycloak user's email.
-    /// </summary>    
-    /// <param name="token">The email confirmation token required to confirm email.</param>
-    /// <returns>An IActionResult representing the result of the operation.</returns>
-    [HttpPut("users/confirm-email")]
-    public async Task<IActionResult> ConfirmEmail([FromQuery] string token)
-    {
-        try
-        {
-            await _authService.ConfirmUserEmailAsync(token);
-            //await _userService.ConfirmEmailAsync(keycloakUserId, true);
-            return Ok(new { message = "Email confirmed successfully." });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { error = ex.Message }); 
-        }
-    }
 }
-

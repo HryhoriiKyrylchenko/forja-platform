@@ -101,9 +101,6 @@ public class TokenService : ITokenService
 
         var purposeClaim = principal.Claims.FirstOrDefault(c => c.Type == "purpose");
         return Task.FromResult(purposeClaim is { Value: "EmailConfirmation" });
-        
-        // var purposeClaim = principal.FindFirst("purpose");
-        // return purposeClaim != null && purposeClaim.Value == "EmailConfirmation";
     }
     
     /// <inheritdoc />
@@ -122,8 +119,38 @@ public class TokenService : ITokenService
 
         var emailClaim = principal.Claims.FirstOrDefault(c => c.Type == "email");
         
-        //var emailClaim = principal.FindFirst(ClaimTypes.Email);
         return Task.FromResult(emailClaim?.Value);
+    }
+    
+    /// <inheritdoc />
+    public string GetUserIdFromToken(string token)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.ASCII.GetBytes(_jwtSecret);
+
+        try
+        {
+            var claimsPrincipal = tokenHandler.ValidateToken(token, new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = false, 
+                ValidateAudience = false, 
+                ValidateLifetime = true 
+            }, out _);
+
+            var userIdClaim = claimsPrincipal.FindFirst("userId");
+            if (userIdClaim?.Value == null)
+            {
+                throw new Exception("Invalid token.");
+            }
+            return userIdClaim.Value;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Token validation failed: {ex.Message}");
+            return string.Empty;
+        }
     }
     
     private ClaimsPrincipal? GetPrincipalFromToken(string token)
