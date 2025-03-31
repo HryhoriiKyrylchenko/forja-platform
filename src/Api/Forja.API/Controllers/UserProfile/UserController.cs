@@ -24,14 +24,12 @@ public class UserController : ControllerBase
     private readonly IUserWishListService _userWishListService;
     private readonly IUserLibraryService _userLibraryService;
     private readonly IAuditLogService _auditLogService;
+    private readonly IDistributedCache _cache;
 
-    public UserController(IUserService userService,
-                            IKeycloakClient keycloakClient,
-                            IUserFollowerService userFollowerService,
-                            IUserWishListService userWishListService,
-                            IUserLibraryService userLibraryService,
-                            IAuditLogService auditLogService)
-
+    public UserController(IUserService userService, 
+        IKeycloakClient keycloakClient,
+        IAuditLogService auditLogService,
+        IDistributedCache cache)
     {
         _userService = userService;
         _keycloakClient = keycloakClient;
@@ -39,6 +37,7 @@ public class UserController : ControllerBase
         _userWishListService = userWishListService;
         _userLibraryService = userLibraryService;
         _auditLogService = auditLogService;
+        _cache = cache;
     }
 
 
@@ -392,11 +391,25 @@ public class UserController : ControllerBase
                 return Unauthorized(new { error = "User ID not found in token claims." });
             }
 
+            var cachedProfile = await _cache.GetStringAsync($"user_profile_{keycloakUserId}");
+            if (!string.IsNullOrWhiteSpace(cachedProfile))
+            {
+                var userProfile = JsonSerializer.Deserialize<UserProfileDto>(cachedProfile);
+                return Ok(userProfile);
+            }
+
             var result = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
             if (result == null)
             {
                 return NotFound(new { error = $"User with Keycloak ID {keycloakUserId} not found." });
             }
+                
+            var serializedData = JsonSerializer.Serialize(result);
+
+            await _cache.SetStringAsync($"user_profile_{keycloakUserId}", serializedData, new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+            });
 
             return Ok(result);
         }
@@ -429,6 +442,7 @@ public class UserController : ControllerBase
     }
 
     [HttpGet("debug-token")]
+    [Obsolete("This method is deprecated and will be removed in a future release.", false)]
     public IActionResult DebugToken()
     {
         if (Request.Cookies.TryGetValue("access_token", out var token))

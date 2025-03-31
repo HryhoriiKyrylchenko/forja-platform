@@ -1,3 +1,5 @@
+using System.Net;
+
 namespace Forja.Application.Services.Storage;
 
 public class FileManagerService : IFileManagerService
@@ -21,7 +23,11 @@ public class FileManagerService : IFileManagerService
         string uniqueSuffix = DateTime.UtcNow.ToString("yyyyMMddHHmmssfff");
         string destinationPath = $"games/{folderName}-{uniqueSuffix}/";
 
-        await _storageService.UploadFolderAsync(destinationPath, request.FolderPath);
+        var result = await _storageService.UploadFolderAsync(destinationPath, request.FolderPath);
+        if (result.Any(r => r.ResponseStatusCode != HttpStatusCode.OK))
+        {
+            throw new InvalidOperationException($"Failed to upload files, status code: {result.First(r => r.ResponseStatusCode != HttpStatusCode.OK).ResponseStatusCode.ToString()}");
+        }
         return destinationPath;
     }
 
@@ -59,7 +65,12 @@ public class FileManagerService : IFileManagerService
         
         destinationPath = await EnsureUniqueFolderPathAsync(destinationPath);
         
-        await _storageService.UploadFolderAsync(destinationPath, request.FolderPath);
+        var result = await _storageService.UploadFolderAsync(destinationPath, request.FolderPath);
+        if (result.Any(r => r.ResponseStatusCode != HttpStatusCode.OK))
+        {
+            throw new InvalidOperationException($"Failed to upload files, status code: {result.First(r => r.ResponseStatusCode != HttpStatusCode.OK).ResponseStatusCode.ToString()}");
+        }
+        
         return destinationPath;
     }
 
@@ -98,7 +109,12 @@ public class FileManagerService : IFileManagerService
         
         destinationFilePath = await EnsureUniqueFilePathAsync(destinationFilePath);
         
-        await _storageService.UploadFileAsync(destinationFilePath, request.FilePath);
+        var result = await _storageService.UploadFileAsync(destinationFilePath, request.FilePath);
+        if (result.ResponseStatusCode != HttpStatusCode.OK)
+        {
+            throw new InvalidOperationException($"Failed to upload file, status code: {result.ResponseStatusCode.ToString()}");
+        }
+        
         return destinationFilePath;
     }
 

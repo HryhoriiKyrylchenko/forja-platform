@@ -95,12 +95,8 @@ public static class StorageRequestsValidator
             return false;
         }
         
-        if (Path.GetExtension(request.FilePath) != ".png"
-            || Path.GetExtension(request.FilePath) != ".jpg"
-            || Path.GetExtension(request.FilePath) != ".jpeg"
-            || Path.GetExtension(request.FilePath) != ".gif"
-            || Path.GetExtension(request.FilePath) != ".bmp"
-            || Path.GetExtension(request.FilePath) != ".webp")
+        if (!new[] { ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp" }
+                .Contains(Path.GetExtension(request.FilePath).ToLower()))
         {
             errorMessage = "File extension must be .png, .jpg, .jpeg, .gif, .bmp or .webp.";
             return false;
