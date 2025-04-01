@@ -52,4 +52,11 @@ public interface IUserFollowerService
     /// <param name="userId">The unique identifier of the followed user.</param>
     /// <returns>A list of UserFollowerDTO entries where the user is being followed.</returns>
     Task<List<UserFollowerDto>> GetFollowedByUserIdAsync(Guid userId);
+
+    /// <summary>
+    /// Gets the number of followers for a specific user.
+    /// </summary>    
+    /// <param name="userId">The unique identifier of the user to get the follower count for.</param>
+    /// <returns>Follow UserStatisticsDto object with the updated follower count.</returns>
+    Task<int> GetFollowersCountAsync(Guid userId);
 }

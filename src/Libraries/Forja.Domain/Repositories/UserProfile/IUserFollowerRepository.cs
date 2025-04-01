@@ -51,4 +51,11 @@ public interface IUserFollowerRepository
     /// <param name="userId">The unique identifier of the user who is being followed.</param>
     /// <returns>A list of UserFollower entries where the user is followed.</returns>
     Task<IEnumerable<UserFollower>> GetFollowedByUserIdAsync(Guid userId);
+
+    /// <summary>
+    /// Asynchronously retrieves the number of followers for a specific user identified by a unique identifier.
+    /// </summary>
+    /// <param name="userId">The unique identifier for the user whose followers count is being requested.</param>
+    /// <returns>An integer representing the total number of followers for the specified user.</returns>
+    Task<int> GetFollowersCountByUserIdAsync(Guid userId);
 }

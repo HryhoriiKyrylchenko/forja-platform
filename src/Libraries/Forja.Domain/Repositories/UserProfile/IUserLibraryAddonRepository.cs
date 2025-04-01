@@ -42,6 +42,14 @@ public interface IUserLibraryAddonRepository
     /// <returns>A task representing the asynchronous operation. The task result contains an enumerable collection of UserLibraryAddon objects associated with the specified game.</returns>
     Task<IEnumerable<UserLibraryAddon>> GetAllByGameIdAsync(Guid gameId);
 
+
+    /// <summary>
+    /// Asynchronously retrieves all user library addons associated with a specific user.
+    /// </summary>
+    /// <param name="userId">The id of the user for which to retrieve associated library addons.</param>
+    /// <returns>A task representing the asynchronous operation. The task result contains an enumerable collection of UserLibraryAddon objects associated with the specified user.</returns>
+    Task<IEnumerable<UserLibraryAddon>> GetAllByUserIdAsync(Guid userId);
+
     /// <summary>
     /// Retrieves all deleted user library addons associated with a specific game by its unique identifier.
     /// </summary>
@@ -96,4 +104,11 @@ public interface IUserLibraryAddonRepository
     /// <param name="userLibraryAddonId">The unique identifier of the user library addon to restore.</param>
     /// <returns>A task representing the asynchronous operation. The task result contains the restored user library addon.</returns>
     Task<UserLibraryAddon?> RestoreAsync(Guid userLibraryAddonId);
+
+    /// <summary>
+    /// Retrieves the total number of addons associated with a specific user asynchronously.
+    /// </summary>
+    /// <param name="userId">The unique identifier for the user whose addons count is being retrieved.</param>
+    /// <returns>An integer representing the count of addons for the specified user.</returns>
+    Task<int> GetAllAddonsCountByUserIdAsync(Guid userId);
 }
