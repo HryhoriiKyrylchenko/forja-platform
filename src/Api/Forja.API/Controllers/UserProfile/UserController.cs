@@ -26,9 +26,12 @@ public class UserController : ControllerBase
     private readonly IAuditLogService _auditLogService;
     private readonly IDistributedCache _cache;
 
-    public UserController(IUserService userService, 
+    public UserController(IUserService userService,
         IKeycloakClient keycloakClient,
         IAuditLogService auditLogService,
+        IUserFollowerService userFollowerService,
+        IUserWishListService userWishListService,
+        IUserLibraryService userLibraryService,
         IDistributedCache cache)
     {
         _userService = userService;
@@ -403,7 +406,7 @@ public class UserController : ControllerBase
             {
                 return NotFound(new { error = $"User with Keycloak ID {keycloakUserId} not found." });
             }
-                
+
             var serializedData = JsonSerializer.Serialize(result);
 
             await _cache.SetStringAsync($"user_profile_{keycloakUserId}", serializedData, new DistributedCacheEntryOptions
