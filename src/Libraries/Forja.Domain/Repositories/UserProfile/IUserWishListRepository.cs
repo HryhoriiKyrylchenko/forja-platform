@@ -44,4 +44,11 @@ public interface IUserWishListRepository
     /// <param name="userId">The unique identifier of the user.</param>
     /// <returns>A list of UserWishList entries associated with the user.</returns>
     Task<IEnumerable<UserWishList>> GetByUserIdAsync(Guid userId);
+
+    /// <summary>
+    /// Asynchronously retrieves the count associated with a specific user identified by a unique identifier.
+    /// </summary>
+    /// <param name="userId">The unique identifier for the user whose count is being retrieved.</param>
+    /// <returns>An integer representing the count related to the specified user.</returns>
+    Task<int> GetCountByUserIdAsync(Guid userId);
 }

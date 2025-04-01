@@ -87,4 +87,15 @@ public class UserWishListRepository : IUserWishListRepository
             .Include(uwl => uwl.Product)
             .ToListAsync();
     }
+
+    /// <inheritdoc />
+    public async Task<int> GetCountByUserIdAsync(Guid userId)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User id cannot be empty.", nameof(userId));
+        }
+        return await _userWishLists
+            .CountAsync(uwl => uwl.UserId == userId);
+    }
 }

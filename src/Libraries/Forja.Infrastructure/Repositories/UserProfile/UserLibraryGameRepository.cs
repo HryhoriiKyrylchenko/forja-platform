@@ -190,4 +190,17 @@ public class UserLibraryGameRepository : IUserLibraryGameRepository
         
         return deletedUserLibraryGame;
     }
+
+    /// <inheritdoc />
+    public async Task<int> GetAllGamesCountByUserIdAsync(Guid userId)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User id cannot be empty.", nameof(userId));
+        }
+
+        return await _userLibraryGames
+            .Where(ulg => ulg.UserId == userId)
+            .CountAsync();
+    }
 }
