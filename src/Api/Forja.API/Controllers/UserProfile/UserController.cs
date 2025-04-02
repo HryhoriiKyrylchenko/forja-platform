@@ -1162,19 +1162,50 @@ public class UserController : ControllerBase
     [HttpGet("statistics/{userId}")]
     public async Task<IActionResult> GetUserStatistics([FromRoute] Guid userId)
     {
-        var gamesOwnedCount = await _userLibraryService.GetUsersGamesCountAsync(userId);
-        var dlcOwnedCount = await _userLibraryService.GetUsersAddonsCountAsync(userId);
-        var followersCount = await _userFollowerService.GetFollowersCountAsync(userId);
-        var wishlistCount = await _userWishListService.GetWishListCountAsync(userId);
-
-        var statsDTO = new UserStatisticsDto
+        try
         {
-            GamesOwned = gamesOwnedCount,
-            DlcOwned = dlcOwnedCount,
-            Follows = followersCount,
-            Whishlisted = wishlistCount
-        };
+            var gamesOwnedCount = await _userLibraryService.GetUsersGamesCountAsync(userId);
+            var dlcOwnedCount = await _userLibraryService.GetUsersAddonsCountAsync(userId);
+            var followersCount = await _userFollowerService.GetFollowersCountAsync(userId);
+            var wishlistCount = await _userWishListService.GetWishListCountAsync(userId);
 
-        return Ok(statsDTO);
+            var statsDTO = new UserStatisticsDto
+            {
+                GamesOwned = gamesOwnedCount,
+                DlcOwned = dlcOwnedCount,
+                Follows = followersCount,
+                Whishlisted = wishlistCount
+            };
+
+            return Ok(statsDTO);
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = userId,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                {
+                    { "Message", $"Failed to get statistics for user {userId}" }
+                }
+                };
+
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception logEx)
+            {
+                Console.WriteLine($"Error logging audit log entry: {logEx.Message}");
+            }
+
+            return BadRequest(new { error = "Failed to retrieve user statistics." });
+        }
     }
+
 }

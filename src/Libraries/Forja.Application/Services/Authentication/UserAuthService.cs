@@ -329,7 +329,7 @@ public class UserAuthService : IUserAuthService
     }
 
     /// <inheritdoc />
-    public async Task TriggerForgotPasswordAsync(string email)
+    public async Task TriggerForgotPasswordAsync(string email, string locale)
     {
         if (string.IsNullOrWhiteSpace(email))
         {
@@ -344,9 +344,9 @@ public class UserAuthService : IUserAuthService
         
         string token = _tokenService.GeneratePasswordResetToken(user);
 
-        string resetLink = $"/reset-password?token={Uri.EscapeDataString(token)}";
+        string resetLink = $"/{locale}/auth/reset-password?token={Uri.EscapeDataString(token)}";
 
-        await _emailService.SendPasswordResetEmailAsync(email, resetLink);
+        await _emailService.SendPasswordResetEmailAsync(email, resetLink, locale);
     }
 
     /// <inheritdoc />
@@ -367,8 +367,20 @@ public class UserAuthService : IUserAuthService
         {
             throw new ArgumentException("Invalid reset user password request.");
         }
-        
-        await _keycloakClient.ResetUserPasswordAsync(request.KeycloakUserId, request.Password, request.Temporary);
+
+        var isValidToken = await ValidateResetTokenAsync(new ValidateResetTokenRequest { Token = request.Token });
+        if (!isValidToken)
+        {
+            throw new ArgumentException("Invalid or expired reset token.");
+        }
+
+        var keycloakUserId = await _tokenService.GetkeycloakUserIdFromToken(request.Token);
+        if (string.IsNullOrWhiteSpace(keycloakUserId))
+        {
+            throw new KeyNotFoundException("User ID not found.");
+        }
+
+        await _keycloakClient.ResetUserPasswordAsync(keycloakUserId, request.Password, request.Temporary);
     }
 
     /// <inheritdoc />
