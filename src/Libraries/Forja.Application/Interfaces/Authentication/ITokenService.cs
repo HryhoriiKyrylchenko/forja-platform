@@ -20,9 +20,24 @@ public interface ITokenService
     /// <returns>Returns a string representing the generated email confirmation token.</returns>
     string GenerateEmailConfirmationToken(Guid userId, string email);
 
-    /// Validates the provided password reset token to determine its validity.
-    /// <param name="token">The password reset token to validate.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains a boolean indicating whether the token is valid.</returns>
+    /// <summary>
+    /// Validates the provided password reset token and extracts the Keycloak user ID if valid.
+    /// </summary>
+    /// <param name="token">The JWT password reset token to validate.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation. The task result contains the Keycloak user ID if the token is valid,
+    /// or <c>null</c> if the token is invalid or expired.
+    /// </returns>
+    Task<string?> GetkeycloakUserIdFromToken(string token);
+
+    /// <summary>
+    /// Validates the provided JWT password reset token to ensure it is well-formed, signed correctly, and not expired.
+    /// </summary>
+    /// <param name="token">The JWT token to validate.</param>
+    /// <returns>
+    /// A task representing the asynchronous operation. The result is <c>true</c> if the token is valid and contains claims;
+    /// otherwise, <c>false</c>.
+    /// </returns>
     Task<bool> ValidatePasswordResetToken(string token);
 
     /// <summary>

@@ -153,8 +153,13 @@ public interface IUserAuthService
     /// (e.g., sending a password reset link or token) via the identity provider.
     /// </summary>
     /// <param name="email">The email address of the user requesting a password reset.</param>
+    /// <param name="locale">
+    /// The locale (e.g., "en", "uk") to be used for generating localized content during the password reset process,
+    /// such as the language of the email or the reset link path.
+    /// </param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    Task TriggerForgotPasswordAsync(string email);
+    Task TriggerForgotPasswordAsync(string email, string locale);
+
 
     /// <summary>
     /// Enables or disables a user in the system based on the provided keycloak user ID.

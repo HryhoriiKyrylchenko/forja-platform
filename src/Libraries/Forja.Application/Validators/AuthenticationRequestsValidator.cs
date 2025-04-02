@@ -188,9 +188,9 @@ public static class AuthenticationRequestsValidator
     /// <returns>True if the request is valid; otherwise, false.</returns>
     public static bool ValidateResetUserPasswordRequest(ResetUserPasswordRequest request, out string errorMessage)
     {
-        if (string.IsNullOrEmpty(request.KeycloakUserId))
+        if (string.IsNullOrEmpty(request.Token))
         {
-            errorMessage = "KeycloakUserId cannot be empty.";
+            errorMessage = "Token cannot be empty.";
             return false;
         }
 
