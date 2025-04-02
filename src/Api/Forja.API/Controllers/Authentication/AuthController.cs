@@ -1031,10 +1031,9 @@ public class AuthController : ControllerBase
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetUserPassword([FromBody] ResetUserPasswordRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.KeycloakUserId) 
-            || string.IsNullOrWhiteSpace(request.Password))
+        if (string.IsNullOrWhiteSpace(request.Token) || string.IsNullOrWhiteSpace(request.Password))
         {
-            return BadRequest(new { error = "Keycloak User ID and new password must be provided." });
+            return BadRequest(new { error = "Token and new password must be provided." });
         }
 
         try
@@ -1056,7 +1055,8 @@ public class AuthController : ControllerBase
                     LogLevel = LogLevel.Error,
                     Details = new Dictionary<string, string>
                     {
-                        { "Message", $"Failed to reset keycloak user {request.KeycloakUserId} password" }
+                        { "Message", $"Failed to set users {request.Password} password" },
+                        { "Reset token", $" {request.Token}" }
                     }
                 };
                 
@@ -1083,10 +1083,14 @@ public class AuthController : ControllerBase
         {
             return BadRequest(new { error = "Email cannot be null or empty." });
         }
+        if(string.IsNullOrWhiteSpace(request.Locale))
+        {
+            return BadRequest(new { error = "Locale cannot be null or empty." });
+        }    
 
         try
         {
-            await _authService.TriggerForgotPasswordAsync(request.Email);
+            await _authService.TriggerForgotPasswordAsync(request.Email, request.Locale);
         }
         catch (KeyNotFoundException ex)
         {
@@ -1144,56 +1148,7 @@ public class AuthController : ControllerBase
         return Ok(new { Message = "Password reset email sent successfully." });
     }
 
-    /// <summary>
-    /// Validates a password reset token to ensure it is valid and not expired.
-    /// </summary>
-    /// <param name="request">The password reset token to be validated.</param>
-    /// <returns>An <see cref="IActionResult"/> indicating the result of the validation.
-    /// Returns an Ok response with a success message if the token is valid,
-    /// an Unauthorized response if the token is invalid or expired,
-    /// or a Server Error response if an exception occurs during validation.</returns>
-    [HttpPost("validate-reset-token")]
-    public async Task<IActionResult> ValidateResetToken([FromBody] ValidateResetTokenRequest request)
-    {
-        try
-        {
-            var isValid = await _authService.ValidateResetTokenAsync(request);
-            if (!isValid)
-            {
-                return Unauthorized(new { Message = "Invalid or expired token." });
-                
-            }
-            return Ok(new { Message = "The token is valid." });
-        }
-        catch (Exception ex)
-        {
-            try
-            {
-                var logEntry = new LogEntry<string>
-                {
-                    State = "Error",
-                    UserId = null,
-                    Exception = ex,
-                    ActionType = AuditActionType.ApiError,
-                    EntityType = AuditEntityType.Other,
-                    LogLevel = LogLevel.Error,
-                    Details = new Dictionary<string, string>
-                    {
-                        { "Message", "Failed to validate reset token" }
-                    }
-                };
-                
-                await _auditLogService.LogWithLogEntryAsync(logEntry);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"Error logging audit log entry: {e.Message}");
-            }
-
-            return BadRequest(new { error = ex.Message });
-        }
-    }
-
+    
     /// <summary>
     /// Sends an email confirmation to the user associated with the provided access token.
     /// </summary>

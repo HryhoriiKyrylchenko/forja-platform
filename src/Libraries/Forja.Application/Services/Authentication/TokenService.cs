@@ -21,7 +21,7 @@ public class TokenService : ITokenService
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity([
-                new Claim("userId", user.Id.ToString()),
+                new Claim("keycloakUserId", user.KeycloakUserId.ToString()),
                 new Claim("email", user.Email)
             ]),
             Expires = DateTime.UtcNow.AddMinutes(30),
@@ -52,6 +52,39 @@ public class TokenService : ITokenService
         return tokenHandler.WriteToken(token);
     }
 
+    /// <inheritdoc/>
+    public async Task<string?> GetkeycloakUserIdFromToken(string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return null;
+        }
+
+        try
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_jwtSecret);
+
+            var result = await tokenHandler.ValidateTokenAsync(token, new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ClockSkew = TimeSpan.Zero
+            });
+
+             var keycloakUserId = result.ClaimsIdentity?.Claims
+                        .FirstOrDefault(c => c.Type == "keycloakUserId")?.Value;
+
+            return string.IsNullOrWhiteSpace(keycloakUserId) ? null : keycloakUserId;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     /// <inheritdoc />
     public async Task<bool> ValidatePasswordResetToken(string token)
     {
@@ -59,7 +92,7 @@ public class TokenService : ITokenService
         {
             return false;
         }
-        
+
         try
         {
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -84,7 +117,7 @@ public class TokenService : ITokenService
             return false;
         }
     }
-    
+
     /// <inheritdoc />
     public Task<bool> ValidateEmailConfirmationToken(string token)
     {

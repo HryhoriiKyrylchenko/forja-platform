@@ -24,16 +24,33 @@ public class EmailService : IEmailService
         _smtpUser = configuration["Email:SMTPUser"] ?? throw new Exception("SMTP configuration error: 'SmtpUser' is required.");
         _smtpPassword = configuration["Email:SMTPPassword"] ?? throw new Exception("SMTP configuration error: 'SmtpPassword' is required.");
     }
-    
+
     /// <inheritdoc />
-    public async Task SendPasswordResetEmailAsync(string email, string resetLink)
+    public async Task SendPasswordResetEmailAsync(string email, string resetLink, string locale)
     {
         var fullResetLink = _frontendBaseUrl + resetLink;
-        var emailBody = $"<p>To reset your password, please click <a href='{fullResetLink}'>here</a>.</p>";
-        
-        await SendEmailAsync(email, "Password Reset Request", emailBody, isBodyHtml: true);
+
+        string subject;
+        string emailBody;
+
+        switch (locale?.ToLowerInvariant())
+        {
+            case "uk":
+                subject = "Запит на скидання пароля";
+                emailBody = $"<p>Щоб скинути пароль, натисніть <a href='{fullResetLink}'>сюди</a>.</p>";
+                break;
+
+            case "en":
+            default:
+                subject = "Password Reset Request";
+                emailBody = $"<p>To reset your password, please click <a href='{fullResetLink}'>here</a>.</p>";
+                break;
+        }
+
+        await SendEmailAsync(email, subject, emailBody, isBodyHtml: true);
     }
-    
+
+
     /// <inheritdoc />
     public async Task SendEmailConfirmationAsync(string email, string username, string confirmationLink)
     {
