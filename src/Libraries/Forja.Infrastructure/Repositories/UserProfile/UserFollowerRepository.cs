@@ -119,4 +119,15 @@ public class UserFollowerRepository : IUserFollowerRepository
 
         return loadedFollowedByUser;
     }
+
+    /// <inheritdoc />
+    public async Task<int> GetFollowersCountByUserIdAsync(Guid userId)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User id cannot be empty.", nameof(userId));
+        }
+        return await _userFollowers
+            .CountAsync(uf => uf.FollowedId == userId);
+    }
 }

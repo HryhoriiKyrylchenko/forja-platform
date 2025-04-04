@@ -44,4 +44,11 @@ public interface IUserWishListService
     /// <param name="userId">The unique identifier of the user.</param>
     /// <returns>A list of UserWishListDTO entries specific to the user.</returns>
     Task<List<UserWishListDto>> GetByUserIdAsync(Guid userId);
+
+    /// <summary>
+    /// Retrieves the total number of items in a user's wish list asynchronously.
+    /// </summary>
+    /// <param name="userId">The unique identifier for the user whose wish list count is being requested.</param>
+    /// <returns>An integer representing the count of items in the specified user's wish list.</returns>
+    Task<int> GetWishListCountAsync(Guid userId);
 }

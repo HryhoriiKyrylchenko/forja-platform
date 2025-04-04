@@ -111,4 +111,18 @@ namespace Forja.Application.Services.UserProfile;
             var wishLists = await _userWishListRepository.GetByUserIdAsync(userId);
             return wishLists.Select(UserProfileEntityToDtoMapper.MapToUserWishListDto).ToList();
         }
+
+    #region User Statistics Methods
+    /// <inheritdoc />
+    public async Task<int> GetWishListCountAsync(Guid userId)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("Id cannot be empty.", nameof(userId));
+        }
+
+        return await _userWishListRepository.GetCountByUserIdAsync(userId);
     }
+    /// <inheritdoc />
+    #endregion
+}

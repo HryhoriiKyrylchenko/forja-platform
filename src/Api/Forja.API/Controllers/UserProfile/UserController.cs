@@ -1,3 +1,8 @@
+
+using Forja.Application.Interfaces.UserProfile;
+using Forja.Application.Services.UserProfile;
+using System.Security.Claims;
+
 namespace Forja.API.Controllers.UserProfile;
 
 /// <summary>
@@ -15,19 +20,29 @@ public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
     private readonly IKeycloakClient _keycloakClient;
+    private readonly IUserFollowerService _userFollowerService;
+    private readonly IUserWishListService _userWishListService;
+    private readonly IUserLibraryService _userLibraryService;
     private readonly IAuditLogService _auditLogService;
     private readonly IDistributedCache _cache;
 
-    public UserController(IUserService userService, 
+    public UserController(IUserService userService,
         IKeycloakClient keycloakClient,
         IAuditLogService auditLogService,
+        IUserFollowerService userFollowerService,
+        IUserWishListService userWishListService,
+        IUserLibraryService userLibraryService,
         IDistributedCache cache)
     {
         _userService = userService;
         _keycloakClient = keycloakClient;
+        _userFollowerService = userFollowerService;
+        _userWishListService = userWishListService;
+        _userLibraryService = userLibraryService;
         _auditLogService = auditLogService;
         _cache = cache;
     }
+
 
     /// <summary>
     /// Retrieves a user profile by the specified user ID.
@@ -71,7 +86,7 @@ public class UserController : ControllerBase
                         { "Message", $"Failed to get user by id: {userId}." }
                     }
                 };
-                
+
                 await _auditLogService.LogWithLogEntryAsync(logEntry);
             }
             catch (Exception e)
@@ -129,7 +144,7 @@ public class UserController : ControllerBase
                         { "Message", $"Failed to get deleted user by id: {userId}." }
                     }
                 };
-                
+
                 await _auditLogService.LogWithLogEntryAsync(logEntry);
             }
             catch (Exception e)
@@ -162,7 +177,7 @@ public class UserController : ControllerBase
             {
                 return NotFound(new { error = $"User with Keycloak ID {keycloakId} not found." });
             }
-        
+
             return Ok(_userService.HidePersonalData(user));
         }
         catch (Exception ex)
@@ -182,7 +197,7 @@ public class UserController : ControllerBase
                         { "Message", $"Failed to get user by keycloak id: {keycloakId}." }
                     }
                 };
-                
+
                 await _auditLogService.LogWithLogEntryAsync(logEntry);
             }
             catch (Exception e)
@@ -216,7 +231,7 @@ public class UserController : ControllerBase
             {
                 return NotFound(new { error = $"User with Keycloak ID {keycloakId} not found." });
             }
-        
+
             return Ok(user);
         }
         catch (Exception ex)
@@ -236,7 +251,7 @@ public class UserController : ControllerBase
                         { "Message", $"Failed to get deleted user by keycloak id: {keycloakId}." }
                     }
                 };
-                
+
                 await _auditLogService.LogWithLogEntryAsync(logEntry);
             }
             catch (Exception e)
@@ -270,7 +285,7 @@ public class UserController : ControllerBase
             {
                 return NotFound(new { error = $"User with email {email} not found." });
             }
-        
+
             return Ok(_userService.HidePersonalData(user));
         }
         catch (Exception ex)
@@ -290,7 +305,7 @@ public class UserController : ControllerBase
                         { "Message", $"Failed to get user by email: {email}." }
                     }
                 };
-                
+
                 await _auditLogService.LogWithLogEntryAsync(logEntry);
             }
             catch (Exception e)
@@ -323,7 +338,7 @@ public class UserController : ControllerBase
             {
                 return NotFound(new { error = $"Deleted user with email {email} not found." });
             }
-        
+
             return Ok(user);
         }
         catch (Exception ex)
@@ -343,7 +358,7 @@ public class UserController : ControllerBase
                         { "Message", $"Failed to get deleted user by email: {email}." }
                     }
                 };
-                
+
                 await _auditLogService.LogWithLogEntryAsync(logEntry);
             }
             catch (Exception e)
@@ -391,7 +406,7 @@ public class UserController : ControllerBase
             {
                 return NotFound(new { error = $"User with Keycloak ID {keycloakUserId} not found." });
             }
-                
+
             var serializedData = JsonSerializer.Serialize(result);
 
             await _cache.SetStringAsync($"user_profile_{keycloakUserId}", serializedData, new DistributedCacheEntryOptions
@@ -418,7 +433,7 @@ public class UserController : ControllerBase
                         { "Message", $"Failed to get self user profile." }
                     }
                 };
-                
+
                 await _auditLogService.LogWithLogEntryAsync(logEntry);
             }
             catch (Exception e)
@@ -485,7 +500,7 @@ public class UserController : ControllerBase
                         { "Message", $"Failed to get user by id (for manager): {userId}." }
                     }
                 };
-                
+
                 await _auditLogService.LogWithLogEntryAsync(logEntry);
             }
             catch (Exception e)
@@ -523,7 +538,7 @@ public class UserController : ControllerBase
             {
                 return BadRequest(new { error = "Unable to create user." });
             }
-            
+
             try
             {
                 var logEntry = new LogEntry<UserProfileDto>
@@ -539,14 +554,14 @@ public class UserController : ControllerBase
                         { "Message", $"User with email: {request.Email} added successfully." }
                     }
                 };
-                
+
                 await _auditLogService.LogWithLogEntryAsync(logEntry);
             }
             catch (Exception e)
             {
                 Console.WriteLine($"Error logging audit log entry: {e.Message}");
             }
-            
+
             return CreatedAtAction(nameof(GetUserById), new { userId = user.Id }, user);
         }
         catch (Exception ex)
@@ -566,7 +581,7 @@ public class UserController : ControllerBase
                         { "Message", $"Failed to add user with email: {request.Email}." }
                     }
                 };
-                
+
                 await _auditLogService.LogWithLogEntryAsync(logEntry);
             }
             catch (Exception e)
@@ -602,7 +617,7 @@ public class UserController : ControllerBase
             }
 
             var keycloakUserId = _keycloakClient.GetKeycloakUserId(accessToken);
-        
+
             if (string.IsNullOrEmpty(keycloakUserId))
             {
                 return Unauthorized(new { error = "Unable to retrieve user information from token." });
@@ -618,13 +633,13 @@ public class UserController : ControllerBase
             {
                 return Unauthorized(new { error = "You are not authorized to update this user's profile." });
             }
-        
+
             var updatedUser = await _userService.UpdateUserAsync(request);
             if (updatedUser == null)
             {
                 return BadRequest(new { error = "Unable to update user." });
             }
-            
+
             try
             {
                 var logEntry = new LogEntry<UserProfileDto>
@@ -640,14 +655,14 @@ public class UserController : ControllerBase
                         { "Message", $"User with id: {request.Id} updated successfully." }
                     }
                 };
-                
+
                 await _auditLogService.LogWithLogEntryAsync(logEntry);
             }
             catch (Exception e)
             {
                 Console.WriteLine($"Error logging audit log entry: {e.Message}");
             }
-            
+
             return NoContent();
         }
         catch (Exception ex)
@@ -667,7 +682,7 @@ public class UserController : ControllerBase
                         { "Message", $"Failed to update user profile for user with id: {request.Id}." }
                     }
                 };
-                
+
                 await _auditLogService.LogWithLogEntryAsync(logEntry);
             }
             catch (Exception e)
@@ -697,7 +712,7 @@ public class UserController : ControllerBase
             {
                 return BadRequest(new { error = "Unable to update user." });
             }
-            
+
             try
             {
                 var logEntry = new LogEntry<UserProfileDto>
@@ -713,14 +728,14 @@ public class UserController : ControllerBase
                         { "Message", $"User with id: {request.Id} updated successfully." }
                     }
                 };
-                
+
                 await _auditLogService.LogWithLogEntryAsync(logEntry);
             }
             catch (Exception e)
             {
                 Console.WriteLine($"Error logging audit log entry: {e.Message}");
             }
-            
+
             return NoContent();
         }
         catch (Exception ex)
@@ -740,7 +755,7 @@ public class UserController : ControllerBase
                         { "Message", $"Failed to update user profile for user with id (for manager): {request.Id}." }
                     }
                 };
-                
+
                 await _auditLogService.LogWithLogEntryAsync(logEntry);
             }
             catch (Exception e)
@@ -791,8 +806,8 @@ public class UserController : ControllerBase
             {
                 await _userService.UpdateProfileHatVariant(request);
             }
-            
-            return userProfile == null ? BadRequest( new { error = "Failed to update user profile hat variant."}) : Ok(userProfile);
+
+            return userProfile == null ? BadRequest(new { error = "Failed to update user profile hat variant." }) : Ok(userProfile);
         }
         catch (Exception ex)
         {
@@ -811,7 +826,7 @@ public class UserController : ControllerBase
                         { "Message", $"Failed to update user profile hat variant for user with id: {request.UserId}." }
                     }
                 };
-                
+
                 await _auditLogService.LogWithLogEntryAsync(logEntry);
             }
             catch (Exception e)
@@ -845,14 +860,14 @@ public class UserController : ControllerBase
             }
 
             var keycloakUserId = _keycloakClient.GetKeycloakUserId(accessToken);
-        
+
             if (string.IsNullOrEmpty(keycloakUserId))
             {
                 return Unauthorized(new { error = "Unable to retrieve user information from token." });
             }
-        
+
             await _userService.DeleteUserAsync(keycloakUserId);
-            
+
             try
             {
                 var logEntry = new LogEntry<string>
@@ -868,14 +883,14 @@ public class UserController : ControllerBase
                         { "Message", $"User with keycloak id: {keycloakUserId} deleted successfully." }
                     }
                 };
-                
+
                 await _auditLogService.LogWithLogEntryAsync(logEntry);
             }
             catch (Exception e)
             {
                 Console.WriteLine($"Error logging audit log entry: {e.Message}");
             }
-            
+
             return NoContent();
         }
         catch (Exception ex)
@@ -895,7 +910,7 @@ public class UserController : ControllerBase
                         { "Message", $"Failed to delete self user profile." }
                     }
                 };
-                
+
                 await _auditLogService.LogWithLogEntryAsync(logEntry);
             }
             catch (Exception e)
@@ -904,7 +919,7 @@ public class UserController : ControllerBase
             }
             return BadRequest(new { error = ex.Message });
         }
-        
+
     }
 
     /// <summary>
@@ -928,7 +943,7 @@ public class UserController : ControllerBase
         try
         {
             await _userService.DeleteUserAsync(keycloakId);
-            
+
             try
             {
                 var logEntry = new LogEntry<string>
@@ -944,14 +959,14 @@ public class UserController : ControllerBase
                         { "Message", $"User with keycloak id: {keycloakId} deleted successfully." }
                     }
                 };
-                
+
                 await _auditLogService.LogWithLogEntryAsync(logEntry);
             }
             catch (Exception e)
             {
                 Console.WriteLine($"Error logging audit log entry: {e.Message}");
             }
-            
+
             return NoContent();
         }
         catch (Exception ex)
@@ -971,7 +986,7 @@ public class UserController : ControllerBase
                         { "Message", $"Failed to delete user with keycloak id: {keycloakId}." }
                     }
                 };
-                
+
                 await _auditLogService.LogWithLogEntryAsync(logEntry);
             }
             catch (Exception e)
@@ -1006,7 +1021,7 @@ public class UserController : ControllerBase
         try
         {
             await _userService.RestoreUserAsync(userId);
-            return NoContent();  
+            return NoContent();
         }
         catch (InvalidOperationException ex)
         {
@@ -1029,7 +1044,7 @@ public class UserController : ControllerBase
                         { "Message", $"Failed to restore user with id: {userId}." }
                     }
                 };
-                
+
                 await _auditLogService.LogWithLogEntryAsync(logEntry);
             }
             catch (Exception e)
@@ -1071,7 +1086,7 @@ public class UserController : ControllerBase
                         { "Message", $"Failed to get all users." }
                     }
                 };
-                
+
                 await _auditLogService.LogWithLogEntryAsync(logEntry);
             }
             catch (Exception e)
@@ -1115,7 +1130,7 @@ public class UserController : ControllerBase
                         { "Message", $"Failed to get all deleted users." }
                     }
                 };
-                
+
                 await _auditLogService.LogWithLogEntryAsync(logEntry);
             }
             catch (Exception e)
@@ -1142,4 +1157,55 @@ public class UserController : ControllerBase
 
         return null;
     }
+
+    [Authorize]
+    [HttpGet("statistics/{userId}")]
+    public async Task<IActionResult> GetUserStatistics([FromRoute] Guid userId)
+    {
+        try
+        {
+            var gamesOwnedCount = await _userLibraryService.GetUsersGamesCountAsync(userId);
+            var dlcOwnedCount = await _userLibraryService.GetUsersAddonsCountAsync(userId);
+            var followersCount = await _userFollowerService.GetFollowersCountAsync(userId);
+            var wishlistCount = await _userWishListService.GetWishListCountAsync(userId);
+
+            var statsDTO = new UserStatisticsDto
+            {
+                GamesOwned = gamesOwnedCount,
+                DlcOwned = dlcOwnedCount,
+                Follows = followersCount,
+                Whishlisted = wishlistCount
+            };
+
+            return Ok(statsDTO);
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = userId,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                {
+                    { "Message", $"Failed to get statistics for user {userId}" }
+                }
+                };
+
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception logEx)
+            {
+                Console.WriteLine($"Error logging audit log entry: {logEx.Message}");
+            }
+
+            return BadRequest(new { error = "Failed to retrieve user statistics." });
+        }
+    }
+
 }

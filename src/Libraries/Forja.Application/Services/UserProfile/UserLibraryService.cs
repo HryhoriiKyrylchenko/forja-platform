@@ -436,4 +436,33 @@ public class UserLibraryService : IUserLibraryService
         
         return userOwnedGame != null || userOwnedAddon != null;
     }
+
+    #region Users Statistics Methods
+
+    /// <inheritdoc />    
+    public async Task<int> GetUsersGamesCountAsync(Guid userId)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User ID cannot be an empty.", nameof(userId));
+        }
+
+        var totalGames = await _userLibraryGameRepository.GetAllGamesCountByUserIdAsync(userId);
+
+        return totalGames;
+    }
+
+    public async Task<int> GetUsersAddonsCountAsync(Guid userId)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User ID cannot be an empty.", nameof(userId));
+        }
+
+        var totalAddons = await _userLibraryAddonRepository.GetAllAddonsCountByUserIdAsync(userId);
+
+        return totalAddons;
+    }
+
+    #endregion
 }
