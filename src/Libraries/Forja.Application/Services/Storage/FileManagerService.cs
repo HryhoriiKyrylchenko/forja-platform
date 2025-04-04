@@ -1,5 +1,3 @@
-using System.Net;
-
 namespace Forja.Application.Services.Storage;
 
 public class FileManagerService : IFileManagerService
@@ -11,144 +9,210 @@ public class FileManagerService : IFileManagerService
         _storageService = storageService;
     }
 
-    public async Task<string> UploadGameFilesAsync(GameFilesUploadRequest request)
+    /// <inheritdoc />
+    public async Task<string> StartChunkedUploadAsync(StartChunkedUploadRequest request)
     {
-        if (!StorageRequestsValidator.ValidateGameFilesUploadRequest(request, out string errorMessage))
+        if (!StorageRequestsValidator.ValidateStartChunkedUploadRequest(request, out var errors))
         {
-            throw new ArgumentException($"Invalid request: {errorMessage}", nameof(request));
+            throw new ArgumentException($"Invalid request. Error: {errors}", nameof(request));
         }
         
-        string folderName = Path.GetFileName(request.FolderPath).TrimEnd('/');
-        
-        string uniqueSuffix = DateTime.UtcNow.ToString("yyyyMMddHHmmssfff");
-        string destinationPath = $"games/{folderName}-{uniqueSuffix}/";
-
-        var result = await _storageService.UploadFolderAsync(destinationPath, request.FolderPath);
-        if (result.Any(r => r.ResponseStatusCode != HttpStatusCode.OK))
-        {
-            throw new InvalidOperationException($"Failed to upload files, status code: {result.First(r => r.ResponseStatusCode != HttpStatusCode.OK).ResponseStatusCode.ToString()}");
-        }
-        return destinationPath;
+        var uploadId = await _storageService.StartChunkedUploadAsync(request.FileName, request.FileSize, request.TotalChunks, request.UserId, request.ContentType);
+        return uploadId;
     }
 
-    public async Task DownloadGameFilesAsync(GameFilesDownloadRequest request)
+    /// <inheritdoc />
+    public async Task<HttpStatusCode> UploadChunkAsync(UploadChunkRequest request)
     {
-        if (!StorageRequestsValidator.ValidateGameFilesDownloadRequest(request, out string errorMessage))
+        if (!StorageRequestsValidator.ValidateUploadChunkRequest(request, out var errors))
         {
-            throw new ArgumentException($"Invalid request: {errorMessage}", nameof(request));
+            throw new ArgumentException($"Invalid request. Error: {errors}", nameof(request));
+        }
+
+        if (request.ChunkFile == null)
+        {
+            throw new ArgumentException("Chunk stream cannot be null.", nameof(request.ChunkFile));
         }
         
-        await _storageService.DownloadFolderAsync(request.SourcePath, request.DestinationPath);
+        await using var stream = request.ChunkFile.OpenReadStream();
+        
+        var result = await _storageService.UploadChunkAsync(request.UploadId, request.ChunkNumber, stream, request.ChunkSize);
+        return result.ResponseStatusCode;
     }
 
-    public async Task DeleteGameFilesAsync(GameFilesDeleteRequest request)
+    /// <inheritdoc />
+    public async Task<ChankedUploadResponse> CompleteChunkedUploadAsync(CompleteChunkedUploadRequest request)
     {
-        if (!StorageRequestsValidator.ValidateGameFilesDeleteRequest(request, out string errorMessage))
+        if (!StorageRequestsValidator.ValidateCompleteChunkedUploadRequest(request, out var errors))
         {
-            throw new ArgumentException($"Invalid request: {errorMessage}", nameof(request));
+            throw new ArgumentException($"Invalid request. Error: {errors}", nameof(request));
         }
-        
-        await _storageService.DeleteFolderAsync(request.SourcePath);
+
+        string destinationPath = request.FileType switch
+        {
+            FileType.FullGame => $"games/{request.GameId}/versions/{request.VersionId}/{request.FinalFileName}",
+            FileType.GameFile => $"games/{request.GameId}/versions/{request.VersionId}/files/{request.FinalFileName}",
+            FileType.GamePatch => $"games/{request.GameId}/patches/{request.FinalFileName}",
+            FileType.GameAddon => $"games/{request.GameId}/addons/{request.AddonId}/{request.FinalFileName}",
+            _ => throw new ArgumentOutOfRangeException(nameof(request.FileType), request.FileType, "Invalid file type")
+        };
+
+        return await _storageService.CompleteChunkedUploadAsync(request.UploadId, destinationPath);
     }
 
-    public async Task<string> UploadAddonFilesAsync(AddonFilesUploadRequest request)
+    /// <inheritdoc />
+    public async Task DeleteGameFileAsync(DeleteObjectRequest request)
     {
-        if (!StorageRequestsValidator.ValidateAddonFilesUploadRequest(request, out string errorMessage))
+        if (!StorageRequestsValidator.ValidateDeleteObjectRequest(request, out var errors))
         {
-            throw new ArgumentException($"Invalid request: {errorMessage}", nameof(request));
-        }
-
-        string folderName = Path.GetFileName(request.FolderPath).TrimEnd('/');
-        
-        string uniqueSuffix = DateTime.UtcNow.ToString("yyyyMMddHHmmssfff");
-        string destinationPath = $"addons/{folderName}-{uniqueSuffix}/";
-        
-        destinationPath = await EnsureUniqueFolderPathAsync(destinationPath);
-        
-        var result = await _storageService.UploadFolderAsync(destinationPath, request.FolderPath);
-        if (result.Any(r => r.ResponseStatusCode != HttpStatusCode.OK))
-        {
-            throw new InvalidOperationException($"Failed to upload files, status code: {result.First(r => r.ResponseStatusCode != HttpStatusCode.OK).ResponseStatusCode.ToString()}");
+            throw new ArgumentException($"Invalid request. Error: {errors}", nameof(request));
         }
         
-        return destinationPath;
+        if (!request.ObjectPath.Contains("games"))
+        {
+            throw new ArgumentException("Wrong object path", nameof(request.ObjectPath));
+        }
+        
+        await _storageService.DeleteFileAsync(request.ObjectPath);
     }
 
-    public async Task DownloadAddonFilesAsync(AddonFilesDownloadRequest request)
+    /// <inheritdoc />
+    public async Task<string> UploadProductLogoAsync(UploadLogoRequest request)
     {
-        if (!StorageRequestsValidator.ValidateAddonFilesDownloadRequest(request, out string errorMessage))
+        if (!StorageRequestsValidator.ValidateUploadLogoRequest(request, out var errors))
         {
-            throw new ArgumentException($"Invalid request: {errorMessage}", nameof(request));
-        }
-        
-        await _storageService.DownloadFolderAsync(request.SourcePath, request.DestinationPath);
-    }
-
-    public async Task DeleteAddonFilesAsync(AddonFilesDeleteRequest request)
-    {
-        if (!StorageRequestsValidator.ValidateAddonFilesDeleteRequest(request, out string errorMessage))
-        {
-            throw new ArgumentException($"Invalid request: {errorMessage}", nameof(request));
-        }
-        
-        await _storageService.DeleteFolderAsync(request.SourcePath);
-    }
-
-    public async Task<string> UploadImageFileAsync(ImageFileUploadRequest request)
-    {
-        if (!StorageRequestsValidator.ValidateImageFileUploadRequest(request, out string errorMessage))
-        {
-            throw new ArgumentException($"Invalid request: {errorMessage}", nameof(request));
+            throw new ArgumentException($"Invalid request. Error: {errors}", nameof(request));
         }
 
-        string destinationPath = "images/";
-        string extension = Path.GetExtension(request.FilePath);
-        string uniqueSuffix = DateTime.UtcNow.ToString("yyyyMMddHHmmssfff");
-        string filenameWithoutExtension = Path.GetFileNameWithoutExtension(request.FilePath);
-        string destinationFilePath = $"{destinationPath}{filenameWithoutExtension}-{uniqueSuffix}{extension}";
-        
-        destinationFilePath = await EnsureUniqueFilePathAsync(destinationFilePath);
-        
-        var result = await _storageService.UploadFileAsync(destinationFilePath, request.FilePath);
-        if (result.ResponseStatusCode != HttpStatusCode.OK)
+        if (request.File == null)
         {
-            throw new InvalidOperationException($"Failed to upload file, status code: {result.ResponseStatusCode.ToString()}");
+            throw new ArgumentException("File cannot be null.", nameof(request.File));
         }
+
+        string destinationPath = "images/product/logo/";
+        string extension = Path.GetExtension(request.FileName);
+        string filenameWithoutExtension = $"product-logo_{request.ProductId}";
+        string destinationFilePath = $"{destinationPath}{filenameWithoutExtension}{extension}";
         
+        await using var stream = request.File.OpenReadStream();
+        
+        await UploadStreamAsync(destinationFilePath, stream, request.ObjectSize, request.ContentType);
         return destinationFilePath;
     }
 
-    public async Task DownloadImageFileAsync(ImageFileDownloadRequest request)
+    /// <inheritdoc />
+    public async Task DeleteProductLogoAsync(DeleteObjectRequest request)
     {
-        if (!StorageRequestsValidator.ValidateImageFileDownloadRequest(request, out string errorMessage))
+        if (!StorageRequestsValidator.ValidateDeleteObjectRequest(request, out var errors))
         {
-            throw new ArgumentException($"Invalid request: {errorMessage}", nameof(request));
+            throw new ArgumentException($"Invalid request. Error: {errors}", nameof(request));
+        }
+
+        if (!request.ObjectPath.Contains("images/product/logo/product-logo"))
+        {
+            throw new ArgumentException("Wrong object path", nameof(request.ObjectPath));
         }
         
-        string fileName = Path.GetFileName(request.SourcePath);
-        string destinationFilePath = Path.Combine(request.DestinationPath, fileName);
-        
-        await _storageService.DownloadFileAsync(request.SourcePath, destinationFilePath);
+        await _storageService.DeleteFileAsync(request.ObjectPath);
     }
-
-    public async Task DeleteImageFileAsync(ImageFileDeleteRequest request)
+    
+    /// <inheritdoc />
+    public async Task<string> UploadProductImageAsync(UploadImageRequest request)
     {
-        if (!StorageRequestsValidator.ValidateImageFileDeleteRequest(request, out string errorMessage))
+        if (!StorageRequestsValidator.ValidateUploadImageRequest(request, out var errors))
         {
-            throw new ArgumentException($"Invalid request: {errorMessage}", nameof(request));
+            throw new ArgumentException($"Invalid request. Error: {errors}", nameof(request));
         }
         
-        await _storageService.DeleteFileAsync(request.SourcePath);
+        if (request.File == null)
+        {
+            throw new ArgumentException("File cannot be null.", nameof(request.File));
+        }
+
+        string destinationPath = "images/product/album/";
+        string extension = Path.GetExtension(request.FileName);
+        string uniqueSuffix = DateTime.UtcNow.ToString("yyyyMMddHHmmssfff");
+        string filenameWithoutExtension = "product-image";
+        string destinationFilePath = $"{destinationPath}{filenameWithoutExtension}-{uniqueSuffix}{extension}";
+        
+        destinationFilePath = await EnsureUniqueObjectPathAsync(destinationFilePath);
+        
+        await using var stream = request.File.OpenReadStream();
+        
+        await UploadStreamAsync(destinationFilePath, stream, request.ObjectSize, request.ContentType);
+        return destinationFilePath;
     }
 
-    public async Task<string> GetPresignedUrlAsync(string objectPath)
+    /// <inheritdoc />
+    public async Task DeleteProductImageAsync(DeleteObjectRequest request)
+    {
+        if (!StorageRequestsValidator.ValidateDeleteObjectRequest(request, out var errors))
+        {
+            throw new ArgumentException($"Invalid request. Error: {errors}", nameof(request));
+        }
+
+        if (!request.ObjectPath.Contains("images/product/album/product-image"))
+        {
+            throw new ArgumentException("Wrong object path", nameof(request.ObjectPath));
+        }
+        
+        await _storageService.DeleteFileAsync(request.ObjectPath);
+    }
+
+    /// <inheritdoc />
+    public async Task<string> UploadUserAvatarAsync(UploadAvatarRequest request)
+    {
+        if (!StorageRequestsValidator.ValidateUploadAvatarRequest(request, out var errors))
+        {
+            throw new ArgumentException($"Invalid request. Error: {errors}", nameof(request));
+        }
+        
+        if (request.File == null)
+        {
+            throw new ArgumentException("Stream cannot be null.", nameof(request.File));
+        }
+
+        string destinationPath = "images/user/avatars/";
+        string extension = Path.GetExtension(request.FileName);
+        string filenameWithoutExtension = $"user-avatar_{request.UserId}";
+        string destinationFilePath = $"{destinationPath}{filenameWithoutExtension}{extension}";
+        
+        await using var stream = request.File.OpenReadStream();
+        
+        await UploadStreamAsync(destinationFilePath, stream, request.ObjectSize, request.ContentType);
+        return destinationFilePath;
+    }
+
+    /// <inheritdoc />
+    public async Task DeleteUserAvatarAsync(DeleteObjectRequest request)
+    {
+        if (!StorageRequestsValidator.ValidateDeleteObjectRequest(request, out var errors))
+        {
+            throw new ArgumentException($"Invalid request. Error: {errors}", nameof(request));
+        }
+
+        if (!request.ObjectPath.Contains("images/user/avatars/user-avatar"))
+        {
+            throw new ArgumentException("Wrong object path", nameof(request.ObjectPath));
+        }
+        
+        await _storageService.DeleteFileAsync(request.ObjectPath);
+    }
+    
+    /// <inheritdoc />
+    public async Task<string> GetPresignedUrlAsync(string objectPath, int expiresInSeconds = 3600)
     {
         if (string.IsNullOrWhiteSpace(objectPath))
         {
-            throw new ArgumentException("Object path cannot be null or empty.", nameof(objectPath));
+            throw new ArgumentException("Object path cannot be empty.", nameof(objectPath));
+        }
+
+        if (expiresInSeconds <= 10)
+        {
+            throw new ArgumentException("Expiration time cannot be less than 10 seconds.", nameof(expiresInSeconds));
         }
         
-        var result = await _storageService.GetPresignedUrlAsync(objectPath, 3600);
+        var result = await _storageService.GetPresignedUrlAsync(objectPath, expiresInSeconds);
         if (string.IsNullOrWhiteSpace(result))
         {
             throw new InvalidOperationException($"Failed to get presigned URL for object path: {objectPath}");
@@ -156,114 +220,111 @@ public class FileManagerService : IFileManagerService
         
         return result;
     }
-
-    public async Task<string> UploadUserImageFileAsync(ImageFileUploadRequest request)
-    {
-        if (!StorageRequestsValidator.ValidateImageFileUploadRequest(request, out string errorMessage))
-        {
-            throw new ArgumentException($"Invalid request: {errorMessage}", nameof(request));
-        }
-
-        string destinationPath = "user-images/";
-        string extension = Path.GetExtension(request.FilePath);
-        string uniqueSuffix = DateTime.UtcNow.ToString("yyyyMMddHHmmssfff");
-        string filenameWithoutExtension = Path.GetFileNameWithoutExtension(request.FilePath);
-        string destinationFilePath = $"{destinationPath}{filenameWithoutExtension}-{uniqueSuffix}{extension}";
-        
-        destinationFilePath = await EnsureUniqueFilePathAsync(destinationFilePath);
-        
-        await _storageService.UploadFileAsync(destinationFilePath, request.FilePath);
-        return destinationFilePath;
-    }
-
-    public async Task DeleteUserImageFileAsync(ImageFileDeleteRequest request)
-    {
-        if (!StorageRequestsValidator.ValidateImageFileDeleteRequest(request, out string errorMessage))
-        {
-            throw new ArgumentException($"Invalid request: {errorMessage}", nameof(request));
-        }
-        
-        string path = request.SourcePath.Split('/').First();
-        if (path != "user-images")
-        {
-            throw new InvalidOperationException("Invalid source path.");
-        }
-        
-        await _storageService.DeleteFileAsync(request.SourcePath);
-    }
-
+    
+    /// <inheritdoc />
     public async Task<string> UploadProfileHatVariantFileAsync(ProfileHatVariantFileUploadRequest request)
     {
-        if (!StorageRequestsValidator.ValidateProfileHatVariantFileUploadRequest(request, out string errorMessage))
+        if (!StorageRequestsValidator.ValidateProfileHatVariantFileUploadRequest(request, out var errors))
         {
-            throw new ArgumentException($"Invalid request: {errorMessage}", nameof(request));
+            throw new ArgumentException($"Invalid request. Error: {errors}", nameof(request));
         }
 
-        string destinationPath = "profile-hat-variants/";
-        string extension = Path.GetExtension(request.FilePath);
+        if (request.File == null)
+        {
+            throw new ArgumentException("Stream cannot be null.", nameof(request.File));
+        }
+
+        string destinationPath = "images/user/profile-hat-variants/";
+        string extension = Path.GetExtension(request.FileName);
         string destinationFilePath = $"{destinationPath}{request.ProfileHatVariantId}{extension}";
         
-        await _storageService.UploadFileAsync(destinationFilePath, request.FilePath);
+        await using var stream = request.File.OpenReadStream();
+        
+        await UploadStreamAsync(destinationFilePath, stream, request.FileSize, request.ContentType);
         return destinationFilePath;
     }
 
+    /// <inheritdoc />
     public async Task DeleteProfileHatVariantFileAsync(ProfileHatVariantFileDeleteRequest request)
     {
-        if (!StorageRequestsValidator.ValidateProfileHatVariantFileDeleteRequest(request, out string errorMessage))
+        if (!StorageRequestsValidator.ValidateProfileHatVariantFileDeleteRequest(request, out var errors))
         {
-            throw new ArgumentException($"Invalid request: {errorMessage}", nameof(request));
+            throw new ArgumentException($"Invalid request. Error: {errors}", nameof(request));
         }
 
-        string path = $"profile-hat-variants/{request.ProfileHatVariantId}.png"; // Path should be in .png format.
+        var variantPath = await FindProfileHatVariantPathAsync(request.ProfileHatVariantId);
+        if (string.IsNullOrWhiteSpace(variantPath))
+        {
+            throw new InvalidOperationException($"Profile hat variant with ID {request.ProfileHatVariantId} not found.");
+        }
         
-        await _storageService.DeleteFileAsync(path);
+        await _storageService.DeleteFileAsync(variantPath);
     }
 
+    /// <inheritdoc />
     public async Task<string> GetPresignedProfileHatVariantUrlAsync(ProfileHatVariantGetByIdRequest request)
     {
-        if (!StorageRequestsValidator.ValidateProfileHatVariantGetByIdRequest(request, out string errorMessage))
+        if (!StorageRequestsValidator.ValidateProfileHatVariantGetByIdRequest(request, out var errors))
         {
-            throw new ArgumentException($"Invalid request: {errorMessage}", nameof(request));
+            throw new ArgumentException($"Invalid request. Error: {errors}", nameof(request));
         }
         
-        string objectPath = $"profile-hat-variants/{request.ProfileHatVariantId}.png";
+        var variantPath = await FindProfileHatVariantPathAsync(request.ProfileHatVariantId);
+        if (string.IsNullOrWhiteSpace(variantPath))
+        {
+            throw new InvalidOperationException($"Profile hat variant with ID {request.ProfileHatVariantId} not found.");
+        }
         
-        var result = await _storageService.GetPresignedUrlAsync(objectPath, 3600);
+        var result = await _storageService.GetPresignedUrlAsync(variantPath);
         if (string.IsNullOrWhiteSpace(result))
         {
-            throw new InvalidOperationException($"Failed to get presigned URL for object path: {objectPath}");
+            throw new InvalidOperationException($"Failed to get presigned URL for hat variant: {request.ProfileHatVariantId}");
         }
         
         return result;
     }
 
-    private async Task<string> EnsureUniqueFilePathAsync(string filePath)
+    private async Task<string?> FindProfileHatVariantPathAsync(short profileHatVariantId)
     {
-        int count = 0;
-        string uniqueFilePath = filePath;
-
-        while (await _storageService.FileExistsAsync(filePath))
+        string[] possibleExtensions = [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"];
+        foreach (var extension in possibleExtensions)
         {
-            count++;
-            string nameWithoutExtension = Path.GetFileNameWithoutExtension(filePath);
-            string extension = Path.GetExtension(filePath);
-            uniqueFilePath = $"{nameWithoutExtension}-{count}{extension}";
+            string path = $"images/user/profile-hat-variants/{profileHatVariantId}{extension}";
+            if (await _storageService.IsObjectExistsAsync(path))
+            {
+                return path;
+            }
         }
-
-        return uniqueFilePath;
+        return null;
     }
 
-    private async Task<string> EnsureUniqueFolderPathAsync(string folderPath)
+    private async Task<string> EnsureUniqueObjectPathAsync(string objectPath)
     {
         int count = 0;
-        string uniqueFolderPath = folderPath;
-
-        while (await _storageService.FolderExistsAsync(folderPath))
+        string uniqueObjectPath = objectPath;
+        
+        if (uniqueObjectPath.Contains("games"))
+        {
+            uniqueObjectPath = uniqueObjectPath.Replace("games", "_");
+        }
+        
+        while (await _storageService.IsObjectExistsAsync(objectPath))
         {
             count++;
-            uniqueFolderPath = $"{folderPath.TrimEnd('/')}-{count}/";
+            string nameWithoutExtension = Path.GetFileNameWithoutExtension(objectPath);
+            string extension = Path.GetExtension(objectPath);
+            uniqueObjectPath = $"{nameWithoutExtension}({count}){extension}";
         }
 
-        return uniqueFolderPath;
+        return uniqueObjectPath;
+    }
+    
+    private async Task UploadStreamAsync(string objectPath, Stream dataStream, long objectSize, string contentType)
+    {
+        var result = await _storageService.UploadStreamAsync(objectPath, dataStream, objectSize, contentType);
+        if (result.ResponseStatusCode != HttpStatusCode.OK)
+        {
+            throw new InvalidOperationException($"Failed to upload file, status code: {result.ResponseStatusCode}");
+        }
     }
 }

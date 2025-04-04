@@ -25,13 +25,6 @@ public interface IGameRepository
     Task<Game?> GetByIdAsync(Guid id);
 
     /// <summary>
-    /// Retrieves a game by its storage URL.
-    /// </summary>
-    /// <param name="storageUrl">The storage URL of the game.</param>
-    /// <returns>The game associated with the specified storage URL.</returns>
-    Task<Game?> GetByStorageUrlAsync(string storageUrl);
-
-    /// <summary>
     /// Adds a new game to the repository.
     /// </summary>
     /// <param name="game">The game to add.</param>

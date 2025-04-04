@@ -417,4 +417,23 @@ public class UserLibraryService : IUserLibraryService
     }
 
     #endregion
+    
+    /// <inheritdoc />
+    public async Task<bool> IsUserOwnedProductAsync(Guid userId, Guid productId)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User ID cannot be an empty Guid.", nameof(userId));
+        }
+        
+        if (productId == Guid.Empty)
+        {
+            throw new ArgumentException("Product ID cannot be an empty Guid.", nameof(productId));
+        }
+        
+        var userOwnedGame = await _userLibraryGameRepository.GetByGameIdAndUserIdAsync(productId, userId);
+        var userOwnedAddon = await _userLibraryAddonRepository.GetByGameIdAndUserIdAsync(productId, userId);
+        
+        return userOwnedGame != null || userOwnedAddon != null;
+    }
 }

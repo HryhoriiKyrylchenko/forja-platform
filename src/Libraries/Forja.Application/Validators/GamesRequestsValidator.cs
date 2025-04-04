@@ -506,4 +506,268 @@ public static class GamesRequestsValidator
         if (string.IsNullOrWhiteSpace(request.Title) || request.Title.Length > 30) return false;
         return true;
     }
+
+    public static bool ValidateGameVersionCreateRequest(GameVersionCreateRequest? request, out string? errorMessage)
+    {
+        errorMessage = null;
+
+        if (request == null)
+        {
+            errorMessage = "Request is null";
+            return false;
+        }
+
+        if (request.GameId == Guid.Empty)
+        {
+            errorMessage = "GameId is required";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Version))
+        {
+            errorMessage = "Version is required";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.StorageUrl))
+        {
+            errorMessage = "StorageUrl is required";
+            return false;
+        }
+        
+        if (string.IsNullOrWhiteSpace(request.Hash))
+        {
+            errorMessage = "Hash is required";
+            return false;
+        }
+
+        if (request.FileSize <= 0)
+        {
+            errorMessage = "File size is required";
+            return false;
+        }
+
+        if (request.ReleaseDate > DateTime.UtcNow)
+        {
+            errorMessage = "Release date cannot be in the future";
+            return false;
+        }
+        
+        return true;
+    }
+
+    public static bool ValidateGameVersionUpdateRequest(GameVersionUpdateRequest? request, out string? errorMessage)
+    {
+        errorMessage = null;
+
+        if (request == null)
+        {
+            errorMessage = "Request is null";
+            return false;
+        }
+
+        if (request.Id == Guid.Empty)
+        {
+            errorMessage = "Id is required";
+            return false;
+        }
+
+        if (request.ReleaseDate > DateTime.UtcNow)
+        {
+            errorMessage = "Release date cannot be in the future";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Hash))
+        {
+            errorMessage = "Hash is required";
+            return false;
+        }
+
+        if (request.FileSize <= 0)
+        {
+            errorMessage = "File size is required";
+            return false;
+        }
+        
+        return true;
+    }
+
+    public static bool ValidateGameFileCreateRequest(GameFileCreateRequest? request, out string? errorMessage)
+    {
+        errorMessage = null;
+
+        if (request == null)
+        {
+            errorMessage = "Request is null";
+            return false;
+        }
+
+        if (request.GameVersionId == Guid.Empty)
+        {
+            errorMessage = "GameVersionId is required";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.FileName))
+        {
+            errorMessage = "FileName is required";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.FilePath))
+        {
+            errorMessage = "FilePath is required";
+            return false;
+        }
+
+        if (request.FileSize == 0)
+        {
+            errorMessage = "FileSize is required";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Hash))
+        {
+            errorMessage = "Hash is required";
+            return false;
+        }
+        
+        return true;
+    }
+
+    public static bool ValidateGameFileUpdateRequest(GameFileUpdateRequest? request, out string? errorMessage)
+    {
+        errorMessage = null;
+
+        if (request == null)
+        {
+            errorMessage = "Request is null";
+            return false;
+        }
+
+        if (request.Id == Guid.Empty)
+        {
+            errorMessage = "Id is required";
+            return false;
+        }
+        
+        if (request.FileSize == 0)
+        {
+            errorMessage = "FileSize is required";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Hash))
+        {
+            errorMessage = "Hash is required";
+            return false;
+        }
+        
+        return true;
+    }
+
+    public static bool ValidateGamePatchCreateRequest(GamePatchCreateRequest? request, out string? errorMessage)
+    {
+        errorMessage = null;
+
+        if (request == null)
+        {
+            errorMessage = "Request is null";
+            return false;
+        }
+
+        if (request.GameId == Guid.Empty)
+        {
+            errorMessage = "GameId is required";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Name))
+        {
+            errorMessage = "Name is required";
+            return false;
+        }
+        
+        if (string.IsNullOrWhiteSpace(request.FromVersion))
+        {
+            errorMessage = "FromVersion is required";
+            return false;
+        }
+        
+        if (string.IsNullOrWhiteSpace(request.ToVersion))
+        {
+            errorMessage = "ToVersion is required";
+            return false;
+        }
+        
+        if (string.IsNullOrWhiteSpace(request.PatchUrl))
+        {
+            errorMessage = "PatchUrl is required";
+            return false;
+        }
+        
+        if (string.IsNullOrWhiteSpace(request.Hash))
+        {
+            errorMessage = "Hash is required";
+            return false;
+        }
+
+        if (request.FileSize <= 0)
+        {
+            errorMessage = "File size is required";
+            return false;
+        }
+
+        return true;
+    }
+
+    public static bool ValidateGamePatchUpdateRequest(GamePatchUpdateRequest? request, out string? errorMessage)
+    {
+        errorMessage = null;
+        
+        if (request == null)
+        {
+            errorMessage = "Request is null";
+            return false;
+        }
+
+        if (request.Id == Guid.Empty)
+        {
+            errorMessage = "Id is required";
+            return false;
+        }
+        
+        if (string.IsNullOrWhiteSpace(request.Name))
+        {
+            errorMessage = "Name is required";
+            return false;
+        }
+        
+        if (string.IsNullOrWhiteSpace(request.FromVersion))
+        {
+            errorMessage = "FromVersion is required";
+            return false;
+        }
+        
+        if (string.IsNullOrWhiteSpace(request.ToVersion))
+        {
+            errorMessage = "ToVersion is required";
+            return false;
+        }
+        
+        if (string.IsNullOrWhiteSpace(request.Hash))
+        {
+            errorMessage = "Hash is required";
+            return false;
+        }
+        
+        if (request.FileSize <= 0)
+        {
+            errorMessage = "File size is required";
+            return false;
+        }
+        
+        return true;
+    }
 }

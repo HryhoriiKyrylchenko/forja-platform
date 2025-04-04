@@ -64,7 +64,7 @@ builder.Services.AddApplicationServices();
 
 builder.Services.AddControllers();
 
-builder.Services.AddHttpContextAccessor(); // HttpContext
+builder.Services.AddHttpContextAccessor(); 
 
 builder.Services.AddSwaggerGen(options =>
 {

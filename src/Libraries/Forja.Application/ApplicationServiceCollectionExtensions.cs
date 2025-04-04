@@ -24,9 +24,11 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<IBundleProductService, BundleProductService>();
         services.AddScoped<IBundleService, BundleService>();
         services.AddScoped<IGameAddonService, GameAddonService>();
+        services.AddScoped<IGameFileService, GameFileService>();
         services.AddScoped<IGameMechanicService, GameMechanicService>();
         services.AddScoped<IGameService, GameService>();
         services.AddScoped<IGameTagService, GameTagService>();
+        services.AddScoped<IGameVersionService, GameVersionService>();
         services.AddScoped<IGenreService, GenreService>();
         services.AddScoped<IItemImageService, ItemImageService>();
         services.AddScoped<IMatureContentService, MatureContentService>();

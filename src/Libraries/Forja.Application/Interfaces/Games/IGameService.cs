@@ -29,17 +29,6 @@ public interface IGameService
     /// </returns>
     Task<GameDto?> GetByIdAsync(Guid id);
 
-
-    /// <summary>
-    /// Retrieves a game by its storage URL asynchronously.
-    /// </summary>
-    /// <param name="storageUrl">The storage URL of the game.</param>
-    /// <returns>
-    /// A task representing the asynchronous operation that, when completed, contains
-    /// a <see cref="GameDto"/> representing the game if found; otherwise, null.
-    /// </returns>
-    Task<GameDto?> GetByStorageUrlAsync(string storageUrl);
-
     /// <summary>
     /// Asynchronously adds a new game using the provided creation request.
     /// </summary>

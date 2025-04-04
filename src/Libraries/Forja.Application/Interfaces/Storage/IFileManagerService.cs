@@ -1,24 +1,37 @@
 namespace Forja.Application.Interfaces.Storage;
 
+/// <summary>
+/// Defines methods for managing file storage, uploading, deleting, and retrieving files
+/// in a chunked or full upload manner for various purposes such as user avatars, product images,
+/// product logos, and custom content types.
+/// </summary>
 public interface IFileManagerService
 {
-    Task<string> UploadGameFilesAsync(GameFilesUploadRequest request);
-    Task DownloadGameFilesAsync(GameFilesDownloadRequest request);
-    Task DeleteGameFilesAsync(GameFilesDeleteRequest request);
+    Task<string> StartChunkedUploadAsync(StartChunkedUploadRequest request);
 
-    Task<string> UploadAddonFilesAsync(AddonFilesUploadRequest request);
-    Task DownloadAddonFilesAsync(AddonFilesDownloadRequest request);
-    Task DeleteAddonFilesAsync(AddonFilesDeleteRequest request);
+    Task<HttpStatusCode> UploadChunkAsync(UploadChunkRequest request);
 
-    Task<string> UploadImageFileAsync(ImageFileUploadRequest request);
-    Task DownloadImageFileAsync(ImageFileDownloadRequest request);
-    Task DeleteImageFileAsync(ImageFileDeleteRequest request);
-    Task<string> GetPresignedUrlAsync(string objectPath);
-    
-    Task<string> UploadUserImageFileAsync(ImageFileUploadRequest request);
-    Task DeleteUserImageFileAsync(ImageFileDeleteRequest request);
-    
+    Task<ChankedUploadResponse> CompleteChunkedUploadAsync(CompleteChunkedUploadRequest request);
+
+    Task DeleteGameFileAsync(DeleteObjectRequest request);
+
+    Task<string> UploadProductLogoAsync(UploadLogoRequest request);
+
+    Task DeleteProductLogoAsync(DeleteObjectRequest request);
+
+    Task<string> UploadProductImageAsync(UploadImageRequest request);
+
+    Task DeleteProductImageAsync(DeleteObjectRequest request);
+
+    Task<string> UploadUserAvatarAsync(UploadAvatarRequest request);
+
+    Task DeleteUserAvatarAsync(DeleteObjectRequest request);
+
+    Task<string> GetPresignedUrlAsync(string objectPath, int expiresInSeconds = 3600);
+
     Task<string> UploadProfileHatVariantFileAsync(ProfileHatVariantFileUploadRequest request);
+
     Task DeleteProfileHatVariantFileAsync(ProfileHatVariantFileDeleteRequest request);
+
     Task<string> GetPresignedProfileHatVariantUrlAsync(ProfileHatVariantGetByIdRequest request);
 }

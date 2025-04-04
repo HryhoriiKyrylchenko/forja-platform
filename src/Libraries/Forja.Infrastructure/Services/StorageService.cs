@@ -1,11 +1,15 @@
 namespace Forja.Infrastructure.Services;
 
+/// <summary>
+/// Provides methods for interacting with storage services for file management.
+/// </summary>
 public class StorageService : IStorageService, IDisposable
 {
+    private readonly IDistributedCache _cache;
     private readonly IMinioClient _minioClient;
     private readonly string _bucketName;
 
-    public StorageService(string endpoint, string accessKey, string secretKey, string bucketName, bool useSSL = true)
+    public StorageService(string endpoint, string accessKey, string secretKey, string bucketName, IDistributedCache cache, bool useSSL = true)
     {
         _bucketName = bucketName ?? throw new ArgumentNullException(nameof(bucketName));
         
@@ -17,221 +21,271 @@ public class StorageService : IStorageService, IDisposable
             .WithSSL(useSSL)
             .Build();
         
+        _cache = cache;
+        
         _ = EnsureBucketExistsAsync().ConfigureAwait(false);
     }
-
-    private async Task EnsureBucketExistsAsync()
-    {
-        if (string.IsNullOrWhiteSpace(_bucketName))
-            throw new ArgumentException("Bucket name must not be null or empty");
-
-        try
-        {
-            bool found = await _minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(_bucketName));
-            if (!found)
-            {
-                await _minioClient.MakeBucketAsync(new MakeBucketArgs().WithBucket(_bucketName));
-            }
-        }
-        catch (MinioException e)
-        {
-            throw new Exception($"Error initializing bucket '{_bucketName}': {e.Message}");
-        }
-    }
     
-    public async Task<bool> FileExistsAsync(string filePath)
+    /// <inheritdoc />
+    public async Task<PutObjectResponse> UploadStreamAsync(string objectPath, Stream dataStream, long objectSize, string contentType)
     {
-        if (string.IsNullOrWhiteSpace(filePath))
-            throw new ArgumentException("File path cannot be null or empty", nameof(filePath));
-
-        try
+        if (string.IsNullOrWhiteSpace(objectPath))
         {
-            await _minioClient.StatObjectAsync(new StatObjectArgs()
-                .WithBucket(_bucketName)
-                .WithObject(filePath));
-
-            return true; 
-        }
-        catch (ObjectNotFoundException)
-        {
-            return false;
-        }
-        catch (MinioException ex)
-        {
-            throw new InvalidOperationException($"Error checking existence of file: {filePath}", ex);
-        }
-    }
-
-    public async Task<bool> FolderExistsAsync(string folderPath)
-    {
-        try
-        {
-            var sanitizedFolderPath = folderPath.TrimEnd('/') + "/";
-        
-            var objects = _minioClient.ListObjectsEnumAsync(new ListObjectsArgs()
-                .WithBucket(_bucketName)
-                .WithPrefix(sanitizedFolderPath)
-                .WithRecursive(false));
-
-            await foreach (var obj in objects)
-            {
-                if (!string.IsNullOrEmpty(obj.Key))
-                {
-                    return true;
-                }
-            }
-
-            return false; 
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException($"Error checking existence of folder: {folderPath}", ex);
-        }
-    }
-
-    public async Task<PutObjectResponse> UploadFileAsync(string destinationObjectPath, string filePath)
-    {
-        if (!File.Exists(filePath))
-        {
-            throw new FileNotFoundException($"File '{filePath}' not found");
+            throw new ArgumentException("Path cannot be null or empty", nameof(objectPath));
         }
 
-        if (string.IsNullOrWhiteSpace(destinationObjectPath))
+        if (dataStream == null)
         {
-            throw new ArgumentException("Path cannot be null or empty", nameof(destinationObjectPath));
+            throw new ArgumentNullException(nameof(dataStream));
+        }
+
+        if (objectSize < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(objectSize), "Object size must be greater than 0");
+        }
+
+        if (string.IsNullOrWhiteSpace(contentType))
+        {
+            throw new ArgumentException("Content type cannot be null or empty", nameof(contentType));
         }
         
         try
         {
             return await _minioClient.PutObjectAsync(new PutObjectArgs()
                 .WithBucket(_bucketName)
-                .WithObject(destinationObjectPath)
-                .WithFileName(filePath)
-                .WithContentType("application/octet-stream"));
-        }
-        catch (MinioException e)
-        {
-            throw new Exception($"Error uploading file '{filePath}' to bucket '{_bucketName}' at path '{destinationObjectPath}': {e.Message}");
-        }
-    }
-
-    public async Task DownloadFileAsync(string objectPath, string downloadFilePath)
-    {
-        if (string.IsNullOrWhiteSpace(objectPath))
-        {
-            throw new ArgumentException("Path cannot be null or empty", nameof(objectPath));
-        }
-        
-        try
-        { 
-            await _minioClient.GetObjectAsync(new GetObjectArgs()
-                .WithBucket(_bucketName)
                 .WithObject(objectPath)
-                .WithFile(downloadFilePath));
+                .WithStreamData(dataStream)
+                .WithObjectSize(objectSize)
+                .WithContentType(contentType));
         }
         catch (MinioException e)
         {
-            throw new Exception($"Error downloading file '{objectPath}' from bucket '{_bucketName}' at path '{objectPath}': {e.Message}");
+            throw new Exception($"Error uploading file to MinIO: {e.Message}");
         }
     }
 
-    public async Task DeleteFileAsync(string objectPath)
+    /// <inheritdoc />
+    public async Task<string> StartChunkedUploadAsync(string fileName, long fileSize, int totalChunks, Guid userId, string contentType)
     {
-        if (string.IsNullOrWhiteSpace(objectPath))
+        if (string.IsNullOrWhiteSpace(fileName))
         {
-            throw new ArgumentException("Path cannot be null or empty", nameof(objectPath));
+            throw new ArgumentException("File name cannot be null or empty", nameof(fileName));
         }
 
-        try
+        if (fileSize < 1)
         {
-            await _minioClient.RemoveObjectAsync(new RemoveObjectArgs()
-                .WithBucket(_bucketName)
-                .WithObject(objectPath));
+            throw new ArgumentOutOfRangeException(nameof(fileSize), "File size must be greater than 0");
         }
-        catch (MinioException e)
+
+        if (totalChunks < 1)
         {
-            throw new Exception($"Error deleting file '{objectPath}' from bucket '{_bucketName}' at path '{objectPath}': {e.Message}");
+            throw new ArgumentOutOfRangeException(nameof(totalChunks), "Total chunks must be greater than 0");
         }
-    }
-    
-    public async Task<List<PutObjectResponse>> UploadFolderAsync(string destinationPath, string folderPath)
-    {
-        if (!Directory.Exists(folderPath)) throw new DirectoryNotFoundException($"Folder '{folderPath}' not found");
+
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User ID cannot be empty", nameof(userId));
+        }
+
+        if (string.IsNullOrWhiteSpace(contentType))
+        {
+            throw new ArgumentException("Content type cannot be null or empty", nameof(contentType));
+        }
         
-        var files = Directory.GetFiles(folderPath, "*", SearchOption.AllDirectories);
-
-        List<PutObjectResponse> result = [];
-        foreach (var file in files)
+        var uploadId = Guid.NewGuid().ToString();
+    
+        var metadata = new UploadMetadata
         {
-            string relativePath = Path.GetRelativePath(folderPath, file).Replace("\\", "/");
-            string objectName = $"{destinationPath}{relativePath}";
-            result.Add(await _minioClient.PutObjectAsync(new PutObjectArgs()
-                .WithBucket(_bucketName)
-                .WithObject(objectName)
-                .WithFileName(file)
-                .WithContentType("application/octet-stream"))); 
+            UploadId = uploadId,
+            UserId = userId,
+            FileName = fileName,
+            FileSize = fileSize,
+            UploadedChunks = 0,
+            TotalChunks = totalChunks,
+            ContentType = contentType
+        };
+
+        await _cache.SetStringAsync($"upload:{uploadId}", JsonSerializer.Serialize(metadata), new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
+        });
+
+        return uploadId;
+    }
+
+    /// <inheritdoc />
+    public async Task<PutObjectResponse> UploadChunkAsync(string uploadId, int partNumber, Stream chunkStream, long chunkSize)
+    {
+        if (string.IsNullOrWhiteSpace(uploadId))
+        {
+            throw new ArgumentException("Upload ID cannot be null or empty", nameof(uploadId));
         }
+
+        if (partNumber < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(partNumber), "Part number must be greater than 0");
+        }
+
+        if (chunkStream == null)
+        {
+            throw new ArgumentNullException(nameof(chunkStream));
+        }
+
+        if (chunkSize < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(chunkSize), "Chunk size must be greater than 0");
+        }
+        
+        var metadataJson = await _cache.GetStringAsync($"upload:{uploadId}");
+        if (metadataJson == null)
+        {
+            throw new InvalidOperationException("Upload session not found or expired.");
+        }
+
+        var metadata = JsonSerializer.Deserialize<UploadMetadata>(metadataJson);
+        if (metadata == null)
+        {
+            throw new InvalidOperationException("Upload session not found or expired.");
+        }
+
+        if (partNumber > metadata.TotalChunks)
+        {
+            throw new InvalidOperationException($"Chunk {partNumber} is not part of the upload session.");
+        }
+        
+        var chunkPath = $"uploads/{uploadId}/chunk_{partNumber}";
+        
+        var uploadedChunksJson = await _cache.GetStringAsync($"upload:{uploadId}:chunks");
+        var uploadedChunks = uploadedChunksJson != null 
+            ? JsonSerializer.Deserialize<HashSet<int>>(uploadedChunksJson) ?? throw new InvalidOperationException("Invalid uploaded chunks list.")
+            : new HashSet<int>();
+
+        if (uploadedChunks.Contains(partNumber))
+        {
+            throw new InvalidOperationException($"Chunk {partNumber} has already been uploaded.");
+        }
+
+        if (await IsObjectExistsAsync(chunkPath))
+        {
+            throw new InvalidOperationException($"Chunk {partNumber} already exists in storage.");
+        }
+
+        var result = await _minioClient.PutObjectAsync(new PutObjectArgs()
+            .WithBucket(_bucketName)
+            .WithObject(chunkPath)
+            .WithStreamData(chunkStream)
+            .WithObjectSize(chunkSize)
+            .WithContentType(metadata.ContentType));
+        
+        uploadedChunks.Add(partNumber);
+        await _cache.SetStringAsync($"upload:{uploadId}:chunks", JsonSerializer.Serialize(uploadedChunks),
+            new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
+            });
+        
+        metadata.UploadedChunks++;
+
+        await _cache.SetStringAsync($"upload:{uploadId}", JsonSerializer.Serialize(metadata),
+            new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
+            });
+        
         return result;
     }
 
-    public async Task DownloadFolderAsync(string sourcePath, string destinationFolderPath)
+    /// <inheritdoc />
+    public async Task<ChankedUploadResponse> CompleteChunkedUploadAsync(string uploadId, string finalFilePath)
     {
-        if (!Directory.Exists(destinationFolderPath)) Directory.CreateDirectory(destinationFolderPath);
-
-        var objects = _minioClient.ListObjectsEnumAsync(new ListObjectsArgs()
-            .WithBucket(_bucketName)
-            .WithPrefix(sourcePath)
-            .WithRecursive(true));
-
-        await foreach (var obj in objects)
+        if (string.IsNullOrWhiteSpace(uploadId))
         {
-            string objectName = obj.Key;
-            string relativePath = objectName.Substring(sourcePath.Length);
-            string localFilePath = Path.Combine(destinationFolderPath, relativePath) ?? throw new Exception("Invalid path");
-            string localDirectory = Path.GetDirectoryName(localFilePath) ?? throw new Exception("Invalid path");
-            if (!Directory.Exists(localDirectory)) Directory.CreateDirectory(localDirectory);
-            await _minioClient.GetObjectAsync(new GetObjectArgs()
-                .WithBucket(_bucketName)
-                .WithObject(objectName)
-                .WithFile(localFilePath));
-        }
-    }
-    
-    public async Task DeleteFolderAsync(string folderPath)
-    {
-        if (string.IsNullOrWhiteSpace(folderPath))
-        {
-            throw new ArgumentException("Folder path cannot be null or empty", nameof(folderPath));
+            throw new ArgumentException("Upload ID cannot be null or empty", nameof(uploadId));
         }
 
-        try
+        if (string.IsNullOrWhiteSpace(finalFilePath))
         {
-            var objects = _minioClient.ListObjectsEnumAsync(new ListObjectsArgs()
-                .WithBucket(_bucketName)
-                .WithPrefix(folderPath)
-                .WithRecursive(true));
+            throw new ArgumentException("Final file path cannot be null or empty", nameof(finalFilePath));
+        }
+        
+        var metadataJson = await _cache.GetStringAsync($"upload:{uploadId}");
+        if (metadataJson == null)
+        {
+            throw new InvalidOperationException("Upload session not found or expired.");
+        }
 
-            var objectNames = new List<string>();
-            await foreach (var obj in objects)
+        var metadata = JsonSerializer.Deserialize<UploadMetadata>(metadataJson);
+        if (metadata == null)
+        {
+            throw new InvalidOperationException("Upload session not found or expired.");
+        }
+        
+        var tempPath = $"uploads/{uploadId}/";
+        var chunkPaths = await ListChunksAsync(tempPath);
+        
+        if (chunkPaths.Count != metadata.TotalChunks)
+        {
+            throw new InvalidOperationException("Not all chunks uploaded yet.");
+        }
+        
+        await using var finalStream = new MemoryStream();
+        using var sha256 = SHA256.Create();
+
+        foreach (var chunk in chunkPaths.OrderBy(c => c))
+        {
+            await using var chunkStream = await DownloadFileAsync(chunk);
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+        
+            while ((bytesRead = await chunkStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
             {
-                objectNames.Add(obj.Key);
+                await finalStream.WriteAsync(buffer, 0, bytesRead);
+                sha256.TransformBlock(buffer, 0, bytesRead, null, 0);
+            }
+        }
+        
+        sha256.TransformFinalBlock([], 0, 0);
+        string fileHash = BitConverter.ToString(sha256.Hash!).Replace("-", "").ToLower();
+
+        finalStream.Position = 0;
+        var result = await UploadStreamAsync(finalFilePath, finalStream, finalStream.Length, metadata.ContentType);
+
+        var objectPath = string.Empty;
+        
+        if (result.ResponseStatusCode == HttpStatusCode.OK)
+        {
+            foreach (var chunk in chunkPaths)
+            {
+                await DeleteFileAsync(chunk);
             }
             
-            if (objectNames.Count > 0)
-            {
-                await _minioClient.RemoveObjectsAsync(new RemoveObjectsArgs()
-                    .WithBucket(_bucketName)
-                    .WithObjects(objectNames));
-            }
+            objectPath = finalFilePath;
         }
-        catch (Exception e)
+        
+        await _cache.RemoveAsync($"upload:{uploadId}");
+
+        return new ChankedUploadResponse
         {
-            throw new Exception($"Error deleting folder '{folderPath}' from bucket '{_bucketName}': {e.Message}");
-        }
+            ResponseStatusCode = result.ResponseStatusCode,
+            ResponseContent = result.ResponseContent,
+            ObjectPath = objectPath,
+            FileHash = fileHash
+        };
     }
     
+    /// <inheritdoc />
     public async Task<string> GetPresignedUrlAsync(string objectPath, int expiryInSeconds = 3600)
     {
+        if (string.IsNullOrWhiteSpace(objectPath))
+        {
+            throw new ArgumentException("Object path cannot be null or empty", nameof(objectPath));
+        }
+
+        if (expiryInSeconds < 1 || expiryInSeconds > 604800)
+        {
+            throw new ArgumentOutOfRangeException(nameof(expiryInSeconds), "Expiry must be between 1 second and 7 days (604800 seconds).");
+        }
+        
         try
         {
             var presignedUrl = await _minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs()
@@ -247,8 +301,114 @@ public class StorageService : IStorageService, IDisposable
         }
     }
     
+    /// <inheritdoc />
+    public async Task<bool> IsObjectExistsAsync(string objectPath)
+    {
+        if (string.IsNullOrWhiteSpace(objectPath))
+            throw new ArgumentException("File path cannot be null or empty", nameof(objectPath));
+
+        try
+        {
+            await _minioClient.StatObjectAsync(new StatObjectArgs()
+                .WithBucket(_bucketName)
+                .WithObject(objectPath));
+
+            return true; 
+        }
+        catch (ObjectNotFoundException)
+        {
+            return false;
+        }
+        catch (MinioException ex)
+        {
+            throw new InvalidOperationException($"Error checking existence of file '{objectPath}' in bucket '{_bucketName}': {ex.Message}", ex);
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task DeleteFileAsync(string objectPath)
+    {
+        if (string.IsNullOrWhiteSpace(objectPath))
+        {
+            throw new ArgumentException("Path cannot be null or empty", nameof(objectPath));
+        }
+
+        try
+        {
+            if (!await IsObjectExistsAsync(objectPath))
+            {
+                throw new FileNotFoundException($"Object '{objectPath}' not found in bucket '{_bucketName}'");
+            }
+            
+            await _minioClient.RemoveObjectAsync(new RemoveObjectArgs()
+                .WithBucket(_bucketName)
+                .WithObject(objectPath));
+        }
+        catch (MinioException e)
+        {
+            throw new Exception($"Error deleting file '{objectPath}' from bucket '{_bucketName}' at path '{objectPath}': {e.Message}");
+        }
+    }
+    
+    /// <inheritdoc />
     public void Dispose()
     {
         _minioClient.Dispose();
+    }
+    
+    private async Task<Stream> DownloadFileAsync(string objectPath)
+    {
+        if (string.IsNullOrWhiteSpace(objectPath))
+        {
+            throw new ArgumentException("Path cannot be null or empty", nameof(objectPath));
+        }
+        
+        try
+        { 
+            var memoryStream = new MemoryStream();
+            
+            await _minioClient.GetObjectAsync(new GetObjectArgs()
+                .WithBucket(_bucketName)
+                .WithObject(objectPath)
+                .WithCallbackStream(stream => stream.CopyTo(memoryStream)));
+            
+            memoryStream.Position = 0;
+            return memoryStream;
+        }
+        catch (MinioException e)
+        {
+            throw new Exception($"Error downloading file '{objectPath}' from bucket '{_bucketName}' at path '{objectPath}': {e.Message}");
+        }
+    }
+    
+    private async Task<List<string>> ListChunksAsync(string pathPrefix)
+    {
+        var chunks = new List<string>();
+        await foreach (var item in _minioClient.ListObjectsEnumAsync(new ListObjectsArgs()
+                           .WithBucket(_bucketName)
+                           .WithPrefix(pathPrefix)))
+        {
+            chunks.Add(item.Key);
+        }
+        return chunks;
+    }
+    
+    private async Task EnsureBucketExistsAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_bucketName))
+            throw new ArgumentException("Bucket name must not be null or empty");
+
+        try
+        {
+            bool bucketExists = await _minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(_bucketName));
+            if (!bucketExists)
+            {
+                await _minioClient.MakeBucketAsync(new MakeBucketArgs().WithBucket(_bucketName));
+            }
+        }
+        catch (MinioException ex)
+        {
+            throw new InvalidOperationException($"Error initializing bucket '{_bucketName}': {ex.Message}", ex);
+        }
     }
 }

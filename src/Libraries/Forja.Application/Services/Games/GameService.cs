@@ -38,19 +38,7 @@ public class GameService : IGameService
         return game == null ? null : GamesEntityToDtoMapper.MapToGameDto(game);
     }
 
-    /// <inheritdoc />
-    public async Task<GameDto?> GetByStorageUrlAsync(string storageUrl)
-    {
-        if (string.IsNullOrWhiteSpace(storageUrl))
-        {
-            throw new ArgumentException("Storage URL cannot be empty.", nameof(storageUrl));
-        }
-        
-        var game = await _gameRepository.GetByStorageUrlAsync(storageUrl);
-        return game == null ? null : GamesEntityToDtoMapper.MapToGameDto(game);
-    }
-
-    /// <inheritdoc />
+ /// <inheritdoc />
     public async Task<GameDto?> AddAsync(GameCreateRequest request)
     {
         if (!GamesRequestsValidator.ValidateGamesCreateRequest(request))
@@ -75,7 +63,6 @@ public class GameService : IGameService
             AudioLanguages = request.AudioLanguages,
             SubtitlesLanguages = request.SubtitlesLanguages,
             SystemRequirements = request.SystemRequirements,
-            StorageUrl = request.StorageUrl,
             CreatedAt = DateTime.UtcNow,
             ModifiedAt = DateTime.UtcNow,
             IsDeleted = false
@@ -113,7 +100,6 @@ public class GameService : IGameService
         existingGame.AudioLanguages = request.AudioLanguages;
         existingGame.SubtitlesLanguages = request.SubtitlesLanguages;
         existingGame.SystemRequirements = request.SystemRequirements;
-        existingGame.StorageUrl = request.StorageUrl;
         existingGame.ModifiedAt = DateTime.UtcNow;
 
         var updatedGame = await _gameRepository.UpdateAsync(existingGame);

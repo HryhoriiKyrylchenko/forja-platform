@@ -3,8 +3,13 @@ namespace Forja.Application.Requests.Storage;
 public class ProfileHatVariantFileUploadRequest
 {
     [Required]
-    [Range(1, 5)]
     public short ProfileHatVariantId { get; set; }
     [Required]
-    public string FilePath { get; set; } = string.Empty;
+    public required IFormFile File { get; set; }
+    [Required]
+    public long FileSize { get; set; }
+    [Required]
+    public string ContentType { get; set; } = string.Empty;
+    [Required]
+    public string FileName { get; set; } = string.Empty;
 }

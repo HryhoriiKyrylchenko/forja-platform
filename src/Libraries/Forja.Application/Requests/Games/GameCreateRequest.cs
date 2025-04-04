@@ -103,13 +103,4 @@ public class GameCreateRequest
     /// software dependencies, or any other prerequisites required for proper functionality.
     /// </summary>
     public string? SystemRequirements { get; set; }
-
-    /// <summary>
-    /// Represents the URL for storing related game assets or resources in an external or internal storage system.
-    /// </summary>
-    /// <remarks>
-    /// This property is optional and can hold a nullable value. It may be used to reference a location
-    /// where additional game-related files, data, or resources are stored.
-    /// </remarks>
-    public string? StorageUrl { get; set; }
 }
