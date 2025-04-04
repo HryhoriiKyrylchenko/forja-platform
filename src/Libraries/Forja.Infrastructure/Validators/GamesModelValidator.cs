@@ -140,13 +140,147 @@ public static class GamesModelValidator
             return false;
         }
 
-        if (game.StorageUrl?.Length > 500)
+        errorMessage = string.Empty;
+        return true;
+    }
+
+    /// <summary>
+    /// Validates the properties of a <see cref="GameVersion"/> object to ensure its values meet the required business rules.
+    /// </summary>
+    /// <param name="gameVersion">The <see cref="GameVersion"/> instance to validate.</param>
+    /// <param name="errorMessage">Contains the validation error message if the method returns false.</param>
+    /// <returns>
+    /// True if the provided <see cref="GameVersion"/> is valid; otherwise, false.
+    /// </returns>
+    /// <remarks>
+    /// Validation rules include:
+    /// - The GameVersion cannot be null.
+    /// - The Id property is required and must not be an empty GUID.
+    /// - The GameId property is required and must not be an empty GUID.
+    /// - The Version property is required and must not exceed 15 characters.
+    /// - The StorageUrl property is required and must not be null or whitespace.
+    /// - The Hash property is required and must not be null or whitespace.
+    /// - The FileSize property should be greater then zero.
+    /// - The ReleaseDate property cannot specify a future date.
+    /// </remarks>
+    public static bool ValidateGameVersion(GameVersion? gameVersion, out string? errorMessage)
+    {
+        errorMessage = null;
+        
+        if (gameVersion == null)
         {
-            errorMessage = "Game Storage URL must not exceed 500 characters.";
+            errorMessage = "GameVersion cannot be null.";
             return false;
         }
 
-        errorMessage = string.Empty;
+        if (gameVersion.Id == Guid.Empty)
+        {
+            errorMessage = "GameVersion Id is required.";
+            return false;
+        }
+        
+        if (gameVersion.GameId == Guid.Empty)
+        {
+            errorMessage = "GameVersion GameId is required.";
+            return false;
+        }
+        
+        if (gameVersion.Version.Length > 15)
+        {
+            errorMessage = "GameVersion Version must not exceed 15 characters.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(gameVersion.StorageUrl))
+        {
+            errorMessage = "GameVersion StorageUrl is required.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(gameVersion.Hash))
+        {
+            errorMessage = "GameVersion Hash is required.";
+            return false;
+        }
+
+        if (gameVersion.FileSize <= 0)
+        {
+            errorMessage = "GameVersion FileSize must be greater than zero.";
+            return false;
+        }
+
+        if (gameVersion.ReleaseDate > DateTime.UtcNow)
+        {
+            errorMessage = "GameVersion ReleaseDate cannot be in the future.";
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Validates the properties of a <see cref="GameFile"/> object to ensure its values meet the required requirements.
+    /// </summary>
+    /// <param name="gameFile">The <see cref="GameFile"/> instance to validate.</param>
+    /// <param name="errorMessage">Contains the validation error message if the method returns false.</param>
+    /// <returns>
+    /// True if the provided <see cref="GameFile"/> is valid; otherwise, false.
+    /// </returns>
+    /// <remarks>
+    /// Validation rules include:
+    /// - The GameFile instance cannot be null.
+    /// - The Id property is required and must not be an empty <see cref="Guid"/>.
+    /// - The GameVersionId property is required and must not be an empty <see cref="Guid"/>.
+    /// - The FileName property is required and cannot be null or whitespace.
+    /// - The FilePath property is required and cannot be null or whitespace.
+    /// - The FileSize property should be greater then zero.
+    /// - The Hash property is required and cannot be null or whitespace.
+    /// </remarks>
+    public static bool ValidateGameFile(GameFile? gameFile, out string? errorMessage)
+    {
+        errorMessage = null;
+        
+        if (gameFile == null)
+        {
+            errorMessage = "GameFile cannot be null.";
+            return false;
+        }
+
+        if (gameFile.Id == Guid.Empty)
+        {
+            errorMessage = "GameFile Id is required.";
+            return false;
+        }
+        
+        if (gameFile.GameVersionId == Guid.Empty)
+        {
+            errorMessage = "GameFile GameVersionId is required.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(gameFile.FileName))
+        {
+            errorMessage = "GameFile FileName is required.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(gameFile.FilePath))
+        {
+            errorMessage = "GameFile FilePath is required.";
+            return false;
+        }
+
+        if (gameFile.FileSize <= 0)
+        {
+            errorMessage = "GameFile FileSize must be greater than zero.";
+        }
+
+        if (string.IsNullOrWhiteSpace(gameFile.Hash))
+        {
+            errorMessage = "GameFile Hash is required.";
+            return false;
+        }
+
         return true;
     }
 
@@ -526,6 +660,67 @@ public static class GamesModelValidator
         }
 
         errorMessage = string.Empty;
+        return true;
+    }
+
+    public static bool ValidateGamePatch(GamePatch? gamePatch, out string? errorMessage)
+    {
+        errorMessage = null;
+
+        if (gamePatch == null)
+        {
+            errorMessage = "GamePatch cannot be null.";
+            return false;
+        }
+
+        if (gamePatch.Id == Guid.Empty)
+        {
+            errorMessage = "GamePatch Id is required.";
+            return false;
+        }
+
+        if (gamePatch.GameId == Guid.Empty)
+        {
+            errorMessage = "GamePatch GameId is required.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(gamePatch.Name))
+        {
+            errorMessage = "GamePatch Name is required.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(gamePatch.FromVersion))
+        {
+            errorMessage = "GamePatch FromVersion is required.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(gamePatch.ToVersion))
+        {
+            errorMessage = "GamePatch ToVersion is required.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(gamePatch.PatchUrl))
+        {
+            errorMessage = "GamePatch PatchUrl is required.";
+            return false;
+        }
+
+        if (gamePatch.FileSize <= 0)
+        {
+            errorMessage = "GamePatch FileSize must be greater than zero.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(gamePatch.Hash))
+        {
+            errorMessage = "GamePatch Hash is required.";
+            return false;
+        }
+
         return true;
     }
 }

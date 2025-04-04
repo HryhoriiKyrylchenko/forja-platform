@@ -1,204 +1,405 @@
+using System.Net.Mime;
+
 namespace Forja.Application.Validators;
 
 public static class StorageRequestsValidator
 {
-    public static bool ValidateGameFilesUploadRequest(GameFilesUploadRequest request, out string errorMessage)
+    public static bool ValidateStartChunkedUploadRequest(StartChunkedUploadRequest? request, out string? errorMessage)
     {
-        if (string.IsNullOrWhiteSpace(request.FolderPath))
-        {
-            errorMessage = "FolderPath cannot be null or empty.";
-            return false;
-        }
-
-        errorMessage = string.Empty;
-        return true;
-    }
-
-    public static bool ValidateGameFilesDownloadRequest(GameFilesDownloadRequest request, out string errorMessage)
-    {
-        if (string.IsNullOrWhiteSpace(request.SourcePath))
-        {
-            errorMessage = "SourcePath cannot be null or empty.";
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.DestinationPath))
-        {
-            errorMessage = "DestinationPath cannot be null or empty.";
-            return false;
-        }
-
-        errorMessage = string.Empty;
-        return true;
-    }
-
-    public static bool ValidateGameFilesDeleteRequest(GameFilesDeleteRequest request, out string errorMessage)
-    {
-
-        if (string.IsNullOrWhiteSpace(request.SourcePath))
-        {
-            errorMessage = "SourcePath cannot be null or empty.";
-            return false;
-        }
-
-        errorMessage = string.Empty;
-        return true;
-    }
-
-    public static bool ValidateAddonFilesUploadRequest(AddonFilesUploadRequest request, out string errorMessage)
-    {
-        if (string.IsNullOrWhiteSpace(request.FolderPath))
-        {
-            errorMessage = "FolderPath cannot be null or empty.";
-            return false;
-        }
-
-        errorMessage = string.Empty;
-        return true;
-    }
-
-    public static bool ValidateAddonFilesDownloadRequest(AddonFilesDownloadRequest request, out string errorMessage)
-    {
-        if (string.IsNullOrWhiteSpace(request.SourcePath))
-        {
-            errorMessage = "SourcePath cannot be null or empty.";
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.DestinationPath))
-        {
-            errorMessage = "DestinationPath cannot be null or empty.";
-            return false;
-        }
-
-        errorMessage = string.Empty;
-        return true;
-    }
-
-    public static bool ValidateAddonFilesDeleteRequest(AddonFilesDeleteRequest request, out string errorMessage)
-    {
-        if (string.IsNullOrWhiteSpace(request.SourcePath))
-        {
-            errorMessage = "SourcePath cannot be null or empty.";
-            return false;
-        }
-
-        errorMessage = string.Empty;
-        return true;
-    }
-
-    public static bool ValidateImageFileUploadRequest(ImageFileUploadRequest request, out string errorMessage)
-    {
-        if (string.IsNullOrWhiteSpace(request.FilePath))
-        {
-            errorMessage = "FilePath cannot be null or empty.";
-            return false;
-        }
-        
-        if (!new[] { ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp" }
-                .Contains(Path.GetExtension(request.FilePath).ToLower()))
-        {
-            errorMessage = "File extension must be .png, .jpg, .jpeg, .gif, .bmp or .webp.";
-            return false;
-        }
-        
-        errorMessage = string.Empty;
-        return true;
-    }
-
-    public static bool ValidateImageFileDownloadRequest(ImageFileDownloadRequest request, out string errorMessage)
-    {
-        if (string.IsNullOrWhiteSpace(request.SourcePath))
-        {
-            errorMessage = "SourcePath cannot be null or empty.";
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.DestinationPath))
-        {
-            errorMessage = "DestinationPath cannot be null or empty.";
-            return false;
-        }
-
-        errorMessage = string.Empty;
-        return true;
-    }
-
-    public static bool ValidateImageFileDeleteRequest(ImageFileDeleteRequest request, out string errorMessage)
-    {
-        if (string.IsNullOrWhiteSpace(request.SourcePath))
-        {
-            errorMessage = "SourcePath cannot be null or empty.";
-            return false;
-        }
-
-        errorMessage = string.Empty;
-        return true;
-    }
-
-    public static bool ValidateProfileHatVariantFileUploadRequest(ProfileHatVariantFileUploadRequest request,
-        out string errorMessage)
-    {
+        errorMessage = null;
         if (request == null)
         {
-            throw new ArgumentNullException(nameof(request));
-        }
-        
-        if (string.IsNullOrWhiteSpace(request.FilePath))
-        {
-            errorMessage = "FilePath cannot be null or empty.";
+            errorMessage = "Request cannot be null.";
             return false;
         }
 
-        if (Path.GetExtension(request.FilePath) != ".png")
+        if (string.IsNullOrWhiteSpace(request.FileName))
         {
-            errorMessage = "File extension must be .png.";
+            errorMessage = "File name cannot be null or empty.";
             return false;
         }
 
-        if (request.ProfileHatVariantId < 1 || request.ProfileHatVariantId > 5)
+        if (request.FileSize < 1)
         {
-            errorMessage = "ProfileHatVariantId must be between 1 and 5.";
+            errorMessage = "File size must be greater than 0.";
+            return false;
+        }
+
+        if (request.TotalChunks < 1)
+        {
+            errorMessage = "Total chunks must be greater than 0.";
+            return false;
+        }
+
+        if (request.UserId == Guid.Empty)
+        {
+            errorMessage = "User ID cannot be null or empty.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.ContentType))
+        {
+            errorMessage = "Content type cannot be null or empty.";
             return false;
         }
         
-        errorMessage = string.Empty;
+        return true;
+    }
+    
+    public static bool ValidateUploadChunkRequest(UploadChunkRequest? request, out string? errorMessage)
+    {
+        errorMessage = null;
+        if (request == null)
+        {
+            errorMessage = "Request cannot be null.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.UploadId))
+        {
+            errorMessage = "Upload ID cannot be null or empty.";
+            return false;
+        }
+
+        if (request.ChunkSize < 1)
+        {
+            errorMessage = "Chunk size must be greater than 0.";
+            return false;
+        }
+
+        if (request.ChunkNumber < 1)
+        {
+            errorMessage = "Chunk number must be greater than 0.";
+            return false;
+        }
+        
+        return true;
+    }
+    
+    public static bool ValidateCompleteChunkedUploadRequest(CompleteChunkedUploadRequest? request, out string? errorMessage)
+    {
+        errorMessage = null;
+        if (request == null)
+        {
+            errorMessage = "Request cannot be null.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.UploadId))
+        {
+            errorMessage = "Upload ID cannot be null or empty.";
+            return false;
+        }
+
+        if (request.GameId == Guid.Empty)
+        {
+            errorMessage = "Game ID cannot be null or empty.";
+            return false;
+        }
+
+        if (request.VersionId == Guid.Empty)
+        {
+            errorMessage = "Version ID cannot be null or empty.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.FinalFileName))
+        {
+            errorMessage = "Final file name cannot be null or empty.";
+            return false;
+        }
+
+        if (request.FileType == FileType.GameAddon && (request.AddonId == null || request.AddonId == Guid.Empty))
+        {
+            errorMessage = "Addon ID cannot be null or empty.";
+            return false;
+        }
+        
         return true;
     }
 
-    public static bool ValidateProfileHatVariantFileDeleteRequest(ProfileHatVariantFileDeleteRequest request, 
-        out string errorMessage)
+    public static bool ValidateUploadAvatarRequest(UploadAvatarRequest? request, out string? errorMessage)
     {
+        errorMessage = null;
         if (request == null)
         {
-            throw new ArgumentNullException(nameof(request));
+            errorMessage = "Request cannot be null.";
+            return false;
         }
-        
-        if (request.ProfileHatVariantId < 1 || request.ProfileHatVariantId > 5)
+
+        if (request.UserId == Guid.Empty)
         {
-            errorMessage = "ProfileHatVariantId must be between 1 and 5.";
+            errorMessage = "User ID cannot be null or empty.";
             return false;
         }
         
-        errorMessage = string.Empty;
+        if (request.ObjectSize < 1)
+        {
+            errorMessage = "Object size must be greater than 0.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.ContentType))
+        {
+            errorMessage = "Content type cannot be null or empty.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.FileName))
+        {
+            errorMessage = "File name cannot be null or empty.";
+            return false;
+        }
+
+        if (!new HashSet<string> { ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp" }.Contains(Path.GetExtension(request.FileName)))
+        {
+            errorMessage = "File extension must be one of the following: .png, .jpg, .jpeg, .gif, .bmp, .webp";
+            return false;
+        }
+        
         return true;
     }
-
-    public static bool ValidateProfileHatVariantGetByIdRequest(ProfileHatVariantGetByIdRequest request,
-        out string errorMessage)
+    
+    public static bool ValidateUploadLogoRequest(UploadLogoRequest? request, out string? errorMessage)
     {
+        errorMessage = null;
         if (request == null)
         {
-            throw new ArgumentNullException(nameof(request));
+            errorMessage = "Request cannot be null.";
+            return false;
         }
-        
-        if (request.ProfileHatVariantId < 1 || request.ProfileHatVariantId > 5)
+
+        if (request.ProductId == Guid.Empty)
         {
-            errorMessage = "ProfileHatVariantId must be between 1 and 5.";
+            errorMessage = "User ID cannot be null or empty.";
             return false;
         }
         
-        errorMessage = string.Empty;
+        if (request.ObjectSize < 1)
+        {
+            errorMessage = "Object size must be greater than 0.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.ContentType))
+        {
+            errorMessage = "Content type cannot be null or empty.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.FileName))
+        {
+            errorMessage = "File name cannot be null or empty.";
+            return false;
+        }
+
+        if (!new HashSet<string> { ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp" }.Contains(Path.GetExtension(request.FileName)))
+        {
+            errorMessage = "File extension must be one of the following: .png, .jpg, .jpeg, .gif, .bmp, .webp";
+            return false;
+        }
+        
+        return true;
+    }
+    
+    public static bool ValidateUploadImageRequest(UploadImageRequest? request, out string? errorMessage)
+    {
+        errorMessage = null;
+        if (request == null)
+        {
+            errorMessage = "Request cannot be null.";
+            return false;
+        }
+
+        if (request.ObjectSize < 1)
+        {
+            errorMessage = "Object size must be greater than 0.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.ContentType))
+        {
+            errorMessage = "Content type cannot be null or empty.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.FileName))
+        {
+            errorMessage = "File name cannot be null or empty.";
+            return false;
+        }
+
+        if (!new HashSet<string> { ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp" }.Contains(Path.GetExtension(request.FileName)))
+        {
+            errorMessage = "File extension must be one of the following: .png, .jpg, .jpeg, .gif, .bmp, .webp";
+            return false;
+        }
+        
+        return true;
+    }
+    
+    public static bool ValidateDeleteObjectRequest(DeleteObjectRequest? request, out string? errorMessage)
+    {
+        errorMessage = null;
+        if (request == null)
+        {
+            errorMessage = "Request cannot be null.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.ObjectPath))
+        {
+            errorMessage = "Object path cannot be null or empty.";
+            return false;
+        }
+        
+        return true;
+    }
+    
+    public static bool ValidateGetPresignedFileUrlRequest(GetPresignedFileUrlRequest? request, out string? errorMessage)
+    {
+        errorMessage = null;
+        if (request == null)
+        {
+            errorMessage = "Request cannot be null.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.ObjectPath))
+        {
+            errorMessage = "Object path cannot be null or empty.";
+            return false;
+        }
+
+        if (request.ExpirationInSeconds < 10)
+        {
+            errorMessage = "Expiration time must be greater than 10 seconds.";
+            return false;
+        }
+
+        if (request.ProductId == Guid.Empty)
+        {
+            errorMessage = "Product ID cannot be null or empty.";
+            return false;
+        }
+
+        if (!request.ObjectPath.Contains(request.ProductId.ToString()))
+        {
+            errorMessage = "Object path must contain the product ID.";
+            return false;
+        }
+        
+        return true;
+    }
+    
+    public static bool ValidateGetPresignedImageUrlRequest(GetPresignedImageUrlRequest? request, out string? errorMessage)
+    {
+        errorMessage = null;
+        if (request == null)
+        {
+            errorMessage = "Request cannot be null.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.ObjectPath))
+        {
+            errorMessage = "Object path cannot be null or empty.";
+            return false;
+        }
+
+        if (request.ExpirationInSeconds < 10)
+        {
+            errorMessage = "Expiration time must be greater than 10 seconds.";
+            return false;
+        }
+        
+        if (!request.ObjectPath.Contains("images") || request.ObjectPath.Contains("games"))
+        {
+            errorMessage = "Wrong object path.";
+            return false;
+        }
+        
+        return true;
+    }
+    
+    public static bool ValidateProfileHatVariantFileUploadRequest(ProfileHatVariantFileUploadRequest? request, out string? errorMessage)
+    {
+        errorMessage = null;
+        
+        if (request == null)
+        {
+            errorMessage = "Request cannot be null.";
+            return false;
+        }
+        
+        if (request.ProfileHatVariantId < 1)
+        {
+            errorMessage = "ProfileHatVariantId must be greater than 0.";
+            return false;
+        }
+
+        if (request.FileSize < 1)
+        {
+            errorMessage = "File size must be greater than 0.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.ContentType))
+        {
+            errorMessage = "Content type cannot be null or empty.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.FileName))
+        {
+            errorMessage = "File name cannot be null or empty.";
+            return false;
+        }
+        
+        if (!new HashSet<string> { ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp" }.Contains(Path.GetExtension(request.FileName)))
+        {
+            errorMessage = "File extension must be one of the following: .png, .jpg, .jpeg, .gif, .bmp, .webp";
+            return false;
+        }
+        
+        return true;
+    }
+    
+    public static bool ValidateProfileHatVariantFileDeleteRequest(ProfileHatVariantFileDeleteRequest? request, out string? errorMessage)
+    {
+        errorMessage = null;
+        
+        if (request == null)
+        {
+            errorMessage = "Request cannot be null.";
+            return false;
+        }
+        
+        if (request.ProfileHatVariantId < 1)
+        {
+            errorMessage = "ProfileHatVariantId must be greater than 0.";
+            return false;
+        }
+        
+        return true;
+    }
+    
+    public static bool ValidateProfileHatVariantGetByIdRequest(ProfileHatVariantGetByIdRequest? request, out string? errorMessage)
+    {
+        errorMessage = null;
+        
+        if (request == null)
+        {
+            errorMessage = "Request cannot be null.";
+            return false;
+        }
+        
+        if (request.ProfileHatVariantId < 1)
+        {
+            errorMessage = "ProfileHatVariantId must be greater than 0.";
+            return false;
+        }
+        
         return true;
     }
 }

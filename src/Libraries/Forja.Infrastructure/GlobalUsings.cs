@@ -41,3 +41,6 @@ global using Forja.Domain.Repositories.Common;
 global using Forja.Domain.Repositories.Analytics;
 global using InvalidOperationException = System.InvalidOperationException;
 global using Minio.DataModel.Response;
+global using Minio.ApiEndpoints;
+global using Microsoft.Extensions.Caching.Distributed;
+global using System.Security.Cryptography;

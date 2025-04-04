@@ -56,3 +56,6 @@ global using Microsoft.Extensions.Logging;
 global using System.Security.Authentication;
 global using Microsoft.EntityFrameworkCore;
 global using Forja.Application.Logging;
+global using System.Net;
+global using Forja.Infrastructure.Minio;
+global using Microsoft.AspNetCore.Http;

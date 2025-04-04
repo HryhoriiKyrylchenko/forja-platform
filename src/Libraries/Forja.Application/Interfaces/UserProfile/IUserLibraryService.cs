@@ -176,6 +176,13 @@ public interface IUserLibraryService
     Task<List<UserLibraryAddonDto>> GetAllDeletedUserLibraryAddonsByGameIdAsync(Guid gameId);
 
     /// <summary>
+    /// Determines whether a user owns a specified product.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user.</param>
+    /// <param name="productId">The unique identifier of the product.</param>
+    /// <returns>A Task that represents the asynchronous operation. The task result contains a boolean indicating whether the user owns the specified product.</returns>
+    Task<bool> IsUserOwnedProductAsync(Guid userId, Guid productId);
+
     /// Retrieves the count of games associated with a specific user.
     /// </summary>
     /// <param name="userId">The unique identifier for the user whose game count is being retrieved.</param>

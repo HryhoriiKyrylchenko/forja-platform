@@ -115,12 +115,6 @@ public class GameUpdateRequest
     public string? SystemRequirements { get; set; }
 
     /// <summary>
-    /// Represents the URL where the storage file or associated data of the game is located.
-    /// Can be null if no storage URL is provided.
-    /// </summary>
-    public string? StorageUrl { get; set; }
-
-    /// <summary>
     /// Gets or sets the time span representing the total amount of time the game has been played.
     /// </summary>
     public TimeSpan? TimePlayed { get; set; }

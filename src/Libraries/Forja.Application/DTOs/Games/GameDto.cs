@@ -86,10 +86,4 @@ public class GameDto
     /// needed to run the game.
     /// </summary>
     public string? SystemRequirements { get; set; }
-
-    /// <summary>
-    /// Gets or sets the URL where the game's storage or related files are located.
-    /// This property can be null if no storage URL is specified.
-    /// </summary>
-    public string? StorageUrl { get; set; }
 }

@@ -1,5 +1,3 @@
-using Forja.Application.DTOs.Games;
-
 namespace Forja.Application.Mapping;
 
 /// <summary>
@@ -30,8 +28,7 @@ public static class GamesEntityToDtoMapper
             InterfaceLanguages = game.InterfaceLanguages,
             AudioLanguages = game.AudioLanguages,
             SubtitlesLanguages = game.SubtitlesLanguages,
-            SystemRequirements = game.SystemRequirements,
-            StorageUrl = game.StorageUrl
+            SystemRequirements = game.SystemRequirements
         };
     }
 
@@ -283,6 +280,51 @@ public static class GamesEntityToDtoMapper
         {
             Id = tag.Id,
             Title = tag.Title
+        };
+    }
+
+    public static GameVersionDto MapToGameVersionDto(GameVersion gameVersion)
+    {
+        return new GameVersionDto
+        {
+            Id = gameVersion.Id,
+            GameId = gameVersion.GameId,
+            Version = gameVersion.Version,
+            StorageUrl = gameVersion.StorageUrl,
+            FileSize = gameVersion.FileSize,
+            Hash = gameVersion.Hash,
+            Changelog = gameVersion.Changelog,
+            ReleaseDate = gameVersion.ReleaseDate
+        };
+    }
+
+    public static GameFileDto MapToGameFileDto(GameFile gameFile)
+    {
+        return new GameFileDto
+        {
+            Id = gameFile.Id,
+            GameVersionId = gameFile.GameVersionId,
+            FileName = gameFile.FileName,
+            FilePath = gameFile.FilePath,
+            FileSize = gameFile.FileSize,
+            Hash = gameFile.Hash,
+            IsArchive = gameFile.IsArchive
+        };
+    }
+
+    public static GamePatchDto MapToGamePatchDto(GamePatch gamePatch)
+    {
+        return new GamePatchDto
+        {
+            Id = gamePatch.Id,
+            GameId = gamePatch.GameId,
+            Name = gamePatch.Name,
+            FromVersion = gamePatch.FromVersion,
+            ToVersion = gamePatch.ToVersion,
+            PatchUrl = gamePatch.PatchUrl,
+            FileSize = gamePatch.FileSize,
+            Hash = gamePatch.Hash,
+            ReleaseDate = gamePatch.ReleaseDate
         };
     }
 }

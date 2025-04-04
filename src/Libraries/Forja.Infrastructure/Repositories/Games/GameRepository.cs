@@ -48,19 +48,6 @@ public class GameRepository : IGameRepository
     }
 
     /// <inheritdoc />
-    public async Task<Game?> GetByStorageUrlAsync(string storageUrl)
-    {
-        if (string.IsNullOrWhiteSpace(storageUrl))
-        {
-            throw new ArgumentException("Invalid storage URL.", nameof(storageUrl));
-        }
-        
-        return await _games
-            .Where(g => !g.IsDeleted)
-            .FirstOrDefaultAsync(g => g.StorageUrl == storageUrl);
-    }
-
-    /// <inheritdoc />
     public async Task<Game?> AddAsync(Game game)
     {
         if (!GamesModelValidator.ValidateGame(game, out _))
