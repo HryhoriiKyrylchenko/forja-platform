@@ -80,14 +80,14 @@ public interface IUserLibraryService
     /// </summary>
     /// <param name="userId">The unique  ID of the user whose library games are to be retrieved.</param>
     /// <returns>A Task representing the result of the asynchronous operation. The task result contains a list of UserLibraryGameDto objects for the library games associated with the specified user's Keycloak ID.</returns>
-    Task<List<UserLibraryGameDto>> GetAllUserLibraryGamesByUserIdAsync(Guid userId);
+    Task<List<UserLibraryGameExtendedDto>> GetAllUserLibraryGamesByUserIdAsync(Guid userId);
 
     /// <summary>
     /// Retrieves all deleted user library games associated with the specified Keycloak ID.
     /// </summary>
     /// <param name="userId">The unique ID of the user whose deleted library games are to be retrieved.</param>
     /// <returns>A Task representing the result of the asynchronous operation. The task result contains a list of UserLibraryGameDto objects for the deleted library games associated with the specified Keycloak ID.</returns>
-    Task<List<UserLibraryGameDto>> GetAllDeletedUserLibraryGamesByUserIdAsync(Guid userId);
+    Task<List<UserLibraryGameExtendedDto>> GetAllDeletedUserLibraryGamesByUserIdAsync(Guid userId);
 
     // UserLibraryAddonRepository
     /// <summary>

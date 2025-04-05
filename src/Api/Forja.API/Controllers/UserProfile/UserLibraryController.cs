@@ -27,7 +27,7 @@ public class UserLibraryController : ControllerBase
     /// Returns a 200 OK response with the created resource if successful, or a 400 BadRequest response if the operation fails or the model-state is invalid.
     /// </returns>
     [HttpPost("game")]
-    public async Task<ActionResult<UserLibraryGameDto>> AddUserLibraryGame([FromBody] UserLibraryGameCreateRequest request)
+    public async Task<ActionResult<UserLibraryGameExtendedDto>> AddUserLibraryGame([FromBody] UserLibraryGameCreateRequest request)
     {
         if (!ModelState.IsValid)
         {
@@ -77,7 +77,7 @@ public class UserLibraryController : ControllerBase
     /// If the operation fails due to an error, returns a "BadRequest" response with the error details.
     /// </returns>
     [HttpPut("game")]
-    public async Task<ActionResult<UserLibraryGameDto>> UpdateUserLibraryGame([FromBody] UserLibraryGameUpdateRequest request)
+    public async Task<ActionResult<UserLibraryGameExtendedDto>> UpdateUserLibraryGame([FromBody] UserLibraryGameUpdateRequest request)
     {
         if (!ModelState.IsValid)
         {
@@ -171,7 +171,7 @@ public class UserLibraryController : ControllerBase
     /// or an appropriate error message if the restoration fails or the game is not found.
     /// </returns>
     [HttpPut("game/restore/{userLibraryGameId}")]
-    public async Task<ActionResult<UserLibraryGameDto>> RestoreUserLibraryGame([FromRoute] Guid userLibraryGameId)
+    public async Task<ActionResult<UserLibraryGameExtendedDto>> RestoreUserLibraryGame([FromRoute] Guid userLibraryGameId)
     {
         if (userLibraryGameId == Guid.Empty)
         {
@@ -219,7 +219,7 @@ public class UserLibraryController : ControllerBase
     /// An <see cref="IActionResult"/> containing the details of the user library game if found
     /// </returns>
     [HttpGet("game/{userLibraryGameId}")]
-    public async Task<ActionResult<UserLibraryGameDto>> GetUserLibraryGameById([FromRoute] Guid userLibraryGameId)
+    public async Task<ActionResult<UserLibraryGameExtendedDto>> GetUserLibraryGameById([FromRoute] Guid userLibraryGameId)
     {
         if (userLibraryGameId == Guid.Empty)
         {
@@ -268,7 +268,7 @@ public class UserLibraryController : ControllerBase
     /// An <see cref="IActionResult"/> containing the deleted game details if found, or an error response if the game is not found or if the request is invalid.
     /// </returns>
     [HttpGet("game/deleted/{userLibraryGameId}")]
-    public async Task<ActionResult<UserLibraryGameDto>> GetDeletedUserLibraryGameById([FromRoute] Guid userLibraryGameId)
+    public async Task<ActionResult<UserLibraryGameExtendedDto>> GetDeletedUserLibraryGameById([FromRoute] Guid userLibraryGameId)
     {
         if (userLibraryGameId == Guid.Empty)
         {
@@ -315,7 +315,7 @@ public class UserLibraryController : ControllerBase
     /// <returns>A task that represents the asynchronous operation.
     /// The task result contains a collection of user library games.</returns>
     [HttpGet("games")]
-    public async Task<ActionResult<List<UserLibraryGameDto>>> GetAllUserLibraryGames()
+    public async Task<ActionResult<List<UserLibraryGameExtendedDto>>> GetAllUserLibraryGames()
     {
         try
         {
@@ -356,7 +356,7 @@ public class UserLibraryController : ControllerBase
     /// </summary>
     /// <returns>A task representing the asynchronous operation, containing a list of deleted user library games.</returns>
     [HttpGet("games/deleted")]
-    public async Task<ActionResult<List<UserLibraryGameDto>>> GetAllDeletedUserLibraryGames()
+    public async Task<ActionResult<List<UserLibraryGameExtendedDto>>> GetAllDeletedUserLibraryGames()
     {
         try
         {
@@ -397,7 +397,7 @@ public class UserLibraryController : ControllerBase
     /// <param name="userId">The unique identifier of the user whose library games are to be retrieved.</param>
     /// <returns>A task representing the asynchronous operation, containing the HTTP response with the list of user library games.</returns>
     [HttpGet("games/user/{userId}")]
-    public async Task<ActionResult<List<UserLibraryGameDto>>> GetAllUserLibraryGamesByUserId(Guid userId)
+    public async Task<ActionResult<List<UserLibraryGameExtendedDto>>> GetAllUserLibraryGamesByUserId(Guid userId)
     {
         if (userId == Guid.Empty)
         {
@@ -444,7 +444,7 @@ public class UserLibraryController : ControllerBase
     /// <param name="userId">The unique identifier of the user whose deleted games are to be retrieved.</param>
     /// <returns>An IActionResult containing a list of deleted games associated with the specified user ID or an appropriate error message.</returns>
     [HttpGet("games/deleted/user/{userId}")]
-    public async Task<ActionResult<List<UserLibraryGameDto>>> GetAllDeletedUserLibraryGamesByUserId(Guid userId)
+    public async Task<ActionResult<List<UserLibraryGameExtendedDto>>> GetAllDeletedUserLibraryGamesByUserId(Guid userId)
     {
         if (userId == Guid.Empty)
         {
