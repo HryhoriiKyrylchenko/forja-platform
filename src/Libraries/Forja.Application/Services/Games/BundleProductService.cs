@@ -10,18 +10,26 @@ namespace Forja.Application.Services.Games;
 public class BundleProductService : IBundleProductService
 {
     private readonly IBundleProductRepository _bundleProductRepository;
+    private readonly IFileManagerService _fileManagerService;
 
-    public BundleProductService(IBundleProductRepository bundleProductRepository)
+    public BundleProductService(IBundleProductRepository bundleProductRepository,
+        IFileManagerService fileManagerService)
     {
         _bundleProductRepository = bundleProductRepository;
+        _fileManagerService = fileManagerService;
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<BundleProductDto>> GetAllAsync()
+    public async Task<List<BundleProductDto>> GetAllAsync()
     {
         var bundleProducts = await _bundleProductRepository.GetAllAsync();
 
-        return bundleProducts.Select(GamesEntityToDtoMapper.MapToBundleProductDto);
+        var result = await Task.WhenAll(bundleProducts.Select(async bp => GamesEntityToDtoMapper.MapToBundleProductDto(
+            bp,
+            await _fileManagerService.GetPresignedProductLogoUrlAsync(bp.ProductId, 1900)
+        )));
+        
+        return result.ToList();
     }
 
     /// <inheritdoc />
@@ -34,11 +42,13 @@ public class BundleProductService : IBundleProductService
         
         var bundleProduct = await _bundleProductRepository.GetByIdAsync(id);
         
-        return bundleProduct == null ? null : GamesEntityToDtoMapper.MapToBundleProductDto(bundleProduct);
+        return bundleProduct == null ? null : GamesEntityToDtoMapper.MapToBundleProductDto(
+            bundleProduct,
+            await _fileManagerService.GetPresignedProductLogoUrlAsync(bundleProduct.ProductId, 1900));
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<BundleProductDto>> GetByBundleIdAsync(Guid bundleId)
+    public async Task<List<BundleProductDto>> GetByBundleIdAsync(Guid bundleId)
     {
         if (bundleId == Guid.Empty)
         {
@@ -46,7 +56,12 @@ public class BundleProductService : IBundleProductService
         }
         var bundleProducts = await _bundleProductRepository.GetByBundleIdAsync(bundleId);
 
-        return bundleProducts.Select(GamesEntityToDtoMapper.MapToBundleProductDto);
+        var result = await Task.WhenAll(bundleProducts.Select(async bp => GamesEntityToDtoMapper.MapToBundleProductDto(
+            bp,
+            await _fileManagerService.GetPresignedProductLogoUrlAsync(bp.ProductId, 1900)
+        )));
+        
+        return result.ToList();
     }
 
     /// <inheritdoc />
@@ -66,7 +81,9 @@ public class BundleProductService : IBundleProductService
 
         var createdBundleProduct = await _bundleProductRepository.AddAsync(newBundleProduct);
 
-        return createdBundleProduct == null ? null : GamesEntityToDtoMapper.MapToBundleProductDto(createdBundleProduct);
+        return createdBundleProduct == null ? null : GamesEntityToDtoMapper.MapToBundleProductDto(
+            createdBundleProduct,
+            await _fileManagerService.GetPresignedProductLogoUrlAsync(createdBundleProduct.ProductId, 1900));
     }
 
     /// <inheritdoc />
@@ -88,7 +105,9 @@ public class BundleProductService : IBundleProductService
 
         var updatedBundleProduct = await _bundleProductRepository.UpdateAsync(existingBundleProduct);
 
-        return updatedBundleProduct == null ? null : GamesEntityToDtoMapper.MapToBundleProductDto(updatedBundleProduct);
+        return updatedBundleProduct == null ? null : GamesEntityToDtoMapper.MapToBundleProductDto(
+            updatedBundleProduct,
+            await _fileManagerService.GetPresignedProductLogoUrlAsync(updatedBundleProduct.ProductId, 1900));
     }
 
     /// <inheritdoc />

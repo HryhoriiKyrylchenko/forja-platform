@@ -10,7 +10,7 @@ public interface IBundleProductService
     /// Retrieves all bundle product records asynchronously.
     /// </summary>
     /// <returns>An asynchronous operation that returns a collection of bundle product data transfer objects.</returns>
-    Task<IEnumerable<BundleProductDto>> GetAllAsync();
+    Task<List<BundleProductDto>> GetAllAsync();
 
     /// <summary>
     /// Asynchronously retrieves a bundle product by its unique identifier.
@@ -30,7 +30,7 @@ public interface IBundleProductService
     /// </summary>
     /// <param name="bundleId">The unique identifier of the bundle for which the bundle products will be retrieved.</param>
     /// <returns>A task representing the asynchronous operation. The task result contains a collection of <see cref="BundleProductDto"/> objects associated with the specified bundle ID.</returns>
-    Task<IEnumerable<BundleProductDto>> GetByBundleIdAsync(Guid bundleId);
+    Task<List<BundleProductDto>> GetByBundleIdAsync(Guid bundleId);
 
     /// <summary>
     /// Creates a new bundle product association based on the provided request object.

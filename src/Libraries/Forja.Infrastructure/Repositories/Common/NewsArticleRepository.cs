@@ -45,6 +45,7 @@ public class NewsArticleRepository : INewsArticleRepository
     {
         return await _newsArticles
             .Where(na => na.IsActive)
+            .Where(na => na.PublicationDate <= DateTime.UtcNow)
             .OrderByDescending(na => na.PublicationDate)
             .ToListAsync();
     }
