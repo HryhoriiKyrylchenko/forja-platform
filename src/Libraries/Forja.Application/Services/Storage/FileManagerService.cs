@@ -9,6 +9,7 @@ public class FileManagerService : IFileManagerService
     private readonly IMatureContentRepository _matureContentRepository;
     private readonly IMechanicRepository _mechanicRepository;
     private readonly IProductImagesRepository _productImagesRepository;
+    private readonly INewsArticleRepository _newsArticleRepository;
 
     public FileManagerService(IStorageService storageService,
         IUserRepository userRepository,
@@ -16,7 +17,8 @@ public class FileManagerService : IFileManagerService
         IAchievementRepository achievementRepository,
         IMatureContentRepository matureContentRepository,
         IMechanicRepository mechanicRepository,
-        IProductImagesRepository productImagesRepository)
+        IProductImagesRepository productImagesRepository,
+        INewsArticleRepository newsArticleRepository)
     {
         _storageService = storageService;
         _userRepository = userRepository;
@@ -25,6 +27,7 @@ public class FileManagerService : IFileManagerService
         _matureContentRepository = matureContentRepository;
         _mechanicRepository = mechanicRepository;
         _productImagesRepository = productImagesRepository;
+        _newsArticleRepository = newsArticleRepository;
     }
 
     /// <inheritdoc />
@@ -331,6 +334,44 @@ public class FileManagerService : IFileManagerService
         await _storageService.DeleteFileAsync(request.ObjectPath);
     }
 
+    public async Task<string> UploadNewsArticleImageAsync(UploadObjectImageRequest request)
+    {
+        if (!StorageRequestsValidator.ValidateUploadObjectImageRequest(request, out var errors))
+        {
+            throw new ArgumentException($"Invalid request. Error: {errors}", nameof(request));
+        }
+        
+        if (request.File == null)
+        {
+            throw new ArgumentException("Stream cannot be null.", nameof(request.File));
+        }
+
+        string destinationPath = "images/news-articles/";
+        string extension = Path.GetExtension(request.FileName);
+        string filenameWithoutExtension = $"news-article_{request.ObjectId}";
+        string destinationFilePath = $"{destinationPath}{filenameWithoutExtension}{extension}";
+        
+        await using var stream = request.File.OpenReadStream();
+        
+        await UploadStreamAsync(destinationFilePath, stream, request.ObjectSize, request.ContentType);
+        return destinationFilePath;
+    }
+
+    public async Task DeleteNewsArticleImageAsync(DeleteObjectRequest request)
+    {
+        if (!StorageRequestsValidator.ValidateDeleteObjectRequest(request, out var errors))
+        {
+            throw new ArgumentException($"Invalid request. Error: {errors}", nameof(request));
+        }
+
+        if (!request.ObjectPath.Contains("images/news-articles/"))
+        {
+            throw new ArgumentException("Wrong object path", nameof(request.ObjectPath));
+        }
+        
+        await _storageService.DeleteFileAsync(request.ObjectPath);
+    }
+
     /// <inheritdoc />
     public async Task<string> GetPresignedUrlAsync(string objectPath, int expiresInSeconds = 3600)
     {
@@ -573,6 +614,33 @@ public class FileManagerService : IFileManagerService
         if (string.IsNullOrWhiteSpace(result))
         {
             throw new InvalidOperationException($"Failed to get presigned URL for mechanic logo: {mechanicId}");
+        }
+        
+        return result;
+    }
+
+    public async Task<string> GetPresignedNewsArticleImageUrlAsync(Guid newsArticleId, int expiresInSeconds = 3600)
+    {
+        if (newsArticleId == Guid.Empty)
+        {
+            throw new ArgumentException("News article ID cannot be empty.", nameof(newsArticleId));
+        }
+
+        var newsArticle = await _newsArticleRepository.GetNewsArticleByIdAsync(newsArticleId);
+        if (newsArticle == null)
+        {
+            throw new InvalidOperationException($"News article with ID {newsArticleId} not found.");
+        }
+        
+        if (string.IsNullOrWhiteSpace(newsArticle.ImageUrl))
+        {
+            return string.Empty;
+        }
+        
+        var result = await _storageService.GetPresignedUrlAsync(newsArticle.ImageUrl, expiresInSeconds);
+        if (string.IsNullOrWhiteSpace(result))
+        {
+            throw new InvalidOperationException($"Failed to get presigned URL for news article image: {newsArticleId}");
         }
         
         return result;

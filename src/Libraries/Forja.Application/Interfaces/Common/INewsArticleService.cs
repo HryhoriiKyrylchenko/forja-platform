@@ -18,13 +18,13 @@ public interface INewsArticleService
     /// </summary>
     /// <param name="publicationDate">The publication date to filter the articles. If null, retrieves all articles.</param>
     /// <returns>A task representing the asynchronous operation. The task result contains an IEnumerable of NewsArticleDto, representing the filtered news articles.</returns>
-    Task<IEnumerable<NewsArticleDto>> GetNewsArticlesByPublicationDateAsync(DateTime? publicationDate = null);
+    Task<List<NewsArticleDto>> GetNewsArticlesByPublicationDateAsync(DateTime? publicationDate = null);
 
     /// <summary>
     /// Retrieves a collection of active news articles.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation. The task result contains a collection of active news articles.</returns>
-    Task<IEnumerable<NewsArticleDto>> GetActiveNewsArticlesAsync();
+    Task<List<NewsArticleDto>> GetActiveNewsArticlesAsync();
 
     /// <summary>
     /// Creates a new News Article with the specified details and returns the created article.

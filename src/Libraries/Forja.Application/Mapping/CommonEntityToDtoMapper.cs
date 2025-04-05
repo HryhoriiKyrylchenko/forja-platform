@@ -16,7 +16,7 @@ public static class CommonEntityToDtoMapper
         };
     }
 
-    public static NewsArticleDto MapToNewsArticleDto(NewsArticle entity)
+    public static NewsArticleDto MapToNewsArticleDto(NewsArticle entity, string fullImageUrl)
     {
         return new NewsArticleDto
         {
@@ -28,7 +28,7 @@ public static class CommonEntityToDtoMapper
             IsPrioritized = entity.IsPrioritized,
             CreatedAt = entity.CreatedAt,
             FileContent = entity.FileContent,
-            ImageUrl = entity.ImageUrl,
+            ImageUrl = fullImageUrl,
             AuthorId = entity.AuthorId,
             ProductId = entity.ProductId
         };

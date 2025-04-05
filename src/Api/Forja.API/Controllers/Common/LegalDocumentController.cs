@@ -17,7 +17,6 @@ public class LegalDocumentController : ControllerBase
     /// <summary>
     /// Get a legal document by its ID.
     /// </summary>
-    [Authorize(Policy = "DocumentReadPolicy")]
     [HttpGet("{documentId:guid}")]
     public async Task<IActionResult> GetLegalDocumentById([FromRoute] Guid documentId)
     {
@@ -59,7 +58,7 @@ public class LegalDocumentController : ControllerBase
     /// <summary>
     /// Get legal documents by effective date.
     /// </summary>
-    [Authorize(Policy = "DocumentReadPolicy")]
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpGet("date")]
     public async Task<IActionResult> GetLegalDocumentsByEffectiveDate([FromQuery] DateTime? effectiveDate)
     {
@@ -99,7 +98,7 @@ public class LegalDocumentController : ControllerBase
     /// <summary>
     /// Get a legal document by its title.
     /// </summary>
-    [Authorize(Policy = "DocumentReadPolicy")]
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpGet("title")]
     public async Task<IActionResult> GetLegalDocumentByTitle([FromQuery] string title)
     {
@@ -141,7 +140,7 @@ public class LegalDocumentController : ControllerBase
     /// <summary>
     /// Create a new legal document.
     /// </summary>
-    [Authorize(Policy = "DocumentWritePolicy")]
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost]
     public async Task<IActionResult> CreateLegalDocument([FromBody] LegalDocumentCreateRequest request)
     {
@@ -182,7 +181,7 @@ public class LegalDocumentController : ControllerBase
     /// <summary>
     /// Update an existing legal document.
     /// </summary>
-    [Authorize(Policy = "DocumentWritePolicy")]
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPut]
     public async Task<IActionResult> UpdateLegalDocument([FromBody] LegalDocumentUpdateRequest request)
     {
@@ -249,7 +248,7 @@ public class LegalDocumentController : ControllerBase
     /// <summary>
     /// Delete a legal document by its ID.
     /// </summary>
-    [Authorize(Policy = "DocumentWritePolicy")]
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpDelete("{documentId:guid}")]
     public async Task<IActionResult> DeleteLegalDocument([FromRoute] Guid documentId)
     {

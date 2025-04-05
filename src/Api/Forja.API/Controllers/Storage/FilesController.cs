@@ -498,6 +498,84 @@ public class FilesController : ControllerBase
     }
     
     [Authorize(Policy = "ContentManagePolicy")]
+    [HttpPost("news-article")]
+    public async Task<IActionResult> UploadNewsArticleImage([FromBody] UploadObjectImageRequest request)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+        try
+        {
+            var result = await _fileManagerService.UploadNewsArticleImageAsync(request);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", "Failed to upload news article image." }
+                    }
+                };
+
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            
+            return StatusCode(500, new { error = "An unexpected error occurred.", details = ex.Message });
+        }
+    }
+    
+    [Authorize(Policy = "ContentManagePolicy")]
+    [HttpDelete("news-article")]
+    public async Task<IActionResult> DeleteNewsArticleImageLogo([FromBody] DeleteObjectRequest request)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+        try
+        {
+            await _fileManagerService.DeleteNewsArticleImageAsync(request);
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", "Failed to delete news article image." }
+                    }
+                };
+
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            
+            return StatusCode(500, new { error = "An unexpected error occurred.", details = ex.Message });
+        }
+    }
+    
+    [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("mature-content-image")]
     public async Task<IActionResult> UploadMatureContentImage([FromBody] UploadObjectImageRequest request)
     {

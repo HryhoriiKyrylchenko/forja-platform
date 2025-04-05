@@ -6,10 +6,13 @@ namespace Forja.Application.Services.Common;
 public class NewsArticleService : INewsArticleService
 {
     private readonly INewsArticleRepository _newsArticleRepository;
+    private readonly IFileManagerService _fileManagerService;
 
-    public NewsArticleService(INewsArticleRepository newsArticleRepository)
+    public NewsArticleService(INewsArticleRepository newsArticleRepository,
+        IFileManagerService fileManagerService)
     {
         _newsArticleRepository = newsArticleRepository;
+        _fileManagerService = fileManagerService;
     }
 
     /// <inheritdoc />
@@ -22,23 +25,38 @@ public class NewsArticleService : INewsArticleService
 
         var article = await _newsArticleRepository.GetNewsArticleByIdAsync(articleId);
 
-        return article == null ? null : CommonEntityToDtoMapper.MapToNewsArticleDto(article);
+        return article == null ? null : CommonEntityToDtoMapper.MapToNewsArticleDto(
+            article,
+            article.ImageUrl == null ? string.Empty 
+                : await _fileManagerService.GetPresignedUrlAsync(article.ImageUrl, 1900));
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<NewsArticleDto>> GetNewsArticlesByPublicationDateAsync(DateTime? publicationDate = null)
+    public async Task<List<NewsArticleDto>> GetNewsArticlesByPublicationDateAsync(DateTime? publicationDate = null)
     {
         var articles = await _newsArticleRepository.GetNewsArticlesByPublicationDateAsync(publicationDate);
 
-        return articles.Select(CommonEntityToDtoMapper.MapToNewsArticleDto);
+        var newsArticles = await Task.WhenAll(articles.Select(async a => CommonEntityToDtoMapper.MapToNewsArticleDto(
+            a,
+            a.ImageUrl == null ? string.Empty 
+                : await _fileManagerService.GetPresignedUrlAsync(a.ImageUrl, 1900)
+            )));
+        
+        return newsArticles.ToList();
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<NewsArticleDto>> GetActiveNewsArticlesAsync()
+    public async Task<List<NewsArticleDto>> GetActiveNewsArticlesAsync()
     {
         var activeArticles = await _newsArticleRepository.GetActiveNewsArticlesAsync();
 
-        return activeArticles.Select(CommonEntityToDtoMapper.MapToNewsArticleDto);
+        var newsArticles = await Task.WhenAll(activeArticles.Select(async a => CommonEntityToDtoMapper.MapToNewsArticleDto(
+            a,
+            a.ImageUrl == null ? string.Empty 
+                : await _fileManagerService.GetPresignedUrlAsync(a.ImageUrl, 1900)
+        )));
+        
+        return newsArticles.ToList();
     }
 
     /// <inheritdoc />
@@ -66,7 +84,10 @@ public class NewsArticleService : INewsArticleService
 
         var createdArticle = await _newsArticleRepository.AddNewsArticleAsync(article);
 
-        return createdArticle == null ? null : CommonEntityToDtoMapper.MapToNewsArticleDto(createdArticle);
+        return createdArticle == null ? null : CommonEntityToDtoMapper.MapToNewsArticleDto(
+            article,
+            article.ImageUrl == null ? string.Empty 
+                : await _fileManagerService.GetPresignedUrlAsync(article.ImageUrl, 1900));
     }
 
     /// <inheritdoc />
@@ -95,7 +116,10 @@ public class NewsArticleService : INewsArticleService
 
         var updatedArticle = await _newsArticleRepository.UpdateNewsArticleAsync(article);
 
-        return updatedArticle == null ? null : CommonEntityToDtoMapper.MapToNewsArticleDto(updatedArticle);
+        return updatedArticle == null ? null : CommonEntityToDtoMapper.MapToNewsArticleDto(
+            article,
+            article.ImageUrl == null ? string.Empty 
+                : await _fileManagerService.GetPresignedUrlAsync(article.ImageUrl, 1900));
     }
 
     /// <inheritdoc />
