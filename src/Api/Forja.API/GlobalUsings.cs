@@ -32,3 +32,4 @@ global using Microsoft.AspNetCore.Authentication.JwtBearer;
 global using Microsoft.Extensions.Caching.Distributed;
 global using System.Text.Json;
 global using Forja.Application.DTOs.Games;
+global using Forja.Application.DTOs.Common;

@@ -10,11 +10,15 @@ public class ReviewService : IReviewService
 {
     private readonly IReviewRepository _reviewRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IFileManagerService _fileManagerService;
 
-    public ReviewService(IReviewRepository reviewRepository, IUserRepository userRepository)
+    public ReviewService(IReviewRepository reviewRepository, 
+        IUserRepository userRepository,
+        IFileManagerService fileManagerService)
     {
-        _reviewRepository = reviewRepository ?? throw new ArgumentNullException(nameof(reviewRepository));
-        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        _reviewRepository = reviewRepository;
+        _userRepository = userRepository;
+        _fileManagerService = fileManagerService;
     }
     
     /// <inheritdoc />
@@ -216,6 +220,46 @@ public class ReviewService : IReviewService
         }
         
         return deletedGameReviewsList.Select(UserProfileEntityToDtoMapper.MapToReviewDto).ToList();
+    }
+
+    public async Task<List<ReviewExtendedDto>> GetAllProductReviewsWithUserInfoAsync(Guid productId)
+    {
+        if (productId == Guid.Empty)
+        {
+            throw new ArgumentException("Game ID cannot be an empty Guid.", nameof(productId));
+        }
+        
+        var gameReviews = await _reviewRepository.GetAllWithUserInfoByProductIdAsync(productId);
+        var gameReviewsList = gameReviews.ToList();
+        if (!gameReviewsList.Any())
+        {
+            return new List<ReviewExtendedDto>();
+        }
+
+        var reviewDtos = await Task.WhenAll(gameReviewsList.Select(async r =>
+        {
+            var user = r.User;
+            var avatarUrl = await _fileManagerService.GetPresignedUserAvatarUrlAsync(user.Id, 1900);
+
+            var productsInLibrary = user.UserLibraryGames.Count;
+            productsInLibrary += user.UserLibraryGames.Sum(ulg => ulg.PurchasedAddons.Count);
+            
+            var achievementDtos = await Task.WhenAll(user.UserAchievements.Select(async ua => 
+                UserProfileEntityToDtoMapper.MapToAchievementShortDto(
+                    ua.Achievement,
+                    await _fileManagerService.GetPresignedAchievementImageUrlAsync(ua.Achievement.Id))).ToList());
+
+            var userDto = UserProfileEntityToDtoMapper.MapToUserForReviewDto(
+                user,
+                avatarUrl,
+                productsInLibrary,
+                achievementDtos.ToList()
+            );
+
+            return UserProfileEntityToDtoMapper.MapToReviewExtendedDto(r, userDto);
+        }));
+
+        return reviewDtos.ToList();
     }
 
     /// <inheritdoc />

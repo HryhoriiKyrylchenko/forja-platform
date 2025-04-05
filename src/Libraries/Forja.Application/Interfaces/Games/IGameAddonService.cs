@@ -9,7 +9,13 @@ public interface IGameAddonService
     /// Asynchronously retrieves all game addon entries.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation. The task result contains an enumerable collection of <see cref="GameAddonDto"/> objects representing the game addons.</returns>
-    Task<IEnumerable<GameAddonDto>> GetAllAsync();
+    Task<List<GameAddonDto>> GetAllAsync();
+    
+    /// <summary>
+    /// Asynchronously retrieves a list of game addon entries specifically formatted for use in the catalog.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a list of <see cref="GameAddonShortDto"/> objects representing the catalog-specific game addons.</returns>
+    Task<List<GameAddonShortDto>> GetAllForCatalogAsync();
 
     /// <summary>
     /// Retrieves a game addon asynchronously based on its unique identifier.
@@ -17,13 +23,6 @@ public interface IGameAddonService
     /// <param name="id">The unique identifier of the game addon.</param>
     /// <returns>A <see cref="GameAddonDto"/> containing the addon details if found, or null if not found.</returns>
     Task<GameAddonDto?> GetByIdAsync(Guid id);
-
-    /// <summary>
-    /// Asynchronously retrieves a game addon based on its associated storage URL.
-    /// </summary>
-    /// <param name="storageUrl">The storage URL of the game addon used to locate the specific resource.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains a <see cref="GameAddonDto"/> object if a matching addon is found, or null if not found.</returns>
-    Task<GameAddonDto?> GetByStorageUrlAsync(string storageUrl);
 
     /// <summary>
     /// Creates a new game addon and returns the created addon details.
@@ -56,6 +55,6 @@ public interface IGameAddonService
     /// Retrieves a collection of game addons associated with a specific game ID.
     /// </summary>
     /// <param name="gameId">The unique identifier of the game for which the addons are requested.</param>
-    /// <returns>A task representing the asynchronous operation. The task result contains a collection of <see cref="GameAddonDto"/> representing the game addons associated with the specified game ID.</returns>
-    Task<IEnumerable<GameAddonDto>> GetByGameIdAsync(Guid gameId);
+    /// <returns>A task representing the asynchronous operation. The task result contains a collection of <see cref="GameAddonShortDto"/> representing the game addons associated with the specified game ID.</returns>
+    Task<List<GameAddonShortDto>> GetByGameIdAsync(Guid gameId);
 }

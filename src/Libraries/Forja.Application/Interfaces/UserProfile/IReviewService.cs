@@ -75,6 +75,14 @@ public interface IReviewService
     /// <returns>A Task representing the result of the asynchronous operation. The task result contains a list of ReviewDto objects representing the deleted reviews for the specified game.</returns>
     Task<List<ReviewDto>> GetAllDeletedProductReviewsAsync(Guid productId);
 
+
+    /// <summary>
+    /// Retrieves all reviews for a specified product, including user information for each review.
+    /// </summary>
+    /// <param name="productId">The unique identifier of the product whose reviews are to be retrieved.</param>
+    /// <returns>A task representing the asynchronous operation, containing a list of ReviewExtendedDto objects with detailed review and user information.</returns>
+    Task<List<ReviewExtendedDto>> GetAllProductReviewsWithUserInfoAsync(Guid productId);
+
     /// <summary>
     /// Retrieves the count of approved positive and negative reviews for a specified product.
     /// </summary>

@@ -6,10 +6,13 @@ namespace Forja.Application.Services.Games;
 public class MechanicService : IMechanicService
 {
     private readonly IMechanicRepository _mechanicRepository;
+    private readonly IFileManagerService _fileManagerService;
 
-    public MechanicService(IMechanicRepository mechanicRepository)
+    public MechanicService(IMechanicRepository mechanicRepository,
+        IFileManagerService fileManagerService)
     {
         _mechanicRepository = mechanicRepository;
+        _fileManagerService = fileManagerService;
     }
 
     /// <inheritdoc />
@@ -17,7 +20,11 @@ public class MechanicService : IMechanicService
     {
         var mechanics = await _mechanicRepository.GetAllAsync();
 
-        return mechanics.Select(GamesEntityToDtoMapper.MapToMechanicDto);
+        return await Task.WhenAll(mechanics.Select(async m => GamesEntityToDtoMapper.MapToMechanicDto(
+            m,
+            m.LogoUrl == null ? string.Empty 
+                    : await _fileManagerService.GetPresignedUrlAsync(m.LogoUrl, 1900)
+            )));
     }
 
     /// <inheritdoc />
@@ -25,7 +32,11 @@ public class MechanicService : IMechanicService
     {
         var deletedMechanics = await _mechanicRepository.GetAllDeletedAsync();
 
-        return deletedMechanics.Select(GamesEntityToDtoMapper.MapToMechanicDto);
+        return await Task.WhenAll(deletedMechanics.Select(async m => GamesEntityToDtoMapper.MapToMechanicDto(
+            m,
+            m.LogoUrl == null ? string.Empty 
+                : await _fileManagerService.GetPresignedUrlAsync(m.LogoUrl, 1900)
+        )));
     }
 
     /// <inheritdoc />
@@ -37,7 +48,10 @@ public class MechanicService : IMechanicService
         }
         var mechanic = await _mechanicRepository.GetByIdAsync(id);
 
-        return mechanic == null ? null : GamesEntityToDtoMapper.MapToMechanicDto(mechanic);
+        return mechanic == null ? null : GamesEntityToDtoMapper.MapToMechanicDto(
+            mechanic,
+            mechanic.LogoUrl == null ? string.Empty
+                : await _fileManagerService.GetPresignedUrlAsync(mechanic.LogoUrl, 1900));
     }
 
     /// <inheritdoc />
@@ -59,7 +73,10 @@ public class MechanicService : IMechanicService
 
         var createdMechanic = await _mechanicRepository.AddAsync(newMechanic);
 
-        return createdMechanic == null ? null : GamesEntityToDtoMapper.MapToMechanicDto(createdMechanic);
+        return createdMechanic == null ? null : GamesEntityToDtoMapper.MapToMechanicDto(
+            createdMechanic,
+            createdMechanic.LogoUrl == null ? string.Empty
+                : await _fileManagerService.GetPresignedUrlAsync(createdMechanic.LogoUrl, 1900));
     }
 
     /// <inheritdoc />
@@ -83,7 +100,10 @@ public class MechanicService : IMechanicService
 
         var updatedMechanic = await _mechanicRepository.UpdateAsync(existingMechanic);
 
-        return updatedMechanic == null ? null : GamesEntityToDtoMapper.MapToMechanicDto(updatedMechanic);
+        return updatedMechanic == null ? null : GamesEntityToDtoMapper.MapToMechanicDto(
+            updatedMechanic,
+            updatedMechanic.LogoUrl == null ? string.Empty
+                : await _fileManagerService.GetPresignedUrlAsync(updatedMechanic.LogoUrl, 1900));
     }
 
     /// <inheritdoc />

@@ -34,6 +34,15 @@ public class GameAddonRepository : IGameAddonRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<GameAddon>> GetAllForCatalogAsync()
+    {
+        return await _gameAddons
+            .Where(ga => !ga.IsDeleted && ga.IsActive)
+            .Include(ga => ga.ProductDiscounts)
+                .ThenInclude(pd => pd.Discount)
+            .ToListAsync();
+    }
+
     /// <inheritdoc />
     public async Task<GameAddon?> GetByIdAsync(Guid id)
     {
@@ -70,7 +79,9 @@ public class GameAddonRepository : IGameAddonRepository
         
         return await _gameAddons
             .Where(ga => ga.GameId == gameId)
-            .Where(ga => !ga.IsDeleted)
+            .Where(ga => !ga.IsDeleted && ga.IsActive)
+            .Include(ga => ga.ProductDiscounts)
+                .ThenInclude(pd => pd.Discount)
             .ToListAsync();
     }
 

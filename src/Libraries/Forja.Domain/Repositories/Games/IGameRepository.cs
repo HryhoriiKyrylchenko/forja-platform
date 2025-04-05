@@ -18,11 +18,24 @@ public interface IGameRepository
     Task<IEnumerable<Game>> GetAllDeletedAsync();
 
     /// <summary>
+    /// Retrieves all games specifically tailored for display in a catalog.
+    /// </summary>
+    /// <returns>A collection of games formatted for catalog presentation.</returns>
+    Task<IEnumerable<Game>> GetAllForCatalogAsync();
+
+    /// <summary>
     /// Gets a game by its unique identifier.
     /// </summary>
     /// <param name="id">The unique identifier of the game.</param>
     /// <returns>The game with the specified ID, or null if not found.</returns>
     Task<Game?> GetByIdAsync(Guid id);
+
+    /// <summary>
+    /// Retrieves extended information about a game by its unique identifier.
+    /// </summary>
+    /// <param name="id">The unique identifier of the game.</param>
+    /// <returns>The game with extended details, or null if not found.</returns>
+    Task<Game?> GetExtendedByIdAsync(Guid id);
 
     /// <summary>
     /// Adds a new game to the repository.

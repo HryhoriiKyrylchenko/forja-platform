@@ -6,10 +6,13 @@ namespace Forja.Application.Services.Games;
 public class ItemImageService : IItemImageService
 {
     private readonly IItemImageRepository _itemImageRepository;
+    private readonly IFileManagerService _fileManagerService;
 
-    public ItemImageService(IItemImageRepository itemImageRepository)
+    public ItemImageService(IItemImageRepository itemImageRepository,
+        IFileManagerService fileManagerService)
     {
         _itemImageRepository = itemImageRepository;
+        _fileManagerService = fileManagerService;
     }
 
     /// <inheritdoc />
@@ -17,7 +20,10 @@ public class ItemImageService : IItemImageService
     {
         var itemImages = await _itemImageRepository.GetAllAsync();
 
-        return itemImages.Select(GamesEntityToDtoMapper.MapToItemImageDto);
+        return await Task.WhenAll(itemImages.Select(async i =>GamesEntityToDtoMapper.MapToItemImageDto(
+            i,
+            await _fileManagerService.GetPresignedUrlAsync(i.ImageUrl, 1900)
+        )));
     }
 
     /// <inheritdoc />
@@ -29,7 +35,9 @@ public class ItemImageService : IItemImageService
         }
         var itemImage = await _itemImageRepository.GetByIdAsync(id);
 
-        return itemImage == null ? null : GamesEntityToDtoMapper.MapToItemImageDto(itemImage);
+        return itemImage == null ? null : GamesEntityToDtoMapper.MapToItemImageDto(
+                                            itemImage,
+                                            await _fileManagerService.GetPresignedUrlAsync(itemImage.ImageUrl, 1900));
     }
 
     /// <inheritdoc />
@@ -37,7 +45,10 @@ public class ItemImageService : IItemImageService
     {
         var itemImagesWithProductImages = await _itemImageRepository.GetAllWithProductImagesAsync();
 
-        return itemImagesWithProductImages.Select(GamesEntityToDtoMapper.MapToItemImageDto);
+        return await Task.WhenAll(itemImagesWithProductImages.Select(async i =>GamesEntityToDtoMapper.MapToItemImageDto(
+            i,
+            await _fileManagerService.GetPresignedUrlAsync(i.ImageUrl, 1900)
+        )));
     }
     
     /// <inheritdoc />
@@ -57,7 +68,9 @@ public class ItemImageService : IItemImageService
 
         var createdItemImage = await _itemImageRepository.AddAsync(newItemImage);
 
-        return createdItemImage == null ? null : GamesEntityToDtoMapper.MapToItemImageDto(createdItemImage);
+        return createdItemImage == null ? null : GamesEntityToDtoMapper.MapToItemImageDto(
+            createdItemImage,
+            await _fileManagerService.GetPresignedUrlAsync(createdItemImage.ImageUrl, 1900));
     }
 
     /// <inheritdoc />
@@ -79,7 +92,9 @@ public class ItemImageService : IItemImageService
 
         var updatedItemImage = await _itemImageRepository.UpdateAsync(existingItemImage);
 
-        return updatedItemImage == null ? null : GamesEntityToDtoMapper.MapToItemImageDto(updatedItemImage);
+        return updatedItemImage == null ? null : GamesEntityToDtoMapper.MapToItemImageDto(
+            updatedItemImage,
+            await _fileManagerService.GetPresignedUrlAsync(updatedItemImage.ImageUrl, 1900));
     }
 
     /// <inheritdoc />

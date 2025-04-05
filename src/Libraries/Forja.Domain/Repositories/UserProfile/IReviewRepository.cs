@@ -114,4 +114,14 @@ public interface IReviewRepository
     /// The task result contains the restored <see cref="Review"/> if successfully restored.
     /// </returns>
     Task<Review?> RestoreAsync(Guid reviewId);
+
+    /// <summary>
+    /// Asynchronously retrieves all reviews for a specified product, including associated user information.
+    /// </summary>
+    /// <param name="productId">The unique identifier of the product for which to retrieve reviews.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation.
+    /// The task result contains a collection of <see cref="Review"/> entities with user information.
+    /// </returns>
+    Task<IEnumerable<Review>> GetAllWithUserInfoByProductIdAsync(Guid productId);
 }

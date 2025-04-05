@@ -25,7 +25,7 @@ public class UserLibraryAddonDto
     /// The <c>GameAddon</c> class inherits from the <c>Product</c> base class and encapsulates details
     /// specific to downloadable, purchasable, or additional content that extends the main game experience.
     /// </remarks>
-    public GameAddonDto GameAddon { get; set; } = null!;
+    public GameAddonShortDto GameAddon { get; set; } = null!;
 
     /// <summary>
     /// Gets or sets the date and time when the addon was purchased by the user.

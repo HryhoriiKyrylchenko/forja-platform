@@ -18,6 +18,12 @@ public interface IGameAddonRepository
     Task<IEnumerable<GameAddon>> GetAllDeletedAsync();
 
     /// <summary>
+    /// Gets all game addons for the catalog.
+    /// </summary>
+    /// <returns>A collection of game addons formatted for the catalog.</returns>
+    Task<IEnumerable<GameAddon>> GetAllForCatalogAsync();
+
+    /// <summary>
     /// Gets a game addon by its unique identifier.
     /// </summary>
     /// <param name="id">The unique identifier of the game addon.</param>
@@ -58,6 +64,4 @@ public interface IGameAddonRepository
     /// <param name="id">The unique identifier of the game addon to delete.</param>
     /// <returns>A task representing the operation.</returns>
     Task DeleteAsync(Guid id);
-
-    
 }

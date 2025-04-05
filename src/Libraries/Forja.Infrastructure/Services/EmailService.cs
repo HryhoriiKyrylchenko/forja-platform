@@ -4,7 +4,7 @@ public class EmailService : IEmailService
 {
     // Necessary to configure the right frontend and backend URLs
     private readonly string _frontendBaseUrl = "https://localhost:3003";
-    private readonly string _backBaseUrl = "https://localhost:7052";
+    //private readonly string _backBaseUrl = "https://localhost:7052";
     
     private readonly string _smtpHost;
     private readonly int _smtpPort;
@@ -36,8 +36,8 @@ public class EmailService : IEmailService
         switch (locale?.ToLowerInvariant())
         {
             case "uk":
-                subject = "Запит на скидання пароля";
-                emailBody = $"<p>Щоб скинути пароль, натисніть <a href='{fullResetLink}'>сюди</a>.</p>";
+                subject = "пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ";
+                emailBody = $"<p>пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ <a href='{fullResetLink}'>пїЅпїЅпїЅпїЅ</a>.</p>";
                 break;
 
             case "en":

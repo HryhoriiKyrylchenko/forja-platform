@@ -6,10 +6,16 @@ namespace Forja.Application.Services.Games;
 public class GameService : IGameService
 {
     private readonly IGameRepository _gameRepository;
+    private readonly IReviewRepository _reviewRepository;
+    private readonly IFileManagerService _fileManagerService;
         
-    public GameService(IGameRepository gameRepository)
+    public GameService(IGameRepository gameRepository,
+        IReviewRepository reviewRepository,
+        IFileManagerService fileManagerService)
     {
         _gameRepository = gameRepository;
+        _reviewRepository = reviewRepository;
+        _fileManagerService = fileManagerService;
     }
      
     /// <inheritdoc />
@@ -17,6 +23,20 @@ public class GameService : IGameService
     {
         var games = await _gameRepository.GetAllAsync();
         return games.Select(GamesEntityToDtoMapper.MapToGameDto);
+    }
+
+    /// <inheritdoc />
+    public async Task<List<GameCatalogDto>> GetAllForCatalogAsync()
+    {
+        var games = await _gameRepository.GetAllForCatalogAsync();
+        var gameCatalogDtos = await Task.WhenAll(games.Select(async g => 
+            GamesEntityToDtoMapper.MapToGameCatalogDto(
+                g,
+                await _fileManagerService.GetPresignedProductLogoUrlAsync(g.Id, 1900),
+                await _reviewRepository.GetProductApprovedReviewsCountAsync(g.Id)
+            )));
+
+        return gameCatalogDtos.ToList();
     }
 
     /// <inheritdoc />
@@ -38,7 +58,78 @@ public class GameService : IGameService
         return game == null ? null : GamesEntityToDtoMapper.MapToGameDto(game);
     }
 
- /// <inheritdoc />
+    public async Task<GameExtendedDto?> GetExtendedByIdAsync(Guid id)
+    {
+        if (id == Guid.Empty)
+        {
+            throw new ArgumentException("Id cannot be empty.", nameof(id));
+        }
+        
+        var game = await _gameRepository.GetExtendedByIdAsync(id);
+        if (game == null)
+        {
+            throw new KeyNotFoundException($"Game with ID {id} not found.");
+        }
+        
+        var productMatureContentDtos = await Task.WhenAll(
+            game.ProductMatureContents.Select(async pmc =>
+            {
+                if (pmc.MatureContent.LogoUrl != null)
+                {
+                    return GamesEntityToDtoMapper.MapToMatureContentDto(
+                        pmc.MatureContent,
+                        await _fileManagerService.GetPresignedMatureContentImageUrlAsync(pmc.MatureContent.Id, 1900)
+                    );
+                }
+
+                return GamesEntityToDtoMapper.MapToMatureContentDto(
+                    pmc.MatureContent,
+                    string.Empty
+                );
+            })
+        );
+        
+        var productImages = await _fileManagerService.GetPresignedProductImagesUrlsAsync(game.Id, 1900);
+
+        var gameAddonDtos = await Task.WhenAll(
+            game.GameAddons.Select(async ga =>
+                GamesEntityToDtoMapper.MapToGameAddonShortDto(
+                    ga,
+                    await _fileManagerService.GetPresignedProductLogoUrlAsync(ga.Id, 1900)
+                )
+            )
+        );
+
+        var gameMechanicsDtos = await Task.WhenAll(
+            game.GameMechanics.Select(async gm =>
+            {
+                if (gm.Mechanic.LogoUrl != null)
+                    return GamesEntityToDtoMapper.MapToMechanicDto(
+                        gm.Mechanic,
+                        await _fileManagerService.GetPresignedMechanicImageUrlAsync(gm.Mechanic.Id, 1900)
+                    );
+                
+                return GamesEntityToDtoMapper.MapToMechanicDto(
+                    gm.Mechanic,
+                    String.Empty
+                );
+            })
+        );
+        
+        var gameExtendedDto = GamesEntityToDtoMapper.MapToGameExtendedDto(
+            game,
+            await _fileManagerService.GetPresignedProductLogoUrlAsync(game.Id, 1900),
+            productMatureContentDtos.ToList(),
+            productImages,
+            gameAddonDtos.ToList(),
+            gameMechanicsDtos.ToList(),
+            await _reviewRepository.GetProductApprovedReviewsCountAsync(game.Id)
+        );
+
+        return gameExtendedDto;
+    }
+
+    /// <inheritdoc />
     public async Task<GameDto?> AddAsync(GameCreateRequest request)
     {
         if (!GamesRequestsValidator.ValidateGamesCreateRequest(request))

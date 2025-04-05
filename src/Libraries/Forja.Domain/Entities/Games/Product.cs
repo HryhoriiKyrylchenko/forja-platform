@@ -97,12 +97,6 @@ public abstract class Product : SoftDeletableEntity
     public virtual ICollection<ProductGenres> ProductGenres { get; set; } = [];
     
     /// <summary>
-    /// Gets or sets the collection of discounts associated with the product.
-    /// Virtual property for Entity Framework to handle related data.
-    /// </summary>
-    public virtual ICollection<Discount> Discounts { get; set; } = [];
-    
-    /// <summary>
     /// Gets or sets the collection of cart items associated with the product.
     /// Virtual property for Entity Framework to handle related data.
     /// </summary>
