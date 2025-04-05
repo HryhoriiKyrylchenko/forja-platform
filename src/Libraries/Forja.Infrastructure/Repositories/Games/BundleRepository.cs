@@ -1,3 +1,5 @@
+using CommunityToolkit.HighPerformance.Helpers;
+
 namespace Forja.Infrastructure.Repositories.Games;
 
 /// <summary>
@@ -19,9 +21,10 @@ public class BundleRepository : IBundleRepository
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<Bundle>> GetAllAsync()
+    public async Task<IEnumerable<Bundle>> GetAllActiveAsync()
     {
         return await _bundles
+            .Where(b => b.IsActive)
             .Include(b => b.BundleProducts)
                 .ThenInclude(bp => bp.Product)
             .ToListAsync();
@@ -51,7 +54,8 @@ public class BundleRepository : IBundleRepository
         
         await _bundles.AddAsync(bundle);
         await _context.SaveChangesAsync();
-        return bundle;
+        
+        return await GetByIdAsync(bundle.Id);
     }
 
     /// <inheritdoc />
@@ -64,7 +68,8 @@ public class BundleRepository : IBundleRepository
         
         _bundles.Update(bundle);
         await _context.SaveChangesAsync();
-        return bundle;
+        
+        return await GetByIdAsync(bundle.Id);
     }
 
     /// <inheritdoc />

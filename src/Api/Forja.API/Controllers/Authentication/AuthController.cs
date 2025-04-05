@@ -13,18 +13,21 @@ public class AuthController : ControllerBase
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IAnalyticsSessionService _analyticsSessionService;
     private readonly IAuditLogService _auditLogService;
+    private readonly IDistributedCache _cache;
 
     public AuthController(IUserAuthService authService, 
         IUserService userService, 
         IHttpContextAccessor httpContextAccessor,
         IAnalyticsSessionService analyticsSessionService,
-        IAuditLogService auditLogService)
+        IAuditLogService auditLogService,
+        IDistributedCache cache)
     {
         _authService = authService;
         _userService = userService;
         _httpContextAccessor = httpContextAccessor;
         _analyticsSessionService = analyticsSessionService;
         _auditLogService = auditLogService;
+        _cache = cache;
     }
 
     /// <summary>
@@ -636,6 +639,50 @@ public class AuthController : ControllerBase
                     Details = new Dictionary<string, string>
                     {
                         { "Message", $"Failed to get keycloak user {userId} roles" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+    
+    [Authorize]
+    [HttpGet("user-roles")]
+    public async Task<IActionResult> GetUserSelfRoles()
+    {
+        try
+        {
+            var keycloakUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(keycloakUserId))
+            {
+                return Unauthorized(new { error = "User ID not found in token claims." });
+            }
+            
+            var roles = await _authService.GetUserRolesAsync(keycloakUserId);
+            return Ok(roles);
+        }
+        catch(Exception ex)
+        {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.ApiError,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", "Failed to get user roles" }
                     }
                 };
                 

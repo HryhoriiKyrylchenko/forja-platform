@@ -94,6 +94,32 @@ public static class GamesEntityToDtoMapper
         };
     }
 
+    public static GameHomePopularDto MapToGameHomePopularDto(Game game, string logoUrl)
+    {
+        return new GameHomePopularDto
+        {
+            Id = game.Id,
+            Title = game.Title,
+            LogoUrl = logoUrl
+        };
+    }
+
+    public static GameHomeDto MapToGameHomeDto(Game game, string logoUrl, List<string> images)
+    {
+        return new GameHomeDto
+        {
+            Id = game.Id,
+            Title = game.Title,
+            ShortDescription = game.ShortDescription,
+            LogoUrl = logoUrl,
+            ReleaseDate = game.ReleaseDate,
+            Developer = game.Developer,
+            Genres = game.ProductGenres.Select(pg => pg.Genre.Name).ToList(),
+            Tags = game.GameTags.Select(gt => gt.Tag.Title).ToList(),
+            Images = images
+        };
+    }
+
     public static GameCatalogDto MapToGameCatalogDto(Game game, 
                                                     string fullLogoUrl, 
                                                     (int positiveReviews, int negativeReviews) rating)
@@ -106,6 +132,7 @@ public static class GamesEntityToDtoMapper
             ReleaseDate = game.ReleaseDate,
             Genres = game.ProductGenres.Select(pg => MapToGenreDto(pg.Genre)).ToList(),
             Tags = game.GameTags.Select(gt => MapToTagDto(gt.Tag)).ToList(),
+            Price = game.Price,
             Discounts = game.ProductDiscounts.Select(pd => StoreEntityToDtoMapper.MapToDiscountDto(pd.Discount))
                 .Where(dto => 
                     (!dto.StartDate.HasValue || dto.StartDate <= DateTime.UtcNow) && 
@@ -167,24 +194,9 @@ public static class GamesEntityToDtoMapper
                 .ToList()
         };
     }
-    
-    /// <summary>
-    /// Maps a <see cref="Bundle"/> entity to a <see cref="BundleDto"/>.
-    /// </summary>
-    public static BundleDto MapToBundleDto(Bundle bundle)
+
+    public static BundleDto MapToBundleDto(Bundle bundle, List<BundleProductDto> bundleProducts)
     {
-        var bundleProducts = bundle.BundleProducts.Select(bp => new ProductDto
-        {
-            Id = bp.ProductId,
-            Title = bp.Product.Title,
-            ShortDescription = bp.Product.ShortDescription,
-            Description = bp.Product.Description,
-            Price = bp.Product.Price,
-            LogoUrl = bp.Product.LogoUrl,
-            ReleaseDate = bp.Product.ReleaseDate,
-            IsActive = bp.Product.IsActive
-        }).ToList();
-        
         return new BundleDto
         {
             Id = bundle.Id,
@@ -196,19 +208,16 @@ public static class GamesEntityToDtoMapper
             BundleProducts = bundleProducts
         };
     }
-
-    /// <summary>
-    /// Maps a <see cref="BundleProduct"/> entity to a <see cref="BundleProductDto"/>.
-    /// </summary>
-    /// <param name="bundleProduct">The bundle product entity to be mapped.</param>
-    /// <returns>A <see cref="BundleProductDto"/> that represents the mapped bundle product entity.</returns>
-    public static BundleProductDto MapToBundleProductDto(BundleProduct bundleProduct)
+    
+    public static BundleProductDto MapToBundleProductDto(BundleProduct bundleProduct, string fullLogoUrl)
     {
         return new BundleProductDto
         {
             Id = bundleProduct.Id,
             BundleId = bundleProduct.BundleId,
-            ProductId = bundleProduct.ProductId
+            ProductId = bundleProduct.ProductId,
+            Title = bundleProduct.Product.Title ?? string.Empty,
+            LogoUrl = fullLogoUrl
         };
     }
 

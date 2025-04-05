@@ -23,6 +23,12 @@ public class GameRepository : IGameRepository
     {
         return await _games
             .Where(g => !g.IsDeleted)
+            .Include(g => g.ProductGenres)
+                .ThenInclude(pg => pg.Genre)
+            .Include(g => g.GameTags)
+                .ThenInclude(gt => gt.Tag)
+            .Include(g => g.ProductImages)
+                .ThenInclude(pi => pi.ItemImage)
             .ToListAsync();
     }
     

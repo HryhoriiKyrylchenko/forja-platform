@@ -9,7 +9,7 @@ public interface IBundleRepository
     /// Gets all bundles.
     /// </summary>
     /// <returns>A collection of all bundles.</returns>
-    Task<IEnumerable<Bundle>> GetAllAsync();
+    Task<IEnumerable<Bundle>> GetAllActiveAsync();
 
     /// <summary>
     /// Gets an active bundle by its unique identifier.

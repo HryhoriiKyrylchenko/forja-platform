@@ -7,24 +7,49 @@ namespace Forja.Application.Services.Games;
 public class BundleService : IBundleService
 {
     private readonly IBundleRepository _bundleRepository;
+    private readonly IFileManagerService _fileManagerService;
 
-    public BundleService(IBundleRepository bundleRepository)
+    public BundleService(IBundleRepository bundleRepository,
+        IFileManagerService fileManagerService)
     {
         _bundleRepository = bundleRepository;
+        _fileManagerService = fileManagerService;
     }
 
     /// <inheritdoc />
     public async Task<IEnumerable<BundleDto>> GetAllAsync()
     {
-        var bundles = await _bundleRepository.GetAllAsync();
-        return bundles.Select(GamesEntityToDtoMapper.MapToBundleDto);
+        var allBundles = await _bundleRepository.GetAllActiveAsync();
+        var bundles = await Task.WhenAll(allBundles.Select(async b =>
+        {
+            var bundleProductDtos = await Task.WhenAll(b.BundleProducts.Select(async bp =>
+            {
+                var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(bp.ProductId);
+                return GamesEntityToDtoMapper.MapToBundleProductDto(bp, logoUrl);
+            }));
+
+            return GamesEntityToDtoMapper.MapToBundleDto(b, bundleProductDtos.ToList());
+        }));
+        
+        return bundles;
     }
 
     /// <inheritdoc />
     public async Task<IEnumerable<BundleDto>> GetActiveBundlesAsync()
     {
         var activeBundles = await _bundleRepository.GetActiveBundlesAsync();
-        return activeBundles.Select(GamesEntityToDtoMapper.MapToBundleDto);
+        var bundles = await Task.WhenAll(activeBundles.Select(async b =>
+        {
+            var bundleProductDtos = await Task.WhenAll(b.BundleProducts.Select(async bp =>
+            {
+                var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(bp.ProductId);
+                return GamesEntityToDtoMapper.MapToBundleProductDto(bp, logoUrl);
+            }));
+
+            return GamesEntityToDtoMapper.MapToBundleDto(b, bundleProductDtos.ToList());
+        }));
+        
+        return bundles;
     }
 
     /// <inheritdoc />
@@ -35,7 +60,21 @@ public class BundleService : IBundleService
             throw new ArgumentException("Id cannot be empty.", nameof(id));
         }
         var bundle = await _bundleRepository.GetByIdAsync(id);
-        return bundle == null ? null : GamesEntityToDtoMapper.MapToBundleDto(bundle);
+        if (bundle == null)
+        {
+            return null;
+        }
+
+        var bundleProductDtos = await Task.WhenAll(
+            bundle.BundleProducts.Select(async bp =>
+            {
+                var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(bp.Product.Id);
+                return GamesEntityToDtoMapper.MapToBundleProductDto(bp, logoUrl);
+            })
+        );
+
+        var bundleDto = GamesEntityToDtoMapper.MapToBundleDto(bundle, bundleProductDtos.ToList());
+        return bundleDto;
     }
 
     /// <inheritdoc />
@@ -57,7 +96,21 @@ public class BundleService : IBundleService
         };
 
         var createdBundle = await _bundleRepository.AddAsync(newBundle);
-        return createdBundle == null ? null : GamesEntityToDtoMapper.MapToBundleDto(createdBundle);
+        if (createdBundle == null)
+        {
+            return null;
+        }
+
+        var bundleProductDtos = await Task.WhenAll(
+            createdBundle.BundleProducts.Select(async bp =>
+            {
+                var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(bp.Product.Id);
+                return GamesEntityToDtoMapper.MapToBundleProductDto(bp, logoUrl);
+            })
+        );
+
+        var bundleDto = GamesEntityToDtoMapper.MapToBundleDto(createdBundle, bundleProductDtos.ToList());
+        return bundleDto;
     }
 
     /// <inheritdoc />
@@ -77,7 +130,21 @@ public class BundleService : IBundleService
         existingBundle.IsActive = request.IsActive;
 
         var updatedBundle = await _bundleRepository.UpdateAsync(existingBundle);
-        return updatedBundle == null ? null : GamesEntityToDtoMapper.MapToBundleDto(updatedBundle);
+        if (updatedBundle == null)
+        {
+            return null;
+        }
+
+        var bundleProductDtos = await Task.WhenAll(
+            updatedBundle.BundleProducts.Select(async bp =>
+            {
+                var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(bp.Product.Id);
+                return GamesEntityToDtoMapper.MapToBundleProductDto(bp, logoUrl);
+            })
+        );
+
+        var bundleDto = GamesEntityToDtoMapper.MapToBundleDto(updatedBundle, bundleProductDtos.ToList());
+        return bundleDto;
     }
 
     /// <inheritdoc />

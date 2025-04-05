@@ -21,6 +21,8 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<ILegalDocumentService, LegalDocumentService>();
         services.AddScoped<INewsArticleService, NewsArticleService>();
 
+        services.AddScoped<IHomeService, HomeService>();
+
         services.AddScoped<IBundleProductService, BundleProductService>();
         services.AddScoped<IBundleService, BundleService>();
         services.AddScoped<IGameAddonService, GameAddonService>();
