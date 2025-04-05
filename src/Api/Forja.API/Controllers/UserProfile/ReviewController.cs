@@ -12,7 +12,7 @@ public class ReviewController : ControllerBase
     private readonly IAnalyticsEventService _analyticsEventService;
     private readonly IAuditLogService _auditLogService;
 
-    public ReviewController(ReviewService reviewService,
+    public ReviewController(IReviewService reviewService,
         IAnalyticsEventService analyticsEventService,
         IAuditLogService auditLogService)
     {
@@ -91,7 +91,7 @@ public class ReviewController : ControllerBase
             {
                 Console.WriteLine($"Error logging audit log entry: {e.Message}");
             }
-           return BadRequest(new { error = ex.Message });
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -444,8 +444,9 @@ public class ReviewController : ControllerBase
     /// </summary>
     /// <param name="productId">The unique identifier of the product for which to retrieve the reviews.</param>
     /// <returns>A list of <see cref="ReviewDto"/> objects representing the reviews of the specified product.</returns>
-    [HttpGet("products/{productId}")]
-    public async Task<ActionResult<List<ReviewDto>>> GetAllProductReviews([FromRoute] Guid productId)
+    [Authorize(Policy = "ModeratePolicy")]
+    [HttpGet("moderate/products/{productId}")]
+    public async Task<ActionResult<List<ReviewDto>>> GetAllProductReviewsForModeration([FromRoute] Guid productId)
     {
         if (productId == Guid.Empty)
         {
@@ -519,6 +520,65 @@ public class ReviewController : ControllerBase
                     Details = new Dictionary<string, string>
                     {
                         { "Message", $"Failed to get all deleted product reviews for product with id: {productId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+    
+    [HttpGet("products/{productId}")]
+    public async Task<ActionResult<PaginatedResult<ReviewDto>>> GetAllProductReviews(
+        [FromRoute] Guid productId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        if (productId == Guid.Empty)
+        {
+            return BadRequest(new { error = "Invalid ID." });
+        }
+
+        try
+        {
+            var reviews = await _reviewService.GetAllProductReviewsWithUserInfoAsync(productId);
+        
+            if (!reviews.Any())
+            {
+                return NoContent();
+            }
+
+            var paginatedReviews = reviews
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            return Ok(new PaginatedResult<ReviewExtendedDto>(
+                paginatedReviews,
+                reviews.Count,
+                pageNumber,
+                pageSize));
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all product reviews for product with id: {productId}" }
                     }
                 };
                 

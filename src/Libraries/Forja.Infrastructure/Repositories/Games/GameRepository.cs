@@ -34,6 +34,19 @@ public class GameRepository : IGameRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<Game>> GetAllForCatalogAsync()
+    {
+        return await _games
+            .Where(g => !g.IsDeleted)
+            .Include(g => g.ProductGenres)
+                .ThenInclude(pg => pg.Genre)
+            .Include(g => g.GameTags)
+                .ThenInclude(gt => gt.Tag)
+            .Include(g => g.ProductDiscounts)
+                .ThenInclude(dc => dc.Discount)
+            .ToListAsync();
+    }
+
     /// <inheritdoc />
     public async Task<Game?> GetByIdAsync(Guid id)
     {
@@ -44,6 +57,34 @@ public class GameRepository : IGameRepository
         
         return await _games
             .Where(g => !g.IsDeleted)
+            .FirstOrDefaultAsync(g => g.Id == id);
+    }
+
+    /// <inheritdoc />
+    public async Task<Game?> GetExtendedByIdAsync(Guid id)
+    {
+        if (id == Guid.Empty)
+        {
+            throw new ArgumentException("Invalid game ID.", nameof(id));
+        }
+        
+        return await _games
+            .Where(g => !g.IsDeleted)
+            .Include(g => g.ProductImages)
+                .ThenInclude(pi => pi.ItemImage)
+            .Include(g => g.GameAddons)
+                .ThenInclude(ga => ga.ProductDiscounts)
+                    .ThenInclude(dc => dc.Discount)
+            .Include(g => g.ProductDiscounts)
+                .ThenInclude(dc => dc.Discount)
+            .Include(g => g.ProductGenres)
+                .ThenInclude(pg => pg.Genre)
+            .Include(g => g.GameTags)
+                .ThenInclude(gt => gt.Tag)
+            .Include(g => g.GameMechanics)
+                .ThenInclude(gm => gm.Mechanic)
+            .Include(g => g.ProductMatureContents)
+                .ThenInclude(mc => mc.MatureContent)
             .FirstOrDefaultAsync(g => g.Id == id);
     }
 

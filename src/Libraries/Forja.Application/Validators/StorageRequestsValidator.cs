@@ -117,50 +117,8 @@ public static class StorageRequestsValidator
         
         return true;
     }
-
-    public static bool ValidateUploadAvatarRequest(UploadAvatarRequest? request, out string? errorMessage)
-    {
-        errorMessage = null;
-        if (request == null)
-        {
-            errorMessage = "Request cannot be null.";
-            return false;
-        }
-
-        if (request.UserId == Guid.Empty)
-        {
-            errorMessage = "User ID cannot be null or empty.";
-            return false;
-        }
-        
-        if (request.ObjectSize < 1)
-        {
-            errorMessage = "Object size must be greater than 0.";
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.ContentType))
-        {
-            errorMessage = "Content type cannot be null or empty.";
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.FileName))
-        {
-            errorMessage = "File name cannot be null or empty.";
-            return false;
-        }
-
-        if (!new HashSet<string> { ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp" }.Contains(Path.GetExtension(request.FileName)))
-        {
-            errorMessage = "File extension must be one of the following: .png, .jpg, .jpeg, .gif, .bmp, .webp";
-            return false;
-        }
-        
-        return true;
-    }
     
-    public static bool ValidateUploadLogoRequest(UploadLogoRequest? request, out string? errorMessage)
+    public static bool ValidateUploadObjectImageRequest(UploadObjectImageRequest? request, out string? errorMessage)
     {
         errorMessage = null;
         if (request == null)
@@ -169,9 +127,9 @@ public static class StorageRequestsValidator
             return false;
         }
 
-        if (request.ProductId == Guid.Empty)
+        if (request.ObjectId == Guid.Empty)
         {
-            errorMessage = "User ID cannot be null or empty.";
+            errorMessage = "Object ID cannot be null or empty.";
             return false;
         }
         

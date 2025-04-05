@@ -31,13 +31,73 @@ public static class GamesEntityToDtoMapper
             SystemRequirements = game.SystemRequirements
         };
     }
+    
+    public static GameExtendedDto MapToGameExtendedDto(Game game, 
+                                                        string fullLogoUrl, 
+                                                        List<MatureContentDto> matureContents, 
+                                                        List<string> images, 
+                                                        List<GameAddonShortDto> gameAddons, 
+                                                        List<MechanicDto> mechanics,
+                                                        (int positiveReviews, int negativeReviews) rating)
+    {
+        return new GameExtendedDto
+        {
+            Id = game.Id,
+            Title = game.Title,
+            ShortDescription = game.ShortDescription,
+            Description = game.Description,
+            Developer = game.Developer,
+            MinimalAge = game.MinimalAge,
+            Platforms = game.Platforms,
+            Price = game.Price,
+            LogoUrl = game.LogoUrl,
+            ReleaseDate = game.ReleaseDate,
+            InterfaceLanguages = game.InterfaceLanguages,
+            AudioLanguages = game.AudioLanguages,
+            SubtitlesLanguages = game.SubtitlesLanguages,
+            SystemRequirements = game.SystemRequirements,
+            Images = images,
+            Addons = gameAddons,
+            Discounts = game.ProductDiscounts.Select(pd => StoreEntityToDtoMapper.MapToDiscountDto(pd.Discount))
+                .Where(dto => 
+                    (!dto.StartDate.HasValue || dto.StartDate <= DateTime.UtcNow) && 
+                    (!dto.EndDate.HasValue || dto.EndDate >= DateTime.UtcNow))
+                .OrderBy(dto => dto.StartDate)
+                .ToList(),
+            Genres = game.ProductGenres.Select(pg => MapToGenreDto(pg.Genre)).ToList(),
+            Tags = game.GameTags.Select(gt => MapToTagDto(gt.Tag)).ToList(),
+            Mechanics = mechanics,
+            MatureContent = matureContents,
+            Rating = rating
+        };
+    }
 
-    /// <summary>
-    /// Maps a <see cref="GameAddon"/> entity to a <see cref="GameAddonDto"/>.
-    /// </summary>
-    /// <param name="gameAddon">The game addon entity to be mapped.</param>
-    /// <returns>A <see cref="GameAddonDto"/> that represents the mapped game addon entity.</returns>
-    public static GameAddonDto MapGameAddonDto(GameAddon gameAddon)
+    public static GameCatalogDto MapToGameCatalogDto(Game game, 
+                                                    string fullLogoUrl, 
+                                                    (int positiveReviews, int negativeReviews) rating)
+    {
+        return new GameCatalogDto
+        {
+            Id = game.Id,
+            Title = game.Title,
+            LogoUrl = fullLogoUrl,
+            ReleaseDate = game.ReleaseDate,
+            Genres = game.ProductGenres.Select(pg => MapToGenreDto(pg.Genre)).ToList(),
+            Tags = game.GameTags.Select(gt => MapToTagDto(gt.Tag)).ToList(),
+            Discounts = game.ProductDiscounts.Select(pd => StoreEntityToDtoMapper.MapToDiscountDto(pd.Discount))
+                .Where(dto => 
+                    (!dto.StartDate.HasValue || dto.StartDate <= DateTime.UtcNow) && 
+                    (!dto.EndDate.HasValue || dto.EndDate >= DateTime.UtcNow))
+                .OrderBy(dto => dto.StartDate)
+                .ToList(),
+            Rating = rating
+        };
+    }
+
+    public static GameAddonDto MapToGameAddonDto(GameAddon gameAddon, 
+                                                string fullLogoUrl, 
+                                                List<MatureContentDto> matureContent, 
+                                                (int positiveReviews, int negativeReviews) rating)
     {
         return new GameAddonDto
         {
@@ -46,45 +106,43 @@ public static class GamesEntityToDtoMapper
             ShortDescription = gameAddon.ShortDescription,
             Description = gameAddon.Description,
             Developer = gameAddon.Developer,
-            MinimalAge = gameAddon.MinimalAge.ToString(),
+            MinimalAge = gameAddon.MinimalAge,
             Platforms = gameAddon.Platforms,
             Price = gameAddon.Price,
-            LogoUrl = gameAddon.LogoUrl,
+            LogoUrl = fullLogoUrl,
             ReleaseDate = gameAddon.ReleaseDate,
             IsActive = gameAddon.IsActive,
             InterfaceLanguages = gameAddon.InterfaceLanguages,
             AudioLanguages = gameAddon.AudioLanguages,
             SubtitlesLanguages = gameAddon.SubtitlesLanguages,
             GameId = gameAddon.GameId,
-            StorageUrl = gameAddon.StorageUrl
+            StorageUrl = gameAddon.StorageUrl,
+            Discounts = gameAddon.ProductDiscounts.Select(pd => StoreEntityToDtoMapper.MapToDiscountDto(pd.Discount))
+                .Where(dto => 
+                    (!dto.StartDate.HasValue || dto.StartDate <= DateTime.UtcNow) && 
+                    (!dto.EndDate.HasValue || dto.EndDate >= DateTime.UtcNow))
+                .OrderBy(dto => dto.StartDate)
+                .ToList(),
+            MatureContent = matureContent,
+            Rating = rating
         };
     }
 
-    /// <summary>
-    /// Maps a <see cref="GameAddon"/> entity to a <see cref="GameAddonDto"/>.
-    /// </summary>
-    /// <param name="addon">The game addon entity to be mapped.</param>
-    /// <returns>A <see cref="GameAddonDto"/> that represents the mapped game addon entity.</returns>
-    public static GameAddonDto MapToGameAddonDto(GameAddon addon)
+    public static GameAddonShortDto MapToGameAddonShortDto(GameAddon gameAddon, string fullLogoUrl)
     {
-        return new GameAddonDto
+        return new GameAddonShortDto
         {
-            Id = addon.Id,
-            Title = addon.Title,
-            ShortDescription = addon.ShortDescription,
-            Description = addon.Description,
-            Developer = addon.Developer,
-            MinimalAge = addon.MinimalAge.ToString(),
-            Platforms = addon.Platforms,
-            Price = addon.Price,
-            LogoUrl = addon.LogoUrl,
-            ReleaseDate = addon.ReleaseDate,
-            IsActive = addon.IsActive,
-            InterfaceLanguages = addon.InterfaceLanguages,
-            AudioLanguages = addon.AudioLanguages,
-            SubtitlesLanguages = addon.SubtitlesLanguages,
-            GameId = addon.GameId,
-            StorageUrl = addon.StorageUrl
+            Id = gameAddon.Id,
+            Title = gameAddon.Title,
+            ShortDescription = gameAddon.ShortDescription,
+            LogoUrl = fullLogoUrl,
+            Price = gameAddon.Price,
+            Discounts = gameAddon.ProductDiscounts.Select(pd => StoreEntityToDtoMapper.MapToDiscountDto(pd.Discount))
+                .Where(dto => 
+                    (!dto.StartDate.HasValue || dto.StartDate <= DateTime.UtcNow) && 
+                    (!dto.EndDate.HasValue || dto.EndDate >= DateTime.UtcNow))
+                .OrderBy(dto => dto.StartDate)
+                .ToList()
         };
     }
     
@@ -175,51 +233,36 @@ public static class GamesEntityToDtoMapper
             Name = genre.Name
         };
     }
-
-    /// <summary>
-    /// Maps an <see cref="ItemImage"/> entity to an <see cref="ItemImageDto"/>.
-    /// </summary>
-    /// <param name="itemImage">The item image entity to be mapped.</param>
-    /// <returns>An <see cref="ItemImageDto"/> that represents the mapped item image entity.</returns>
-    public static ItemImageDto MapToItemImageDto(ItemImage itemImage)
+    
+    public static ItemImageDto MapToItemImageDto(ItemImage itemImage, string fullLogoUrl)
     {
         return new ItemImageDto
         {
             Id = itemImage.Id,
-            ImageUrl = itemImage.ImageUrl,
+            ImageUrl = fullLogoUrl,
             ImageAlt = itemImage.ImageAlt
         };
     }
-
-    /// <summary>
-    /// Maps a <see cref="MatureContent"/> entity to a <see cref="MatureContentDto"/>.
-    /// </summary>
-    /// <param name="matureContent">The mature content entity to be mapped.</param>
-    /// <returns>A <see cref="MatureContentDto"/> that represents the mapped mature content entity.</returns>
-    public static MatureContentDto MapToMatureContentDto(MatureContent matureContent)
+    
+    public static MatureContentDto MapToMatureContentDto(MatureContent matureContent, string fullLogoUrl)
     {
         return new MatureContentDto
         {
             Id = matureContent.Id,
             Name = matureContent.Name,
             Description = matureContent.Description,
-            LogoUrl = matureContent.LogoUrl
+            LogoUrl = fullLogoUrl
         };
     }
 
-    /// <summary>
-    /// Maps a <see cref="Mechanic"/> entity to a <see cref="MechanicDto"/>.
-    /// </summary>
-    /// <param name="mechanic">The mechanic entity to be mapped.</param>
-    /// <returns>A <see cref="MechanicDto"/> that represents the mapped mechanic entity.</returns>
-    public static MechanicDto MapToMechanicDto(Mechanic mechanic)
+    public static MechanicDto MapToMechanicDto(Mechanic mechanic, string fullLogoUrl)
     {
         return new MechanicDto
         {
             Id = mechanic.Id,
             Name = mechanic.Name,
             Description = mechanic.Description,
-            LogoUrl = mechanic.LogoUrl,
+            LogoUrl = fullLogoUrl,
             IsDeleted = mechanic.IsDeleted
         };
     }

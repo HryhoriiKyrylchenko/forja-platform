@@ -174,6 +174,26 @@ public class ReviewRepository : IReviewRepository
         return review;
     }
 
+    public async Task<IEnumerable<Review>> GetAllWithUserInfoByProductIdAsync(Guid productId)
+    {
+        if (productId == Guid.Empty)
+        {
+            throw new ArgumentException("Product id cannot be empty.", nameof(productId));
+        }
+        
+        return await _reviews
+            .Where(r => r.ProductId == productId)
+            .Where(r => !r.IsDeleted)
+            .Where(r => r.IsApproved)
+            .Include(r => r.User)
+                .ThenInclude(u => u.UserAchievements)
+                    .ThenInclude(ua => ua.Achievement)
+            .Include(r => r.User)
+                .ThenInclude(u => u.UserLibraryGames)
+                    .ThenInclude(ulg => ulg.PurchasedAddons)
+            .ToListAsync();
+    }
+
     /// <inheritdoc />
     public async Task<IEnumerable<Review>> GetAllNotApprovedAsync()
     {

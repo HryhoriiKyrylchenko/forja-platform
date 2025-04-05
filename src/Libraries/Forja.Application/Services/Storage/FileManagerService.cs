@@ -3,10 +3,28 @@ namespace Forja.Application.Services.Storage;
 public class FileManagerService : IFileManagerService
 {
     private readonly IStorageService _storageService;
+    private readonly IUserRepository _userRepository;
+    private readonly IProductRepository _productRepository;
+    private readonly IAchievementRepository _achievementRepository;
+    private readonly IMatureContentRepository _matureContentRepository;
+    private readonly IMechanicRepository _mechanicRepository;
+    private readonly IProductImagesRepository _productImagesRepository;
 
-    public FileManagerService(IStorageService storageService)
+    public FileManagerService(IStorageService storageService,
+        IUserRepository userRepository,
+        IProductRepository productRepository,
+        IAchievementRepository achievementRepository,
+        IMatureContentRepository matureContentRepository,
+        IMechanicRepository mechanicRepository,
+        IProductImagesRepository productImagesRepository)
     {
         _storageService = storageService;
+        _userRepository = userRepository;
+        _productRepository = productRepository;
+        _achievementRepository = achievementRepository;
+        _matureContentRepository = matureContentRepository;
+        _mechanicRepository = mechanicRepository;
+        _productImagesRepository = productImagesRepository;
     }
 
     /// <inheritdoc />
@@ -77,9 +95,9 @@ public class FileManagerService : IFileManagerService
     }
 
     /// <inheritdoc />
-    public async Task<string> UploadProductLogoAsync(UploadLogoRequest request)
+    public async Task<string> UploadProductLogoAsync(UploadObjectImageRequest request)
     {
-        if (!StorageRequestsValidator.ValidateUploadLogoRequest(request, out var errors))
+        if (!StorageRequestsValidator.ValidateUploadObjectImageRequest(request, out var errors))
         {
             throw new ArgumentException($"Invalid request. Error: {errors}", nameof(request));
         }
@@ -91,7 +109,7 @@ public class FileManagerService : IFileManagerService
 
         string destinationPath = "images/product/logo/";
         string extension = Path.GetExtension(request.FileName);
-        string filenameWithoutExtension = $"product-logo_{request.ProductId}";
+        string filenameWithoutExtension = $"product-logo_{request.ObjectId}";
         string destinationFilePath = $"{destinationPath}{filenameWithoutExtension}{extension}";
         
         await using var stream = request.File.OpenReadStream();
@@ -160,9 +178,9 @@ public class FileManagerService : IFileManagerService
     }
 
     /// <inheritdoc />
-    public async Task<string> UploadUserAvatarAsync(UploadAvatarRequest request)
+    public async Task<string> UploadUserAvatarAsync(UploadObjectImageRequest request)
     {
-        if (!StorageRequestsValidator.ValidateUploadAvatarRequest(request, out var errors))
+        if (!StorageRequestsValidator.ValidateUploadObjectImageRequest(request, out var errors))
         {
             throw new ArgumentException($"Invalid request. Error: {errors}", nameof(request));
         }
@@ -174,7 +192,7 @@ public class FileManagerService : IFileManagerService
 
         string destinationPath = "images/user/avatars/";
         string extension = Path.GetExtension(request.FileName);
-        string filenameWithoutExtension = $"user-avatar_{request.UserId}";
+        string filenameWithoutExtension = $"user-avatar_{request.ObjectId}";
         string destinationFilePath = $"{destinationPath}{filenameWithoutExtension}{extension}";
         
         await using var stream = request.File.OpenReadStream();
@@ -198,7 +216,121 @@ public class FileManagerService : IFileManagerService
         
         await _storageService.DeleteFileAsync(request.ObjectPath);
     }
-    
+
+    public async Task<string> UploadAchievementImageAsync(UploadObjectImageRequest request)
+    {
+        if (!StorageRequestsValidator.ValidateUploadObjectImageRequest(request, out var errors))
+        {
+            throw new ArgumentException($"Invalid request. Error: {errors}", nameof(request));
+        }
+        
+        if (request.File == null)
+        {
+            throw new ArgumentException("Stream cannot be null.", nameof(request.File));
+        }
+
+        string destinationPath = "images/achievements/";
+        string extension = Path.GetExtension(request.FileName);
+        string filenameWithoutExtension = $"achievement_{request.ObjectId}";
+        string destinationFilePath = $"{destinationPath}{filenameWithoutExtension}{extension}";
+        
+        await using var stream = request.File.OpenReadStream();
+        
+        await UploadStreamAsync(destinationFilePath, stream, request.ObjectSize, request.ContentType);
+        return destinationFilePath;
+    }
+
+    public async Task DeleteAchievementImageAsync(DeleteObjectRequest request)
+    {
+        if (!StorageRequestsValidator.ValidateDeleteObjectRequest(request, out var errors))
+        {
+            throw new ArgumentException($"Invalid request. Error: {errors}", nameof(request));
+        }
+
+        if (!request.ObjectPath.Contains("images/achievements/"))
+        {
+            throw new ArgumentException("Wrong object path", nameof(request.ObjectPath));
+        }
+        
+        await _storageService.DeleteFileAsync(request.ObjectPath);
+    }
+
+    public async Task<string> UploadMatureContentImageAsync(UploadObjectImageRequest request)
+    {
+        if (!StorageRequestsValidator.ValidateUploadObjectImageRequest(request, out var errors))
+        {
+            throw new ArgumentException($"Invalid request. Error: {errors}", nameof(request));
+        }
+        
+        if (request.File == null)
+        {
+            throw new ArgumentException("Stream cannot be null.", nameof(request.File));
+        }
+
+        string destinationPath = "images/mature-content/";
+        string extension = Path.GetExtension(request.FileName);
+        string filenameWithoutExtension = $"mature-content_{request.ObjectId}";
+        string destinationFilePath = $"{destinationPath}{filenameWithoutExtension}{extension}";
+        
+        await using var stream = request.File.OpenReadStream();
+        
+        await UploadStreamAsync(destinationFilePath, stream, request.ObjectSize, request.ContentType);
+        return destinationFilePath;
+    }
+
+    public async Task DeleteMatureContentImageAsync(DeleteObjectRequest request)
+    {
+        if (!StorageRequestsValidator.ValidateDeleteObjectRequest(request, out var errors))
+        {
+            throw new ArgumentException($"Invalid request. Error: {errors}", nameof(request));
+        }
+
+        if (!request.ObjectPath.Contains("images/mature-content/"))
+        {
+            throw new ArgumentException("Wrong object path", nameof(request.ObjectPath));
+        }
+        
+        await _storageService.DeleteFileAsync(request.ObjectPath);
+    }
+
+    public async Task<string> UploadMechanicImageAsync(UploadObjectImageRequest request)
+    {
+        if (!StorageRequestsValidator.ValidateUploadObjectImageRequest(request, out var errors))
+        {
+            throw new ArgumentException($"Invalid request. Error: {errors}", nameof(request));
+        }
+        
+        if (request.File == null)
+        {
+            throw new ArgumentException("Stream cannot be null.", nameof(request.File));
+        }
+
+        string destinationPath = "images/mechanics/";
+        string extension = Path.GetExtension(request.FileName);
+        string filenameWithoutExtension = $"mechanic_{request.ObjectId}";
+        string destinationFilePath = $"{destinationPath}{filenameWithoutExtension}{extension}";
+        
+        await using var stream = request.File.OpenReadStream();
+        
+        await UploadStreamAsync(destinationFilePath, stream, request.ObjectSize, request.ContentType);
+        return destinationFilePath;
+    }
+
+    public async Task DeleteMechanicImageAsync(DeleteObjectRequest request)
+    {
+        if (!StorageRequestsValidator.ValidateDeleteObjectRequest(request, out var errors))
+        {
+            throw new ArgumentException($"Invalid request. Error: {errors}", nameof(request));
+        }
+
+        if (!request.ObjectPath.Contains("images/mechanics/"))
+        {
+            throw new ArgumentException("Wrong object path", nameof(request.ObjectPath));
+        }
+        
+        await _storageService.DeleteFileAsync(request.ObjectPath);
+    }
+
     /// <inheritdoc />
     public async Task<string> GetPresignedUrlAsync(string objectPath, int expiresInSeconds = 3600)
     {
@@ -279,6 +411,168 @@ public class FileManagerService : IFileManagerService
         if (string.IsNullOrWhiteSpace(result))
         {
             throw new InvalidOperationException($"Failed to get presigned URL for hat variant: {request.ProfileHatVariantId}");
+        }
+        
+        return result;
+    }
+
+    public async Task<List<string>> GetPresignedProductImagesUrlsAsync(Guid productId, int expiresInSeconds = 3600)
+    {
+        if (productId == Guid.Empty)
+        {
+            throw new ArgumentException("Product ID cannot be empty.", nameof(productId));
+        }
+        
+        var productImages = await _productImagesRepository.GetByProductIdAsync(productId);
+        if (productImages == null)
+        {
+            throw new InvalidOperationException($"Product with ID {productId} not found.");
+        }
+
+        var productImagesList = productImages.ToList();
+        if (!productImagesList.Any())
+        {
+            return new List<string>();
+        }
+
+        var presignedUrls = await Task.WhenAll(
+            productImagesList.Select(async pi =>
+                await _storageService.GetPresignedUrlAsync(pi.ItemImage.ImageUrl, expiresInSeconds))
+        );
+
+        return presignedUrls.ToList();
+    }
+
+    public async Task<string> GetPresignedUserAvatarUrlAsync(Guid userId, int expiresInSeconds = 3600)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User ID cannot be empty.", nameof(userId));
+        }
+
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user == null)
+        {
+            throw new InvalidOperationException($"User with ID {userId} not found.");
+        }
+
+        if (string.IsNullOrWhiteSpace(user.AvatarUrl))
+        {
+            return string.Empty;
+        }
+        
+        var result = await _storageService.GetPresignedUrlAsync(user.AvatarUrl, expiresInSeconds);
+        if (string.IsNullOrWhiteSpace(result))
+        {
+            throw new InvalidOperationException($"Failed to get presigned URL for user avatar: {userId}");
+        }
+        
+        return result;
+    }
+
+    public async Task<string> GetPresignedProductLogoUrlAsync(Guid productId, int expiresInSeconds = 3600)
+    {
+        if (productId == Guid.Empty)
+        {
+            throw new ArgumentException("Product ID cannot be empty.", nameof(productId));
+        }
+        
+        var product = await _productRepository.GetByIdAsync(productId);
+        if (product == null)
+        {
+            throw new InvalidOperationException($"Product with ID {productId} not found.");
+        }
+
+        if (string.IsNullOrWhiteSpace(product.LogoUrl))
+        {
+            return string.Empty;
+        }
+        
+        var result = await _storageService.GetPresignedUrlAsync(product.LogoUrl, expiresInSeconds);
+        if (string.IsNullOrWhiteSpace(result))
+        {
+            throw new InvalidOperationException($"Failed to get presigned URL for product logo: {productId}");
+        }
+        
+        return result;
+    }
+
+    public async Task<string> GetPresignedAchievementImageUrlAsync(Guid achievementId, int expiresInSeconds = 3600)
+    {
+        if (achievementId == Guid.Empty)
+        {
+            throw new ArgumentException("Achievement ID cannot be empty.", nameof(achievementId));
+        }
+        
+        var achievement = await _achievementRepository.GetByIdAsync(achievementId);
+        if (achievement == null)
+        {
+            throw new InvalidOperationException($"Achievement with ID {achievementId} not found.");
+        }
+        
+        if (string.IsNullOrWhiteSpace(achievement.LogoUrl))
+        {
+            return string.Empty;
+        }
+
+        var result = await _storageService.GetPresignedUrlAsync(achievement.LogoUrl, expiresInSeconds);
+        if (string.IsNullOrWhiteSpace(result))
+        {
+            throw new InvalidOperationException($"Failed to get presigned URL for achievement logo: {achievementId}");
+        }
+        
+        return result;
+    }
+
+    public async Task<string> GetPresignedMatureContentImageUrlAsync(Guid matureContentId, int expiresInSeconds = 3600)
+    {
+        if (matureContentId == Guid.Empty)
+        {
+            throw new ArgumentException("Mature content ID cannot be empty.", nameof(matureContentId));
+        }
+        
+        var matureContent = await _matureContentRepository.GetByIdAsync(matureContentId);
+        if (matureContent == null)
+        {
+            throw new InvalidOperationException($"Mature content with ID {matureContentId} not found.");
+        }
+        
+        if (string.IsNullOrWhiteSpace(matureContent.LogoUrl))
+        {
+            return string.Empty;
+        }
+        
+        var result = await _storageService.GetPresignedUrlAsync(matureContent.LogoUrl, expiresInSeconds);
+        if (string.IsNullOrWhiteSpace(result))
+        {
+            throw new InvalidOperationException($"Failed to get presigned URL for mature content logo: {matureContentId}");
+        }
+        
+        return result;
+    }
+
+    public async Task<string> GetPresignedMechanicImageUrlAsync(Guid mechanicId, int expiresInSeconds = 3600)
+    {
+        if (mechanicId == Guid.Empty)
+        {
+            throw new ArgumentException("Mechanic ID cannot be empty.", nameof(mechanicId));
+        }
+
+        var mechanic = await _mechanicRepository.GetByIdAsync(mechanicId);
+        if (mechanic == null)
+        {
+            throw new InvalidOperationException($"Mechanic with ID {mechanicId} not found.");
+        }
+        
+        if (string.IsNullOrWhiteSpace(mechanic.LogoUrl))
+        {
+            return string.Empty;
+        }
+        
+        var result = await _storageService.GetPresignedUrlAsync(mechanic.LogoUrl, expiresInSeconds);
+        if (string.IsNullOrWhiteSpace(result))
+        {
+            throw new InvalidOperationException($"Failed to get presigned URL for mechanic logo: {mechanicId}");
         }
         
         return result;

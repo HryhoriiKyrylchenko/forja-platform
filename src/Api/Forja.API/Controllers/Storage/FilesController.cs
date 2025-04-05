@@ -180,7 +180,7 @@ public class FilesController : ControllerBase
 
     [Authorize]
     [HttpPost("avatar")]
-    public async Task<IActionResult> UploadUserAvatar([FromBody] UploadAvatarRequest request)
+    public async Task<IActionResult> UploadUserAvatar([FromBody] UploadObjectImageRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         try
@@ -203,7 +203,7 @@ public class FilesController : ControllerBase
                 userProfile = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
             }
 
-            if (userProfile == null || userProfile.Id != request.UserId)
+            if (userProfile == null || userProfile.Id != request.ObjectId)
             {
                 return Unauthorized(new { error = "User ID does not match the user ID in the token claims." });
             }
@@ -343,7 +343,7 @@ public class FilesController : ControllerBase
     
     [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("product-logo")]
-    public async Task<IActionResult> UploadProductLogo([FromBody] UploadLogoRequest request)
+    public async Task<IActionResult> UploadProductLogo([FromBody] UploadObjectImageRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         try

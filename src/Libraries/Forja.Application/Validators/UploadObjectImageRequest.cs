@@ -1,9 +1,9 @@
-namespace Forja.Application.Requests.Storage;
+namespace Forja.Application.Validators;
 
-public class UploadAvatarRequest
+public class UploadObjectImageRequest
 {
     [Required]
-    public Guid UserId { get; set; }
+    public Guid ObjectId { get; set; }
     [Required]
     public required IFormFile File { get; set; }
     [Required]

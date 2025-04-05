@@ -15,6 +15,15 @@ public interface IGameService
     Task<IEnumerable<GameDto>> GetAllAsync();
 
     /// <summary>
+    /// Asynchronously retrieves all games formatted for catalog view as a collection of <see cref="GameCatalogDto"/>.
+    /// </summary>
+    /// <returns>
+    /// A task representing the asynchronous operation that, when completed, contains
+    /// an enumerable collection of <see cref="GameCatalogDto"/> representing the games in catalog format.
+    /// </returns>
+    Task<List<GameCatalogDto>> GetAllForCatalogAsync();
+
+    /// <summary>
     /// Retrieves a collection of all deleted game records asynchronously.
     /// </summary>
     /// <returns>An enumerable collection of GameDto objects representing the deleted games.</returns>
@@ -28,6 +37,18 @@ public interface IGameService
     /// A <see cref="GameDto"/> representing the game if found; otherwise, null.
     /// </returns>
     Task<GameDto?> GetByIdAsync(Guid id);
+
+    /// <summary>
+    /// Asynchronously retrieves detailed information about a game identified by its unique identifier
+    /// as a <see cref="GameExtendedDto"/>.
+    /// </summary>
+    /// <param name="id">The unique identifier of the game to retrieve.</param>
+    /// <returns>
+    /// A task representing the asynchronous operation that, when completed, contains
+    /// a <see cref="GameExtendedDto"/> instance with detailed information about the specified game,
+    /// or null if no game with the given identifier is found.
+    /// </returns>
+    Task<GameExtendedDto?> GetExtendedByIdAsync(Guid id);
 
     /// <summary>
     /// Asynchronously adds a new game using the provided creation request.

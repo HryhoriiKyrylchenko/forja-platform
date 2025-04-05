@@ -107,6 +107,98 @@ public class GamesController : ControllerBase
             return BadRequest(new { error = ex.Message });
         }
     }
+    
+    /// <summary>
+    /// Gets all games.
+    /// </summary>
+    [HttpGet("games-catalog")]
+    public async Task<ActionResult<PaginatedResult<GameCatalogDto>>> GetAllGamesForCatalogAsync(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        try
+        {
+            var cachedGames = await _cache.GetStringAsync("games_catalog");
+            List<GameCatalogDto>? allGames;
+            
+            if (!string.IsNullOrWhiteSpace(cachedGames))
+            {
+                allGames = JsonSerializer.Deserialize<List<GameCatalogDto>>(cachedGames);
+            }
+            else
+            {
+                allGames = await _gameService.GetAllForCatalogAsync();
+                if (!allGames.Any()) return NoContent();
+                
+                var serializedData = JsonSerializer.Serialize(allGames);
+                
+                await _cache.SetStringAsync("games_catalog", serializedData, new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+                });
+            }
+            
+            if (allGames == null) return NoContent();
+            
+            var paginatedGames = allGames
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+            
+            try
+            {
+                var keycloakUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                UserProfileDto? user = null;
+                if (!string.IsNullOrEmpty(keycloakUserId))
+                {
+                    user = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
+                }
+                await _analyticsEventService.AddEventAsync(AnalyticEventType.PageView,
+                    user?.Id,
+                    new Dictionary<string, string>
+                    {
+                        { "Page", "GamesCatalog" },
+                        { "Date", DateTime.UtcNow.ToString(CultureInfo.InvariantCulture) }
+                    });
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Analytics event creation failed.");
+            }
+            
+            return Ok(new PaginatedResult<GameCatalogDto>(
+                paginatedGames,
+                allGames.Count,
+                pageNumber,
+                pageSize));
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all games" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
+        }
+    }
 
     /// <summary>
     /// Gets all deleted games.
@@ -154,8 +246,9 @@ public class GamesController : ControllerBase
     /// <summary>
     /// Gets a game by its ID.
     /// </summary>
-    [HttpGet("games/{id}")]
-    public async Task<IActionResult> GetGameByIdAsync([FromRoute] Guid id)
+    [Authorize(Policy = "ContentManagePolicy")]
+    [HttpGet("manage/games/{id}")]
+    public async Task<IActionResult> GetGameByIdForManagerAsync([FromRoute] Guid id)
     {
         if (id == Guid.Empty) return BadRequest("Game ID cannot be empty.");
 
@@ -183,7 +276,61 @@ public class GamesController : ControllerBase
 
             await _cache.SetStringAsync($"game_{id}", serializedData, new DistributedCacheEntryOptions
             {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+            });
+
+            return Ok(game);
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get game by id: {id}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+    
+    [HttpGet("games/{id}")]
+    public async Task<IActionResult> GetGameByIdAsync([FromRoute] Guid id)
+    {
+        if (id == Guid.Empty) return BadRequest("Game ID cannot be empty.");
+
+        try
+        {
+            var cachedGame = await _cache.GetStringAsync($"extended_game_{id}");
+            if (!string.IsNullOrWhiteSpace(cachedGame))
+            {
+                var gameDto = JsonSerializer.Deserialize<GameExtendedDto>(cachedGame);
+                return Ok(gameDto);
+            }
+            
+            var game = await _gameService.GetExtendedByIdAsync(id);
+            if (game == null) return NotFound(new { error = $"Game with ID {id} not found." });
+            
+            var serializedData = JsonSerializer.Serialize(game);
+
+            await _cache.SetStringAsync($"extended_game_{id}", serializedData, new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
             });
             
             try
@@ -226,7 +373,7 @@ public class GamesController : ControllerBase
                     LogLevel = LogLevel.Error,
                     Details = new Dictionary<string, string>
                     {
-                        { "Message", $"Failed to get game by id: {id}" }
+                        { "Message", $"Failed to get extended game by id: {id}" }
                     }
                 };
                 
@@ -455,9 +602,6 @@ public class GamesController : ControllerBase
 
     #region GameAddons Endpoints
 
-    /// <summary>
-    /// Gets all game addons.
-    /// </summary>
     [HttpGet("game-addons")]
     public async Task<IActionResult> GetAllGameAddonsAsync()
     {
@@ -519,6 +663,95 @@ public class GamesController : ControllerBase
                     Details = new Dictionary<string, string>
                     {
                         { "Message", $"Failed to get all game addons" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+    
+    [HttpGet("game-addons-catalog")]
+    public async Task<ActionResult<PaginatedResult<GameAddonShortDto>>> GetAllGameAddonsForCatalogAsync(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        try
+        {
+            var cachedAddons = await _cache.GetStringAsync("games_addons_catalog");
+            List<GameAddonShortDto>? allAddons;
+            
+            if (!string.IsNullOrWhiteSpace(cachedAddons))
+            {
+                allAddons = JsonSerializer.Deserialize<List<GameAddonShortDto>>(cachedAddons);
+            }
+            else
+            {
+                allAddons = await _gameAddonService.GetAllForCatalogAsync();
+                if (!allAddons.Any()) return NoContent();
+                
+                var serializedData = JsonSerializer.Serialize(allAddons);
+
+                await _cache.SetStringAsync("games_addons_catalog", serializedData, new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+                });
+            }
+            
+            if (allAddons == null) return NoContent();
+
+            var pagedAddons = allAddons
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+            
+            try
+            {
+                var keycloakUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                UserProfileDto? user = null;
+                if (!string.IsNullOrEmpty(keycloakUserId))
+                {
+                    user = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
+                }
+                await _analyticsEventService.AddEventAsync(AnalyticEventType.PageView,
+                    user?.Id,
+                    new Dictionary<string, string>
+                    {
+                        { "Page", "GameAddonsCatalog" },
+                        { "Date", DateTime.UtcNow.ToString(CultureInfo.InvariantCulture) }
+                    });
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Analytics event creation failed.");
+            }
+            
+            return Ok(new PaginatedResult<GameAddonShortDto>(
+                pagedAddons,
+                allAddons.Count,
+                pageNumber,
+                pageSize));
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all addons for catalog" }
                     }
                 };
                 
@@ -629,7 +862,22 @@ public class GamesController : ControllerBase
 
         try
         {
+            var cachedAddons = await _cache.GetStringAsync($"games_addons_for_game_{id}");
+            if (!string.IsNullOrWhiteSpace(cachedAddons))
+            {
+                var allGames = JsonSerializer.Deserialize<List<GameAddonShortDto>>(cachedAddons);
+                return Ok(allGames);
+            }
+
             var addons = await _gameAddonService.GetByGameIdAsync(id);
+            if (!addons.Any()) return NoContent();
+            
+            var serializedData = JsonSerializer.Serialize(addons);
+
+            await _cache.SetStringAsync($"games_addons_for_game_{id}", serializedData, new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+            });
             
             try
             {

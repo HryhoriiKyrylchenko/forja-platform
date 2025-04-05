@@ -15,7 +15,7 @@ public interface IFileManagerService
 
     Task DeleteGameFileAsync(DeleteObjectRequest request);
 
-    Task<string> UploadProductLogoAsync(UploadLogoRequest request);
+    Task<string> UploadProductLogoAsync(UploadObjectImageRequest request);
 
     Task DeleteProductLogoAsync(DeleteObjectRequest request);
 
@@ -23,9 +23,21 @@ public interface IFileManagerService
 
     Task DeleteProductImageAsync(DeleteObjectRequest request);
 
-    Task<string> UploadUserAvatarAsync(UploadAvatarRequest request);
+    Task<string> UploadUserAvatarAsync(UploadObjectImageRequest request);
 
     Task DeleteUserAvatarAsync(DeleteObjectRequest request);
+    
+    Task<string> UploadAchievementImageAsync(UploadObjectImageRequest request);
+
+    Task DeleteAchievementImageAsync(DeleteObjectRequest request);
+    
+    Task<string> UploadMatureContentImageAsync(UploadObjectImageRequest request);
+
+    Task DeleteMatureContentImageAsync(DeleteObjectRequest request);
+    
+    Task<string> UploadMechanicImageAsync(UploadObjectImageRequest request);
+
+    Task DeleteMechanicImageAsync(DeleteObjectRequest request);
 
     Task<string> GetPresignedUrlAsync(string objectPath, int expiresInSeconds = 3600);
 
@@ -34,4 +46,11 @@ public interface IFileManagerService
     Task DeleteProfileHatVariantFileAsync(ProfileHatVariantFileDeleteRequest request);
 
     Task<string> GetPresignedProfileHatVariantUrlAsync(ProfileHatVariantGetByIdRequest request);
+    
+    Task<List<string>> GetPresignedProductImagesUrlsAsync(Guid productId, int expiresInSeconds = 3600);
+    Task<string> GetPresignedUserAvatarUrlAsync(Guid userId, int expiresInSeconds = 3600);
+    Task<string> GetPresignedProductLogoUrlAsync(Guid productId, int expiresInSeconds = 3600);
+    Task<string> GetPresignedAchievementImageUrlAsync(Guid achievementId, int expiresInSeconds = 3600);
+    Task<string> GetPresignedMatureContentImageUrlAsync(Guid matureContentId, int expiresInSeconds = 3600);
+    Task<string> GetPresignedMechanicImageUrlAsync(Guid mechanicId, int expiresInSeconds = 3600);
 }

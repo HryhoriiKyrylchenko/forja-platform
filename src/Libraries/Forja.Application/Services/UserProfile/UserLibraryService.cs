@@ -7,11 +7,15 @@ public class UserLibraryService : IUserLibraryService
 {
     private readonly IUserLibraryGameRepository _userLibraryGameRepository;
     private readonly IUserLibraryAddonRepository _userLibraryAddonRepository;
+    private readonly IFileManagerService _fileManagerService;
 
-    public UserLibraryService(IUserLibraryGameRepository userLibraryGameRepository, IUserLibraryAddonRepository userLibraryAddonRepository)
+    public UserLibraryService(IUserLibraryGameRepository userLibraryGameRepository, 
+        IUserLibraryAddonRepository userLibraryAddonRepository,
+        IFileManagerService fileManagerService)
     {
-        _userLibraryGameRepository = userLibraryGameRepository ?? throw new ArgumentNullException(nameof(userLibraryGameRepository));
-        _userLibraryAddonRepository = userLibraryAddonRepository ?? throw new ArgumentNullException(nameof(userLibraryAddonRepository));
+        _userLibraryGameRepository = userLibraryGameRepository;
+        _userLibraryAddonRepository = userLibraryAddonRepository;
+        _fileManagerService = fileManagerService;
     }
     
     #region Games Methods
@@ -237,7 +241,10 @@ public class UserLibraryService : IUserLibraryService
         
         var result = await _userLibraryAddonRepository.AddAsync(userLibraryAddon);
     
-        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(result);
+        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(
+            result,
+            await _fileManagerService.GetPresignedProductLogoUrlAsync(userLibraryAddon.AddonId, 1900)
+            );
     }
 
     /// <inheritdoc />
@@ -260,7 +267,10 @@ public class UserLibraryService : IUserLibraryService
         
         var result = await _userLibraryAddonRepository.UpdateAsync(userLibraryAddon);
         
-        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(result);
+        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(
+            result,
+            await _fileManagerService.GetPresignedProductLogoUrlAsync(userLibraryAddon.AddonId, 1900)
+        );
     }
 
     /// <inheritdoc />
@@ -290,7 +300,10 @@ public class UserLibraryService : IUserLibraryService
         
         var result = await _userLibraryAddonRepository.RestoreAsync(userLibraryAddonId);
         
-        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(result);
+        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(
+            result,
+            await _fileManagerService.GetPresignedProductLogoUrlAsync(result.AddonId, 1900)
+        );
     }
 
     /// <inheritdoc />
@@ -303,7 +316,10 @@ public class UserLibraryService : IUserLibraryService
         
         var result = await _userLibraryAddonRepository.GetByIdAsync(userLibraryAddonId);
         
-        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(result);
+        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(
+            result,
+            await _fileManagerService.GetPresignedProductLogoUrlAsync(result.AddonId, 1900)
+        );
     }
 
     /// <inheritdoc />
@@ -316,7 +332,10 @@ public class UserLibraryService : IUserLibraryService
         
         var result = await _userLibraryAddonRepository.GetDeletedByIdAsync(userLibraryAddonId);
         
-        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(result);
+        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(
+            result,
+            await _fileManagerService.GetPresignedProductLogoUrlAsync(result.AddonId, 1900)
+        );
     }
 
     /// <inheritdoc />
@@ -334,7 +353,10 @@ public class UserLibraryService : IUserLibraryService
         
         var userLibraryAddon = await _userLibraryAddonRepository.GetByGameIdAndUserIdAsync(addonId, userId);
         
-        return userLibraryAddon == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(userLibraryAddon);
+        return userLibraryAddon == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(
+            userLibraryAddon,
+            await _fileManagerService.GetPresignedProductLogoUrlAsync(userLibraryAddon.AddonId, 1900)
+        );
     }
 
     /// <inheritdoc />
@@ -345,23 +367,32 @@ public class UserLibraryService : IUserLibraryService
             throw new ArgumentException("Addon ID cannot be an empty Guid.", nameof(addonId));
         }
         
-        var result = await _userLibraryAddonRepository.GetByAddonIdAsync(addonId);
-        
-        return result.Select(UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto).ToList();
+        var libraryAddons = await _userLibraryAddonRepository.GetByAddonIdAsync(addonId);
+
+        var addonDtos = await Task.WhenAll(
+            libraryAddons.Select(async la =>
+            {
+                var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(la.AddonId, 1900);
+                return UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(la, logoUrl);
+            })
+        );
+
+        return addonDtos.ToList();
     }
 
     /// <inheritdoc />
     public async Task<List<UserLibraryAddonDto>> GetAllUserLibraryAddonsAsync()
     {
-        var allUserLibraryAddons = await _userLibraryAddonRepository.GetAllAsync();
-        
-        var userLibraryAddons = allUserLibraryAddons.ToList();
-        //if (!userLibraryAddons.Any())
-        //{
-        //    throw new KeyNotFoundException("No user library addons were found.");
-        //}
+        var libraryAddons = await _userLibraryAddonRepository.GetAllAsync();
+        var addonDtos = await Task.WhenAll(
+            libraryAddons.Select(async la =>
+            {
+                var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(la.AddonId, 1900);
+                return UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(la, logoUrl);
+            })
+        );
 
-        return userLibraryAddons.Select(UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto).ToList();
+        return addonDtos.ToList();
     }
 
     /// <inheritdoc />
@@ -369,13 +400,16 @@ public class UserLibraryService : IUserLibraryService
     {
         var allDeletedUserLibraryAddons = await _userLibraryAddonRepository.GetAllDeletedAsync();
         
-        var userLibraryAddons = allDeletedUserLibraryAddons.ToList();
-        if (!userLibraryAddons.Any())
-        {
-            throw new KeyNotFoundException("No user library addons were found.");
-        }
+        var libraryAddons = allDeletedUserLibraryAddons.ToList();
+        var addonDtos = await Task.WhenAll(
+            libraryAddons.Select(async la =>
+            {
+                var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(la.AddonId, 1900);
+                return UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(la, logoUrl);
+            })
+        );
 
-        return userLibraryAddons.Select(UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto).ToList();
+        return addonDtos.ToList();
     }
 
     /// <inheritdoc />
@@ -386,15 +420,17 @@ public class UserLibraryService : IUserLibraryService
             throw new ArgumentException("Game ID cannot be an empty Guid.", nameof(gameId));
         }
         
-        var allUserLibraryAddons = await _userLibraryAddonRepository.GetAllByGameIdAsync(gameId);
+        var libraryAddons = await _userLibraryAddonRepository.GetAllByGameIdAsync(gameId);
         
-        var userLibraryAddons = allUserLibraryAddons.ToList();
-        if (!userLibraryAddons.Any())
-        {
-            throw new KeyNotFoundException("No user library addons were found.");
-        }
-        
-        return userLibraryAddons.Select(UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto).ToList();
+        var addonDtos = await Task.WhenAll(
+            libraryAddons.Select(async la =>
+            {
+                var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(la.AddonId, 1900);
+                return UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(la, logoUrl);
+            })
+        );
+
+        return addonDtos.ToList();
     }
 
     /// <inheritdoc />
@@ -405,15 +441,17 @@ public class UserLibraryService : IUserLibraryService
             throw new ArgumentException("Game ID cannot be an empty Guid.", nameof(gameId));
         }
         
-        var allDeletedUserLibraryAddons = await _userLibraryAddonRepository.GetAllDeletedByGameIdAsync(gameId);
+        var libraryAddons = await _userLibraryAddonRepository.GetAllDeletedByGameIdAsync(gameId);
         
-        var userLibraryAddons = allDeletedUserLibraryAddons.ToList();
-        if (!userLibraryAddons.Any())
-        {
-            throw new KeyNotFoundException("No user library addons were found.");
-        }
-        
-        return userLibraryAddons.Select(UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto).ToList();
+        var addonDtos = await Task.WhenAll(
+            libraryAddons.Select(async la =>
+            {
+                var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(la.AddonId, 1900);
+                return UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(la, logoUrl);
+            })
+        );
+
+        return addonDtos.ToList();
     }
 
     #endregion

@@ -7,10 +7,13 @@ namespace Forja.Application.Services.Games;
 public class MatureContentService : IMatureContentService
 {
     private readonly IMatureContentRepository _matureContentRepository;
+    private readonly IFileManagerService _fileManagerService;
 
-    public MatureContentService(IMatureContentRepository matureContentRepository)
+    public MatureContentService(IMatureContentRepository matureContentRepository,
+        IFileManagerService fileManagerService)
     {
         _matureContentRepository = matureContentRepository;
+        _fileManagerService = fileManagerService;
     }
 
     /// <inheritdoc />
@@ -18,7 +21,19 @@ public class MatureContentService : IMatureContentService
     {
         var matureContents = await _matureContentRepository.GetAllAsync();
 
-        return matureContents.Select(GamesEntityToDtoMapper.MapToMatureContentDto);
+        return await Task.WhenAll(matureContents.Select(async mc =>
+        {
+            if (mc.LogoUrl != null)
+                return GamesEntityToDtoMapper.MapToMatureContentDto(
+                    mc,
+                    await _fileManagerService.GetPresignedUrlAsync(mc.LogoUrl, 1900)
+                );
+
+            return GamesEntityToDtoMapper.MapToMatureContentDto(
+                mc,
+                string.Empty
+            );
+        }));
     }
 
     /// <inheritdoc />
@@ -30,7 +45,11 @@ public class MatureContentService : IMatureContentService
         }
         var matureContent = await _matureContentRepository.GetByIdAsync(id);
 
-        return matureContent == null ? null : GamesEntityToDtoMapper.MapToMatureContentDto(matureContent);
+        return matureContent == null ? null : GamesEntityToDtoMapper.MapToMatureContentDto(
+            matureContent,
+            matureContent.LogoUrl == null ? string.Empty 
+                : await _fileManagerService.GetPresignedUrlAsync(matureContent.LogoUrl, 1900)
+            );
     }
 
     /// <inheritdoc />
@@ -51,7 +70,10 @@ public class MatureContentService : IMatureContentService
 
         var createdMatureContent = await _matureContentRepository.AddAsync(newMatureContent);
 
-        return createdMatureContent == null ? null : GamesEntityToDtoMapper.MapToMatureContentDto(createdMatureContent);
+        return createdMatureContent == null ? null : GamesEntityToDtoMapper.MapToMatureContentDto(
+            createdMatureContent,
+            createdMatureContent.LogoUrl == null? string.Empty 
+                : await _fileManagerService.GetPresignedUrlAsync(createdMatureContent.LogoUrl, 1900));
     }
 
     /// <inheritdoc />
@@ -74,7 +96,10 @@ public class MatureContentService : IMatureContentService
 
         var updatedMatureContent = await _matureContentRepository.UpdateAsync(existingMatureContent);
 
-        return updatedMatureContent == null ? null : GamesEntityToDtoMapper.MapToMatureContentDto(updatedMatureContent);
+        return updatedMatureContent == null ? null : GamesEntityToDtoMapper.MapToMatureContentDto(
+            updatedMatureContent,
+            updatedMatureContent.LogoUrl == null ? string.Empty
+                : await _fileManagerService.GetPresignedUrlAsync(updatedMatureContent.LogoUrl, 1900));
     }
 
     /// <inheritdoc />

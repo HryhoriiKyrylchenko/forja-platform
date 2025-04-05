@@ -119,20 +119,51 @@ public static class UserProfileEntityToDtoMapper
             PurchaseDate = userLibraryGame.PurchaseDate
         };
     }
-
-    /// <summary>
-    /// Maps a <see cref="UserLibraryAddon"/> entity to a <see cref="UserLibraryAddonDto"/> DTO.
-    /// </summary>
-    /// <param name="userLibraryAddon">The <see cref="UserLibraryAddon"/> entity to map.</param>
-    /// <returns>A <see cref="UserLibraryAddonDto"/> that represents the mapped data.</returns>
-    public static UserLibraryAddonDto MapToUserLibraryAddonDto(UserLibraryAddon userLibraryAddon)
+    
+    public static UserLibraryAddonDto MapToUserLibraryAddonDto(UserLibraryAddon userLibraryAddon, string addonLogoUrl)
     {
         return new UserLibraryAddonDto
         {
             Id = userLibraryAddon.Id,
             UserLibraryGameId = userLibraryAddon.UserLibraryGameId,
-            GameAddon = GamesEntityToDtoMapper.MapGameAddonDto(userLibraryAddon.GameAddon),
+            GameAddon = GamesEntityToDtoMapper.MapToGameAddonShortDto(userLibraryAddon.GameAddon, addonLogoUrl),
             PurchaseDate = userLibraryAddon.PurchaseDate
+        };
+    }
+
+    public static AchievementShortDto MapToAchievementShortDto(Achievement achievement, string achievementLogoUrl)
+    {
+        return new AchievementShortDto
+        {
+            Id = achievement.Id,
+            Name = achievement.Name,
+            LogoUrl = achievementLogoUrl
+        };
+    }
+
+    public static UserForReviewDto MapToUserForReviewDto(User user, string avatarUrl, int productsCount, List<AchievementShortDto> achievements)
+    {
+        return new UserForReviewDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            UserTag = user.CustomUrl ?? user.Username,
+            AvatarUrl = avatarUrl,
+            ProductsInLibrary = productsCount,
+            Achievements = achievements
+        };
+    }
+
+    public static ReviewExtendedDto MapToReviewExtendedDto(Review review, UserForReviewDto user)
+    {
+        return new ReviewExtendedDto
+        {
+            Id = review.Id,
+            ProductId = review.ProductId,
+            PositiveRating = review.PositiveRating,
+            Comment = review.Comment,
+            CreatedAt = review.CreatedAt,
+            User = user
         };
     }
 
