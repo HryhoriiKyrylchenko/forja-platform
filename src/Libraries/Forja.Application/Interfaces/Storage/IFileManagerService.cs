@@ -38,6 +38,10 @@ public interface IFileManagerService
     Task<string> UploadMechanicImageAsync(UploadObjectImageRequest request);
 
     Task DeleteMechanicImageAsync(DeleteObjectRequest request);
+    
+    Task<string> UploadNewsArticleImageAsync(UploadObjectImageRequest request);
+
+    Task DeleteNewsArticleImageAsync(DeleteObjectRequest request);
 
     Task<string> GetPresignedUrlAsync(string objectPath, int expiresInSeconds = 3600);
 
@@ -53,4 +57,5 @@ public interface IFileManagerService
     Task<string> GetPresignedAchievementImageUrlAsync(Guid achievementId, int expiresInSeconds = 3600);
     Task<string> GetPresignedMatureContentImageUrlAsync(Guid matureContentId, int expiresInSeconds = 3600);
     Task<string> GetPresignedMechanicImageUrlAsync(Guid mechanicId, int expiresInSeconds = 3600);
+    Task<string> GetPresignedNewsArticleImageUrlAsync(Guid mechanicId, int expiresInSeconds = 3600);
 }

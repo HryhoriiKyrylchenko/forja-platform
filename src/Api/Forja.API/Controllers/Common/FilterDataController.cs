@@ -21,8 +21,8 @@ public class FilterDataController : ControllerBase
     /// This endpoint retrieves genres, mechanics, tags, and mature content details to be used in product filtering.
     /// </remarks>
     /// <returns>A collection of filter data.</returns>
-    [HttpGet("filters")]
-    public async Task<ActionResult<ProductsFilterDataDto>> GetGameFilterDataAsync()
+    [HttpGet("product-filters")]
+    public async Task<ActionResult<ProductsFilterDataDto>> GetProductFiltersDataAsync()
     {
         try
         {
