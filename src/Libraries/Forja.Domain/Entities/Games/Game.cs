@@ -18,4 +18,6 @@ public class Game : Product
     public virtual ICollection<GameVersion> GameVersions { get; set; } = [];
     
     public virtual ICollection<GamePatch> GamePatches { get; set; } = [];
+    
+    public virtual ICollection<Achievement> Achievements { get; set; } = [];
 }

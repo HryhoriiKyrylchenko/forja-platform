@@ -104,7 +104,12 @@ public class UserLibraryGameRepository : IUserLibraryGameRepository
             .Where(ulg => ulg.UserId == userId)
             .Where(ulg => !ulg.IsDeleted)
             .Include(ulg => ulg.User)
+                .ThenInclude(u => u.UserAchievements)
+                    .ThenInclude(ua => ua.Achievement)
             .Include(ulg => ulg.Game)
+                .ThenInclude(g => g.Achievements)
+            .Include(ulg => ulg.PurchasedAddons)
+                .ThenInclude(a => a.GameAddon)
             .ToListAsync();
     }
 
@@ -120,7 +125,12 @@ public class UserLibraryGameRepository : IUserLibraryGameRepository
             .Where(ulg => ulg.UserId == userId)
             .Where(ulg => ulg.IsDeleted)
             .Include(ulg => ulg.User)
+                .ThenInclude(u => u.UserAchievements)
+                    .ThenInclude(ua => ua.Achievement)
             .Include(ulg => ulg.Game)
+                .ThenInclude(g => g.Achievements)
+            .Include(ulg => ulg.PurchasedAddons)
+                .ThenInclude(a => a.GameAddon)
             .ToListAsync();
     }
 

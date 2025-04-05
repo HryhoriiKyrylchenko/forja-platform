@@ -103,20 +103,18 @@ public static class UserProfileEntityToDtoMapper
         };
     }
     
-    /// <summary>
-    /// Maps a <see cref="UserLibraryGame"/> entity to a <see cref="UserLibraryGameDto"/>.
-    /// </summary>
-    /// <param name="userLibraryGame">The user library game entity to be mapped.</param>
-    /// <returns>A <see cref="UserLibraryGameDto"/> representation of the provided <see cref="UserLibraryGame"/> entity.</returns>
-    public static UserLibraryGameDto MapToUserLibraryGameDto(UserLibraryGame userLibraryGame)
+    public static UserLibraryGameExtendedDto MapToUserLibraryGameDto(UserLibraryGame userLibraryGame, string gameLogoUrl, List<AchievementShortDto> achievements, List<UserLibraryAddonDto> addons)
     {
-        return new UserLibraryGameDto
+        return new UserLibraryGameExtendedDto
         {
             Id = userLibraryGame.Id,
             UserId = userLibraryGame.UserId,
-            Game = GamesEntityToDtoMapper.MapToGameDto(userLibraryGame.Game),
+            Game = GamesEntityToDtoMapper.MapToGameSmallDto(userLibraryGame.Game, gameLogoUrl),
             TimePlayed = userLibraryGame.TimePlayed,
-            PurchaseDate = userLibraryGame.PurchaseDate
+            PurchaseDate = userLibraryGame.PurchaseDate,
+            TotalGameAchievements = userLibraryGame.Game.Achievements.Count,
+            CompletedAchievements = achievements,
+            Addons = addons
         };
     }
     
@@ -126,7 +124,7 @@ public static class UserProfileEntityToDtoMapper
         {
             Id = userLibraryAddon.Id,
             UserLibraryGameId = userLibraryAddon.UserLibraryGameId,
-            GameAddon = GamesEntityToDtoMapper.MapToGameAddonShortDto(userLibraryAddon.GameAddon, addonLogoUrl),
+            GameAddon = GamesEntityToDtoMapper.MapToGameAddonSmallDto(userLibraryAddon.GameAddon, addonLogoUrl),
             PurchaseDate = userLibraryAddon.PurchaseDate
         };
     }
@@ -138,6 +136,19 @@ public static class UserProfileEntityToDtoMapper
             Id = achievement.Id,
             Name = achievement.Name,
             LogoUrl = achievementLogoUrl
+        };
+    }
+
+    public static UserLibraryGameDto MapToUserLibraryGameDto(UserLibraryGame userLibraryGame, string gameLogoUrl)
+    {
+        return new UserLibraryGameDto
+        {
+            Id = userLibraryGame.Id,
+            UserId = userLibraryGame.UserId,
+            GameId = userLibraryGame.GameId,
+            GameLogoUrl = gameLogoUrl,
+            TimePlayed = userLibraryGame.TimePlayed,
+            PurchaseDate = userLibraryGame.PurchaseDate
         };
     }
 

@@ -38,7 +38,9 @@ public class UserLibraryService : IUserLibraryService
         
         var result = await _userLibraryGameRepository.AddAsync(userLibraryGame);
         
-        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(result);
+        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(
+            result,
+            await _fileManagerService.GetPresignedProductLogoUrlAsync(userLibraryGame.GameId, 1900));
     }
 
     /// <inheritdoc />
@@ -63,7 +65,9 @@ public class UserLibraryService : IUserLibraryService
         
         var result = await _userLibraryGameRepository.UpdateAsync(userLibraryGame);
         
-        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(result);
+        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(
+            result,
+            await _fileManagerService.GetPresignedProductLogoUrlAsync(userLibraryGame.GameId, 1900));
     }
 
     /// <inheritdoc />
@@ -93,7 +97,9 @@ public class UserLibraryService : IUserLibraryService
         
         var result = await _userLibraryGameRepository.RestoreAsync(userLibraryGameId);
 
-        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(result);
+        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(
+            result,
+            await _fileManagerService.GetPresignedProductLogoUrlAsync(result.GameId, 1900));
     }
 
     /// <inheritdoc />
@@ -106,7 +112,9 @@ public class UserLibraryService : IUserLibraryService
         
         var userLibraryGame = await _userLibraryGameRepository.GetByIdAsync(userLibraryGameId);
         
-        return userLibraryGame == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(userLibraryGame);
+        return userLibraryGame == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(
+            userLibraryGame,
+            await _fileManagerService.GetPresignedProductLogoUrlAsync(userLibraryGame.GameId, 1900));
     }
 
     /// <inheritdoc />
@@ -119,7 +127,9 @@ public class UserLibraryService : IUserLibraryService
         
         var deletedUserLibraryGame = await _userLibraryGameRepository.GetDeletedByIdAsync(userLibraryGameId);
         
-        return deletedUserLibraryGame == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(deletedUserLibraryGame);
+        return deletedUserLibraryGame == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(
+            deletedUserLibraryGame,
+            await _fileManagerService.GetPresignedProductLogoUrlAsync(deletedUserLibraryGame.GameId, 1900));
     }
 
     /// <inheritdoc />
@@ -137,7 +147,9 @@ public class UserLibraryService : IUserLibraryService
         
         var userLibraryGame = await _userLibraryGameRepository.GetByGameIdAndUserIdAsync(gameId, userId);
         
-        return userLibraryGame == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(userLibraryGame);
+        return userLibraryGame == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(
+            userLibraryGame,
+            await _fileManagerService.GetPresignedProductLogoUrlAsync(userLibraryGame.GameId, 1900));
     }
 
     /// <inheritdoc />
@@ -150,7 +162,12 @@ public class UserLibraryService : IUserLibraryService
         
         var userLibraryGames = await _userLibraryGameRepository.GetByGameIdAsync(gameId);
 
-        return userLibraryGames.Select(UserProfileEntityToDtoMapper.MapToUserLibraryGameDto).ToList();
+        var libraryGames = await Task.WhenAll(userLibraryGames.Select(async ulg => UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(
+            ulg,
+            await _fileManagerService.GetPresignedProductLogoUrlAsync(ulg.GameId, 1900)
+        )));
+        
+        return libraryGames.ToList();
     }
 
     /// <inheritdoc />
@@ -164,7 +181,12 @@ public class UserLibraryService : IUserLibraryService
             throw new KeyNotFoundException("No user library games were found.");
         }
         
-        return userLibraryGames.Select(UserProfileEntityToDtoMapper.MapToUserLibraryGameDto).ToList();
+        var libraryGames = await Task.WhenAll(userLibraryGames.Select(async ulg => UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(
+            ulg,
+            await _fileManagerService.GetPresignedProductLogoUrlAsync(ulg.GameId, 1900)
+        )));
+        
+        return libraryGames.ToList();
     }
 
     /// <inheritdoc />
@@ -178,30 +200,64 @@ public class UserLibraryService : IUserLibraryService
             throw new KeyNotFoundException("No user library games were found.");
         }
         
-        return userLibraryGames.Select(UserProfileEntityToDtoMapper.MapToUserLibraryGameDto).ToList();
+        var libraryGames = await Task.WhenAll(userLibraryGames.Select(async ulg => UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(
+            ulg,
+            await _fileManagerService.GetPresignedProductLogoUrlAsync(ulg.GameId, 1900)
+        )));
+        
+        return libraryGames.ToList();
     }
 
     /// <inheritdoc />
-    public async Task<List<UserLibraryGameDto>> GetAllUserLibraryGamesByUserIdAsync(Guid userId)
+    public async Task<List<UserLibraryGameExtendedDto>> GetAllUserLibraryGamesByUserIdAsync(Guid userId)
     {
         if (userId == Guid.Empty)
         {
             throw new ArgumentException("User ID cannot be an empty Guid.", nameof(userId));
         }
         
-        var allUserLibraryGames = await _userLibraryGameRepository.GetAllByUserIdAsync(userId);
-        
-        var userLibraryGames = allUserLibraryGames.ToList();
-        if (!userLibraryGames.Any())
+        var userLibraryGames = await _userLibraryGameRepository.GetAllByUserIdAsync(userId);
+        if (userLibraryGames == null)
         {
             throw new KeyNotFoundException("No user library games were found.");
         }
+        var userLibraryGamesList = userLibraryGames.ToList();
         
-        return userLibraryGames.Select(UserProfileEntityToDtoMapper.MapToUserLibraryGameDto).ToList();
+        var userLibraryGameDtos = new List<UserLibraryGameExtendedDto>();
+        
+        foreach (var userLibraryGame in userLibraryGamesList)
+        {
+            string gameLogoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(userLibraryGame.GameId, 1900);
+            
+            var achievementDtos = await Task.WhenAll(userLibraryGame.Game.Achievements
+                .Select(async a =>
+                {
+                    var logoUrl = await _fileManagerService.GetPresignedAchievementImageUrlAsync(a.Id);
+                    return UserProfileEntityToDtoMapper.MapToAchievementShortDto(a, logoUrl);
+                }));
+
+            var addonDtos = await Task.WhenAll(userLibraryGame.PurchasedAddons
+                .Select(async addon =>
+                {
+                    var addonLogoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(addon.AddonId, 1900);
+                    return UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(addon, addonLogoUrl);
+                }));
+
+            var dto = UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(
+                userLibraryGame,
+                gameLogoUrl,
+                achievementDtos.ToList(),
+                addonDtos.ToList()
+            );
+
+            userLibraryGameDtos.Add(dto);
+        }
+        
+        return userLibraryGameDtos;
     }
 
     /// <inheritdoc />
-    public async Task<List<UserLibraryGameDto>> GetAllDeletedUserLibraryGamesByUserIdAsync(Guid userId)
+    public async Task<List<UserLibraryGameExtendedDto>> GetAllDeletedUserLibraryGamesByUserIdAsync(Guid userId)
     {
         if (userId == Guid.Empty)
         {
@@ -209,14 +265,43 @@ public class UserLibraryService : IUserLibraryService
         }
         
         var allDeletedUserLibraryGames = await _userLibraryGameRepository.GetAllDeletedByUserIdAsync(userId);
-        
-        var userLibraryGames = allDeletedUserLibraryGames.ToList();
-        if (!userLibraryGames.Any())
+        if (allDeletedUserLibraryGames == null)
         {
             throw new KeyNotFoundException("No user library games were found.");
         }
+        var userLibraryGamesList = allDeletedUserLibraryGames.ToList();
         
-        return userLibraryGames.Select(UserProfileEntityToDtoMapper.MapToUserLibraryGameDto).ToList();
+        var userLibraryGameDtos = new List<UserLibraryGameExtendedDto>();
+        
+        foreach (var userLibraryGame in userLibraryGamesList)
+        {
+            string gameLogoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(userLibraryGame.GameId, 1900);
+            
+            var achievementDtos = await Task.WhenAll(userLibraryGame.Game.Achievements
+                .Select(async a =>
+                {
+                    var logoUrl = await _fileManagerService.GetPresignedAchievementImageUrlAsync(a.Id);
+                    return UserProfileEntityToDtoMapper.MapToAchievementShortDto(a, logoUrl);
+                }));
+
+            var addonDtos = await Task.WhenAll(userLibraryGame.PurchasedAddons
+                .Select(async addon =>
+                {
+                    var addonLogoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(addon.AddonId, 1900);
+                    return UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(addon, addonLogoUrl);
+                }));
+
+            var dto = UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(
+                userLibraryGame,
+                gameLogoUrl,
+                achievementDtos.ToList(),
+                addonDtos.ToList()
+            );
+
+            userLibraryGameDtos.Add(dto);
+        }
+        
+        return userLibraryGameDtos;
     }
     
     #endregion

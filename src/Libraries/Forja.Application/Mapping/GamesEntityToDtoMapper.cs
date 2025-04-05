@@ -71,6 +71,28 @@ public static class GamesEntityToDtoMapper
             Rating = rating
         };
     }
+    
+    public static GameSmallDto MapToGameSmallDto(Game game, string logoUrl)
+    {
+        return new GameSmallDto
+        {
+            Id = game.Id,
+            Title = game.Title,
+            ShortDescription = game.ShortDescription,
+            LogoUrl = logoUrl
+        };
+    }
+    
+    public static GameAddonSmallDto MapToGameAddonSmallDto(GameAddon gameAddon, string addonLogoUrl)
+    {
+        return new GameAddonSmallDto
+        {
+            Id = gameAddon.Id,
+            Title = gameAddon.Title,
+            ShortDescription = gameAddon.ShortDescription,
+            LogoUrl = addonLogoUrl
+        };
+    }
 
     public static GameCatalogDto MapToGameCatalogDto(Game game, 
                                                     string fullLogoUrl, 
