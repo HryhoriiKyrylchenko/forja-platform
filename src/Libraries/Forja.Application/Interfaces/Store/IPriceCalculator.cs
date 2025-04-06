@@ -6,4 +6,6 @@ public interface IPriceCalculator
 
     Task<decimal> CalculateTotalAsync(IEnumerable<CartItem> cartItems,
         IProductDiscountRepository productDiscountRepository);
+
+    bool ArePricesDifferent(decimal price1, decimal price2, decimal tolerance = 0.01m);
 }

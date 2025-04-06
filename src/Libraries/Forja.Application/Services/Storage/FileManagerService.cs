@@ -375,10 +375,10 @@ public class FileManagerService : IFileManagerService
     /// <inheritdoc />
     public async Task<string> GetPresignedUrlAsync(string objectPath, int expiresInSeconds = 3600)
     {
-        if (string.IsNullOrWhiteSpace(objectPath))
-        {
-            throw new ArgumentException("Object path cannot be empty.", nameof(objectPath));
-        }
+        // if (string.IsNullOrWhiteSpace(objectPath))
+        // {
+        //     throw new ArgumentException("Object path cannot be empty.", nameof(objectPath));
+        // }
 
         if (expiresInSeconds <= 10)
         {

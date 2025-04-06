@@ -10,13 +10,15 @@ public interface ICartService
     Task ArchiveCartAsync(Guid cartId);
     Task HandleAbandonedCartsAsync(TimeSpan inactivityPeriod);
     Task<CartDto?> RecoverAbandonedCartAsync(Guid userId);
+    Task<bool> IsCartRelevantAsync(Guid cartId);
+    Task<CartDto?> UpdateCartAsync(Guid cartId);
 
     // Cart Item Operations
     Task<CartItemDto?> GetCartItemByIdAsync(Guid cartItemId);
-    Task<IEnumerable<CartItemDto>> GetCartItemsByCartIdAsync(Guid cartId);
+    Task<List<CartItemDto>> GetCartItemsByCartIdAsync(Guid cartId);
     Task<CartItemDto?> AddCartItemAsync(CartItemCreateRequest request);
-    Task<CartItemDto?> UpdateCartItemAsync(CartItemUpdateRequest request);
     Task RemoveCartItemAsync(Guid cartItemId);
-
     Task RecalculateCartTotalAsync(Guid cartId);
+
+    Task<List<CartItemDto>> AddBundleToCartAsync(CartAddBundleRequest request);
 }

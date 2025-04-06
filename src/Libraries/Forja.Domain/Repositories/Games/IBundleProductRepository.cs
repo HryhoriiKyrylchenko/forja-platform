@@ -45,4 +45,12 @@ public interface IBundleProductRepository
     /// <param name="bundleId">The unique identifier of the bundle.</param>
     /// <returns>A collection of bundle products for the specified bundle.</returns>
     Task<IEnumerable<BundleProduct>> GetByBundleIdAsync(Guid bundleId);
+
+    /// <summary>
+    /// Distributes the total price of a bundle proportionally among its individual products.
+    /// </summary>
+    /// <param name="bundleProducts">A list of the products included in the bundle.</param>
+    /// <param name="bundleTotalPrice">The total price of the bundle to be distributed.</param>
+    /// <returns>A list of bundle products with their respective distributed prices updated.</returns>
+    List<BundleProduct> DistributeBundlePrice(List<BundleProduct> bundleProducts, decimal bundleTotalPrice);
 }

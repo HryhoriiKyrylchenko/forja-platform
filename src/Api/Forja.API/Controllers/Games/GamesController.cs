@@ -30,10 +30,7 @@ public class GamesController : ControllerBase
     }
 
     #region Games Endpoints
-
-    /// <summary>
-    /// Gets all games.
-    /// </summary>
+    
     [HttpGet("games")]
     public async Task<IActionResult> GetAllGamesAsync()
     {
@@ -107,10 +104,7 @@ public class GamesController : ControllerBase
             return BadRequest(new { error = ex.Message });
         }
     }
-    
-    /// <summary>
-    /// Gets all games.
-    /// </summary>
+
     [HttpGet("games-catalog")]
     public async Task<ActionResult<PaginatedResult<GameCatalogDto>>> GetAllGamesForCatalogAsync(
         [FromQuery] int pageNumber = 1,

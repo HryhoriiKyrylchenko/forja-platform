@@ -26,90 +26,85 @@ public class HomeService : IHomeService
         var allGames = await _gameRepository.GetAllAsync();
         var allBundles = await _bundleRepository.GetAllActiveAsync();
         var allNewsArticles = await _newsArticleRepository.GetActiveNewsArticlesAsync();
-        
-        var gameWithReviews = await Task.WhenAll(allGames.Select(async game =>
+
+        var gameWithReviews = new List<(Game Game, int PositiveReviews, int NegativeReviews)>();
+        foreach (var game in allGames)
         {
             var (positive, negative) = await _reviewRepository.GetProductApprovedReviewsCountAsync(game.Id);
-            return new
-            {
-                Game = game,
-                PositiveReviews = positive,
-                NegativeReviews = negative
-            };
-        }));
-        
+            gameWithReviews.Add((game, positive, negative));
+        }
+
         var top5Games = gameWithReviews
             .OrderByDescending(g => g.PositiveReviews)
-            .ThenBy(g => g.NegativeReviews) 
+            .ThenBy(g => g.NegativeReviews)
             .Take(5)
             .Select(g => g.Game)
             .ToList();
-        
-        var bestGamesByGenre = await Task.WhenAll(
-            gameWithReviews
-                .SelectMany(g => g.Game.ProductGenres.Select(pg => new
-                {
-                    GenreName = pg.Genre.Name,
-                    g.Game,
-                    g.PositiveReviews,
-                    g.NegativeReviews
-                }))
-                .GroupBy(g => g.GenreName)
-                .Select(async g =>
-                {
-                    var topGame = g
-                        .OrderByDescending(x => x.PositiveReviews)
-                        .ThenBy(x => x.NegativeReviews)
-                        .First();
 
-                    var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(topGame.Game.Id);
+        var bestGamesByGenre = new Dictionary<string, GameHomePopularDto>();
+        var gamesGroupedByGenre = gameWithReviews
+            .SelectMany(g => g.Game.ProductGenres.Select(pg => new
+            {
+                GenreName = pg.Genre.Name,
+                Game = g.Game,
+                PositiveReviews = g.PositiveReviews,
+                NegativeReviews = g.NegativeReviews
+            }))
+            .GroupBy(x => x.GenreName);
 
-                    return new
-                    {
-                        Genre = topGame.GenreName,
-                        Game = new GameHomePopularDto
-                        {
-                            Id = topGame.Game.Id,
-                            Title = topGame.Game.Title,
-                            LogoUrl = logoUrl
-                        }
-                    };
-                })
-        );
-        
-        var bestGamesByGenreDict = bestGamesByGenre
-            .ToDictionary(x => x.Genre, x => x.Game);
-        
-        var topGames = await Task.WhenAll(top5Games.Select(async g =>
+        foreach (var genreGroup in gamesGroupedByGenre)
         {
-            var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(g.Id);
-            var images = await _fileManagerService.GetPresignedProductImagesUrlsAsync(g.Id);
-            return GamesEntityToDtoMapper.MapToGameHomeDto(g, logoUrl, images);
-        }));
+            var topGame = genreGroup
+                .OrderByDescending(x => x.PositiveReviews)
+                .ThenBy(x => x.NegativeReviews)
+                .First();
 
-        var bundles = await Task.WhenAll(allBundles.Select(async b =>
+            var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(topGame.Game.Id);
+
+            bestGamesByGenre.Add(genreGroup.Key, new GameHomePopularDto
+            {
+                Id = topGame.Game.Id,
+                Title = topGame.Game.Title,
+                LogoUrl = logoUrl
+            });
+        }
+
+        var topGames = new List<GameHomeDto>();
+        foreach (var game in top5Games)
         {
-            var bundleProductDtos = await Task.WhenAll(b.BundleProducts.Select(async bp =>
+            var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(game.Id);
+            var images = await _fileManagerService.GetPresignedProductImagesUrlsAsync(game.Id);
+            topGames.Add(GamesEntityToDtoMapper.MapToGameHomeDto(game, logoUrl, images));
+        }
+
+        var bundles = new List<BundleDto>();
+        foreach (var bundle in allBundles)
+        {
+            var bundleProductDtos = new List<BundleProductDto>();
+            foreach (var bp in bundle.BundleProducts)
             {
                 var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(bp.ProductId);
-                return GamesEntityToDtoMapper.MapToBundleProductDto(bp, logoUrl);
-            }));
+                bundleProductDtos.Add(GamesEntityToDtoMapper.MapToBundleProductDto(bp, logoUrl));
+            }
+            bundles.Add(GamesEntityToDtoMapper.MapToBundleDto(bundle, bundleProductDtos));
+        }
 
-            return GamesEntityToDtoMapper.MapToBundleDto(b, bundleProductDtos.ToList());
-        }));
-        
-        var newsArticles = await Task.WhenAll(allNewsArticles.Select(async na => CommonEntityToDtoMapper.MapToNewsArticleDto(
-            na,
-            na.ImageUrl == null ? string.Empty
-                : await _fileManagerService.GetPresignedUrlAsync(na.ImageUrl)
-        )));
+        var newsArticles = new List<NewsArticleDto>();
+        foreach (var article in allNewsArticles)
+        {
+            var imageUrl = article.ImageUrl != null
+                ? await _fileManagerService.GetPresignedUrlAsync(article.ImageUrl)
+                : string.Empty;
+
+            newsArticles.Add(CommonEntityToDtoMapper.MapToNewsArticleDto(article, imageUrl));
+        }
 
         return new HomepageDto
         {
-            Games = topGames.ToList(),
-            PopularInGenre = bestGamesByGenreDict,
-            Bundles = bundles.ToList(),
-            News = newsArticles.ToList()
+            Games = topGames,
+            PopularInGenre = bestGamesByGenre,
+            Bundles = bundles,
+            News = newsArticles
         };
     }
 }

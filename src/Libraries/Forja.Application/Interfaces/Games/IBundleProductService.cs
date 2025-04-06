@@ -33,24 +33,11 @@ public interface IBundleProductService
     Task<List<BundleProductDto>> GetByBundleIdAsync(Guid bundleId);
 
     /// <summary>
-    /// Creates a new bundle product association based on the provided request object.
+    /// Creates bundle product records asynchronously based on the provided request data.
     /// </summary>
-    /// <param name="request">
-    /// An object of type <see cref="BundleProductCreateRequest"/> containing details
-    /// of the bundle product association to be created, including BundleId and ProductId.
-    /// </param>
-    /// <returns>
-    /// A task representing the asynchronous operation, which upon completion contains
-    /// an object of type <see cref="BundleProductDto"/> representing the created bundle product.
-    /// Returns null if the creation process fails.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">
-    /// Thrown if the <paramref name="request"/> is null.
-    /// </exception>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown if an error occurs during the creation process.
-    /// </exception>
-    Task<BundleProductDto?> CreateAsync(BundleProductCreateRequest request);
+    /// <param name="request">A request object containing details for creating bundle products, including bundle ID, product IDs, and total bundle price.</param>
+    /// <returns>An asynchronous operation that returns a list of created bundle product data transfer objects.</returns>
+    Task<List<BundleProductDto>> CreateBundleProductsAsync(BundleProductsCreateRequest request);
 
     /// <summary>
     /// Updates an existing bundle-product relationship.

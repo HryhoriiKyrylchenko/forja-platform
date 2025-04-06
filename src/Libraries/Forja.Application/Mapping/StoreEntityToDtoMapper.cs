@@ -2,7 +2,7 @@ namespace Forja.Application.Mapping;
 
 public class StoreEntityToDtoMapper
 {
-    public static CartDto MapToCartDto(Cart cart)
+    public static CartDto MapToCartDto(Cart cart, List<CartItemDto> cartItems)
     {
         return new CartDto
         {
@@ -12,18 +12,24 @@ public class StoreEntityToDtoMapper
             Status = cart.Status.ToString(),
             CreatedAt = cart.CreatedAt,
             LastModifiedAt = cart.LastModifiedAt,
-            CartItems = cart.CartItems.Select(MapToCartItemDto).ToList()
+            CartItems = cartItems
         };
     }
 
-    public static CartItemDto MapToCartItemDto(CartItem cartItem)
+    public static CartItemDto MapToCartItemDto(CartItem cartItem, string fullLogoUrl, decimal? totalDiscountValue = null, DateTime? discountExpirationDate = null)
     {
         return new CartItemDto
         {
             Id = cartItem.Id,
             CartId = cartItem.CartId,
             ProductId = cartItem.ProductId,
-            Price = cartItem.Price
+            BundleId = cartItem.BundleId,
+            Title = cartItem.Product.Title,
+            LogoUrl = fullLogoUrl,
+            OriginalPrice = cartItem.Product.Price,
+            TotalDiscountValue = totalDiscountValue,
+            DiscountExpirationDate = discountExpirationDate,
+            TotalPrice = cartItem.Price
         };
     }
 

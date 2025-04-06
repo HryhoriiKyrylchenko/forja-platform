@@ -92,6 +92,7 @@ public class BundleService : IBundleService
             Description = request.Description,
             TotalPrice = request.TotalPrice,
             CreatedAt = DateTime.UtcNow,
+            ExpiresAt = request.ExpirationDate,
             IsActive = true
         };
 

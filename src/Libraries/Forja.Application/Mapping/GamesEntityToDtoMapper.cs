@@ -216,6 +216,8 @@ public static class GamesEntityToDtoMapper
             Id = bundleProduct.Id,
             BundleId = bundleProduct.BundleId,
             ProductId = bundleProduct.ProductId,
+            DistributedPrice = bundleProduct.DistributedPrice,
+            OriginalProductPrice = bundleProduct.Product.Price,
             Title = bundleProduct.Product.Title ?? string.Empty,
             LogoUrl = fullLogoUrl
         };
