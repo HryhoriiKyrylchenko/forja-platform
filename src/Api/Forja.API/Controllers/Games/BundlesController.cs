@@ -398,14 +398,14 @@ public class BundlesController : ControllerBase
     /// </summary>
     [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("bundle-products")]
-    public async Task<IActionResult> CreateBundleProductAsync([FromBody] BundleProductCreateRequest request)
+    public async Task<IActionResult> CreateBundleProductAsync([FromBody] BundleProductsCreateRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         try
         {
-            var createdBundleProduct = await _bundleProductService.CreateAsync(request);
-            return createdBundleProduct != null ? Ok(createdBundleProduct) : BadRequest(new { error = "Failed to create bundle product." });
+            var createdBundleProduct = await _bundleProductService.CreateBundleProductsAsync(request);
+            return Ok(createdBundleProduct);
         }
         catch (Exception ex)
         {
@@ -421,7 +421,7 @@ public class BundlesController : ControllerBase
                     LogLevel = LogLevel.Error,
                     Details = new Dictionary<string, string>
                     {
-                        { "Message", $"Failed to create bundle product with product id: {request.ProductId} and bundle id: {request.BundleId}" }
+                        { "Message", $"Failed to create bundle products for bundle id: {request.BundleId}" }
                     }
                 };
                 

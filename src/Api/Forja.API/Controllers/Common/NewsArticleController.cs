@@ -218,7 +218,7 @@ public class NewsArticleController : ControllerBase
     /// </summary>
     [Authorize(Policy = "ContentManagePolicy")]
     [HttpPut("{articleId:guid}")]
-    public async Task<IActionResult> UpdateNewsArticle([FromRoute] Guid articleId, [FromBody] NewsArticleUpdateRequest request)
+    public async Task<IActionResult> UpdateNewsArticle([FromBody] NewsArticleUpdateRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         try

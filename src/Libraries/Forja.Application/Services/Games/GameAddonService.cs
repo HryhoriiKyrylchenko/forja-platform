@@ -22,48 +22,69 @@ public class GameAddonService : IGameAddonService
     public async Task<List<GameAddonDto>> GetAllAsync()
     {
         var addons = await _gameAddonRepository.GetAllAsync();
-        
-        var allAddonsDto = await Task.WhenAll(addons.Select(async addon =>
+        var allAddons = addons
+            .Select(addon => new
             {
-                var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(addon.Id, 1900);
+                addon,
+                addonId = addon.Id,
+                matureContents = addon.ProductMatureContents
+                    .Select(pmc => pmc.MatureContent)
+                    .ToList()
+            })
+            .ToList(); 
 
-                var matureContentDtos = await Task.WhenAll(
-                    addon.ProductMatureContents.Select(async pmc =>
-                    {
-                        var matureLogoUrl = pmc.MatureContent.LogoUrl != null
-                            ? await _fileManagerService.GetPresignedMatureContentImageUrlAsync(pmc.MatureContent.Id, 1900)
-                            : string.Empty;
+        var addonDtos = new List<GameAddonDto>();
 
-                        return GamesEntityToDtoMapper.MapToMatureContentDto(pmc.MatureContent, matureLogoUrl);
-                    })
-                );
+        foreach (var addonInfo in allAddons)
+        {
+            var addon = addonInfo.addon;
+            var addonId = addonInfo.addonId;
 
-                var rating = await _reviewRepository.GetProductApprovedReviewsCountAsync(addon.Id);
+            var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(addonId, 1900);
+            var reviewCount = await _reviewRepository.GetProductApprovedReviewsCountAsync(addonId);
 
-                return GamesEntityToDtoMapper.MapToGameAddonDto(
-                    addon,
-                    logoUrl,
-                    matureContentDtos.ToList(),
-                    rating
-                );
+            var matureContentDtos = new List<MatureContentDto>();
+
+            foreach (var mc in addonInfo.matureContents)
+            {
+                var matureLogoUrl = mc.LogoUrl != null
+                    ? await _fileManagerService.GetPresignedMatureContentImageUrlAsync(mc.Id, 1900)
+                    : string.Empty;
+
+                matureContentDtos.Add(GamesEntityToDtoMapper.MapToMatureContentDto(mc, matureLogoUrl));
             }
-            ));
-        
-        return allAddonsDto.ToList();
+
+            var addonDto = GamesEntityToDtoMapper.MapToGameAddonDto(
+                addon,
+                logoUrl,
+                matureContentDtos,
+                reviewCount
+            );
+
+            addonDtos.Add(addonDto);
+        }
+
+        return addonDtos;
     }
 
     /// <inheritdoc />
     public async Task<List<GameAddonShortDto>> GetAllForCatalogAsync()
     {
         var addons = await _gameAddonRepository.GetAllForCatalogAsync();
-        var gameCatalogDtos = await Task.WhenAll(addons.Select(async a => 
-            GamesEntityToDtoMapper.MapToGameAddonShortDto(
-                a,
-                await _fileManagerService.GetPresignedProductLogoUrlAsync(a.Id, 1900)
-            )));
+        var addonList = addons.ToList();
 
-        return gameCatalogDtos.ToList();
+        var result = new List<GameAddonShortDto>();
+
+        foreach (var addon in addonList)
+        {
+            var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(addon.Id, 1900);
+            var gameAddonDto = GamesEntityToDtoMapper.MapToGameAddonShortDto(addon, logoUrl);
+            result.Add(gameAddonDto);
+        }
+
+        return result;
     }
+
 
     /// <inheritdoc />
     public async Task<GameAddonDto?> GetByIdAsync(Guid id)
@@ -72,30 +93,42 @@ public class GameAddonService : IGameAddonService
         {
             throw new ArgumentException("Id cannot be empty.", nameof(id));
         }
-        
+
         var addon = await _gameAddonRepository.GetByIdAsync(id);
-        if (addon == null) return null;
+        if (addon == null) 
+            return null;
 
-        var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(addon.Id, 1900);
-
-        var matureContentDtos = await Task.WhenAll(
-            addon.ProductMatureContents.Select(async pmc =>
+        var matureContents = addon.ProductMatureContents
+            .Select(pmc => new
             {
-                var contentLogoUrl = pmc.MatureContent.LogoUrl != null
-                    ? await _fileManagerService.GetPresignedMatureContentImageUrlAsync(pmc.MatureContent.Id, 1900)
-                    : string.Empty;
-
-                return GamesEntityToDtoMapper.MapToMatureContentDto(pmc.MatureContent, contentLogoUrl);
+                pmc.MatureContent.Id,
+                pmc.MatureContent.LogoUrl,
+                MatureContentEntity = pmc.MatureContent
             })
-        );
+            .ToList();
 
-        var rating = await _reviewRepository.GetProductApprovedReviewsCountAsync(addon.Id);
+        var logoUrlTask = _fileManagerService.GetPresignedProductLogoUrlAsync(addon.Id, 1900);
+        var ratingTask = _reviewRepository.GetProductApprovedReviewsCountAsync(addon.Id);
+
+        var matureContentDtos = new List<MatureContentDto>();
+        foreach (var content in matureContents)
+        {
+            var contentLogoUrl = content.LogoUrl != null
+                ? await _fileManagerService.GetPresignedMatureContentImageUrlAsync(content.Id, 1900)
+                : string.Empty;
+
+            var dto = GamesEntityToDtoMapper.MapToMatureContentDto(content.MatureContentEntity, contentLogoUrl);
+            matureContentDtos.Add(dto);
+        }
+
+        var logoUrl = await logoUrlTask;
+        var ratingCount = await ratingTask;
 
         return GamesEntityToDtoMapper.MapToGameAddonDto(
             addon,
             logoUrl,
-            matureContentDtos.ToList(),
-            rating
+            matureContentDtos,
+            ratingCount
         );
     }
 
@@ -233,15 +266,19 @@ public class GameAddonService : IGameAddonService
         {
             throw new ArgumentException("Id cannot be empty.", nameof(gameId));
         }
-        
-        var addons = await _gameAddonRepository.GetByGameIdAsync(gameId);
-        
-        var gameAddonsDtos = await Task.WhenAll(addons.Select(async a => 
-            GamesEntityToDtoMapper.MapToGameAddonShortDto(
-                a,
-                await _fileManagerService.GetPresignedProductLogoUrlAsync(a.Id, 1900)
-            )));
 
-        return gameAddonsDtos.ToList();
+        var addons = await _gameAddonRepository.GetByGameIdAsync(gameId);
+        var detachedAddons = addons.ToList();
+
+        var gameAddonsDtos = new List<GameAddonShortDto>();
+
+        foreach (var addon in detachedAddons)
+        {
+            var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(addon.Id, 1900);
+            var dto = GamesEntityToDtoMapper.MapToGameAddonShortDto(addon, logoUrl);
+            gameAddonsDtos.Add(dto);
+        }
+
+        return gameAddonsDtos;
     }
 }

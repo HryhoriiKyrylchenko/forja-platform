@@ -98,4 +98,47 @@ public class BundleProductRepository : IBundleProductRepository
             .Include(bp => bp.Product)
             .ToListAsync();
     }
+    
+    /// <inheritdoc />
+    public List<BundleProduct> DistributeBundlePrice(List<BundleProduct> bundleProducts, decimal bundleTotalPrice)
+    {
+        if (bundleProducts == null || bundleProducts.Count == 0)
+        {
+            throw new ArgumentException("Bundle products cannot be null or empty", nameof(bundleProducts));
+        }
+
+        var totalOriginalPrice = bundleProducts.Sum(p => p.Product.Price);
+
+        if (totalOriginalPrice == 0)
+        {
+            var equalPrice = bundleTotalPrice / bundleProducts.Count;
+            foreach (var bp in bundleProducts)
+            {
+                bp.DistributedPrice = Math.Round(equalPrice, 2);
+            }
+        }
+        else
+        {
+            decimal distributedTotal = 0;
+
+            for (int i = 0; i < bundleProducts.Count; i++)
+            {
+                var productPrice = bundleProducts[i].Product.Price;
+
+                if (i == bundleProducts.Count - 1)
+                {
+                    bundleProducts[i].DistributedPrice = Math.Round(bundleTotalPrice - distributedTotal, 2);
+                }
+                else
+                {
+                    var proportionalPrice = productPrice / totalOriginalPrice * bundleTotalPrice;
+                    var roundedPrice = Math.Round(proportionalPrice, 2);
+                    bundleProducts[i].DistributedPrice = roundedPrice;
+                    distributedTotal += roundedPrice;
+                }
+            }
+        }
+        
+        return bundleProducts;
+    }
 }

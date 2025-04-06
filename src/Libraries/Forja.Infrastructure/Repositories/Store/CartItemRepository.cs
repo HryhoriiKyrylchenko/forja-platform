@@ -69,7 +69,10 @@ public class CartItemRepository : ICartItemRepository
         await _cartItems.AddAsync(cartItem);
         await _context.SaveChangesAsync();
         
-        return cartItem;
+        var createdCartItem = _cartItems
+            .Include(ci => ci.Product)
+            .FirstOrDefault(ci => ci.Id == cartItem.Id);
+        return createdCartItem;
     }
 
     /// <summary>
@@ -87,7 +90,10 @@ public class CartItemRepository : ICartItemRepository
         _cartItems.Update(cartItem);
         await _context.SaveChangesAsync();
         
-        return cartItem;
+        var updatedCartItem = _cartItems
+            .Include(ci => ci.Product)
+            .FirstOrDefault(ci => ci.Id == cartItem.Id);
+        return updatedCartItem;
     }
 
     /// <summary>

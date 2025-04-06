@@ -274,4 +274,28 @@ public static class StoreRequestsValidator
         error = null;
         return true;
     }
+
+    public static bool ValidateCartAddBundleRequest(CartAddBundleRequest? request, out string? error)
+    {
+        error = null;
+        if (request == null)
+        {
+            error = "Request cannot be empty.";
+            return false;
+        }
+
+        if (request.CartId == Guid.Empty)
+        {
+            error = "Cart ID cannot be empty.";
+            return false;
+        }
+
+        if (request.BundleId == Guid.Empty)
+        {
+            error = "Bundle ID cannot be empty.";
+            return false;
+        }
+
+        return true;
+    }
 }

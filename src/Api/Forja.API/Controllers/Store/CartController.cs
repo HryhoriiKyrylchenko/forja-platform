@@ -385,43 +385,6 @@ public class CartController : ControllerBase
         }
     }
     
-    [HttpPut("/items")]
-    public async Task<IActionResult> UpdateCartItem([FromBody] CartItemUpdateRequest request)
-    {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
-        try
-        {
-            var item = await _cartService.UpdateCartItemAsync(request);
-            return Ok(item);
-        }
-        catch (Exception ex)
-        {
-            try
-            {
-                var logEntry = new LogEntry<string>
-                {
-                    State = "Error",
-                    UserId = null,
-                    Exception = ex,
-                    ActionType = AuditActionType.Update,
-                    EntityType = AuditEntityType.Other,
-                    LogLevel = LogLevel.Error,
-                    Details = new Dictionary<string, string>
-                    {
-                        { "Message", $"Failed update cart item with id: {request.Id}" }
-                    }
-                };
-                
-                await _auditLogService.LogWithLogEntryAsync(logEntry);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"Error logging audit log entry: {e.Message}");
-            }
-            return BadRequest(new { error = ex.Message });
-        }
-    }
-    
     [HttpDelete("/items/{itemId:guid}")]
     public async Task<IActionResult> RemoveCartItem([FromRoute] Guid itemId)
     {

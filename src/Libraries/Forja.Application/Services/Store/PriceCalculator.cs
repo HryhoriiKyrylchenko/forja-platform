@@ -45,4 +45,9 @@ public class PriceCalculator : IPriceCalculator
 
         return totalPrice;
     }
+    
+    public bool ArePricesDifferent(decimal price1, decimal price2, decimal tolerance = 0.01m)
+    {
+        return Math.Abs(price1 - price2) > tolerance;
+    }
 }

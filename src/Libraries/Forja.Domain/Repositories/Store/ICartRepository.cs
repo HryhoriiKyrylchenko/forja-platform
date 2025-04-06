@@ -31,14 +31,14 @@ public interface ICartRepository
     /// </summary>
     /// <param name="cart">The Cart to add.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task AddCartAsync(Cart cart);
+    Task<Cart?> AddCartAsync(Cart cart);
 
     /// <summary>
     /// Updates an existing Cart in the database.
     /// </summary>
     /// <param name="cart">The Cart to update.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task UpdateCartAsync(Cart cart);
+    Task<Cart?> UpdateCartAsync(Cart cart);
 
     /// <summary>
     /// Deletes a Cart from the database by its ID.

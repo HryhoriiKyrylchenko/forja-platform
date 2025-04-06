@@ -22,6 +22,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<INewsArticleService, NewsArticleService>();
 
         services.AddScoped<IHomeService, HomeService>();
+        services.AddScoped<IFilterDataService, FilterDataService>();
 
         services.AddScoped<IBundleProductService, BundleProductService>();
         services.AddScoped<IBundleService, BundleService>();

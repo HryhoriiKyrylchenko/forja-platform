@@ -89,6 +89,7 @@ public static class GamesRequestsValidator
     {
         if (string.IsNullOrWhiteSpace(request.Title)) return false;
         if (request.TotalPrice <= 0) return false;
+        if (request.ExpirationDate != null && request.ExpirationDate < DateTime.UtcNow) return false;
         return true;
     }
 
@@ -108,18 +109,33 @@ public static class GamesRequestsValidator
         if (request.TotalPrice <= 0) return false;
         return true;
     }
-
-    /// <summary>
-    /// Validates the integrity of a bundle product create request model.
-    /// </summary>
-    /// <param name="request">The bundle product create request model to validate.</param>
-    /// <returns>
-    /// Returns true if the provided request contains valid data; otherwise, false.
-    /// </returns>
-    public static bool ValidateBundleProductCreateRequest(BundleProductCreateRequest request)
+    
+    public static bool ValidateBundleProductsCreateRequest(BundleProductsCreateRequest? request, out string? errorMessage)
     {
-        if (request.BundleId == Guid.Empty) return false;
-        if (request.ProductId == Guid.Empty) return false;
+        errorMessage = null;
+        if (request == null)
+        {
+            errorMessage = "The request is null.";
+            return false;
+        }
+
+        if (request.BundleId == Guid.Empty)
+        {
+            errorMessage = "The bundle ID is empty.";
+            return false;
+        }
+
+        if (request.ProductIds.Count < 2)
+        {
+            errorMessage = "The bundle must contain at least two products.";
+            return false;
+        }
+
+        if (request.BundleTotalPrice < request.ProductIds.Count * 0.01m)
+        {
+            errorMessage = "The bundle total price must be at least 1% of the total price of the products.";
+            return false;
+        }
         return true;
     }
 

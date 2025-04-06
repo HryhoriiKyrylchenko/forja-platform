@@ -7,18 +7,27 @@ public class CartService : ICartService
     private readonly IProductDiscountRepository _productDiscountRepository;
     private readonly IPriceCalculator _priceCalculator;
     private readonly IProductRepository _productRepository;
+    private readonly IBundleRepository _bundleRepository;
+    private readonly IBundleProductRepository _bundleProductRepository;
+    private readonly IFileManagerService _fileManagerService;
 
     public CartService(ICartRepository cartRepository, 
         ICartItemRepository cartItemRepository,
         IProductDiscountRepository productDiscountRepository,
         IPriceCalculator priceCalculator,
-        IProductRepository productRepository)
+        IProductRepository productRepository,
+        IBundleRepository bundleRepository,
+        IBundleProductRepository bundleProductRepository,
+        IFileManagerService fileManagerService)
     {
         _cartRepository = cartRepository;
         _cartItemRepository = cartItemRepository;
         _productDiscountRepository = productDiscountRepository;
         _priceCalculator = priceCalculator;
         _productRepository = productRepository;
+        _bundleRepository = bundleRepository;
+        _bundleProductRepository = bundleProductRepository;
+        _fileManagerService = fileManagerService;
     }
 
     // ---------------- Cart Operations --------------------
@@ -31,8 +40,11 @@ public class CartService : ICartService
         }
 
         var cart = await _cartRepository.GetCartByIdAsync(cartId);
+        if (cart == null) return null;
         
-        return cart == null ? null : StoreEntityToDtoMapper.MapToCartDto(cart);
+        var cartItems = await GetCartItemsByCartIdAsync(cart.Id);
+        
+        return StoreEntityToDtoMapper.MapToCartDto(cart, cartItems);
     }
 
     public async Task<IEnumerable<CartDto>> GetCartsByUserIdAsync(Guid userId)
@@ -43,8 +55,18 @@ public class CartService : ICartService
         }
         
         var carts = await _cartRepository.GetCartsByUserIdAsync(userId);
+        var cartsList = carts.ToList();
+        
+        var cartDtos = new List<CartDto>();
 
-        return carts.Select(StoreEntityToDtoMapper.MapToCartDto);
+        foreach (var cart in cartsList)
+        {
+            var cartItems = await GetCartItemsByCartIdAsync(cart.Id);
+
+            cartDtos.Add(StoreEntityToDtoMapper.MapToCartDto(cart, cartItems));
+        }
+
+        return cartDtos;
     }
 
     public async Task<CartDto> GetOrCreateActiveCartAsync(CartCreateRequest request)
@@ -67,9 +89,18 @@ public class CartService : ICartService
             };
             
             await _cartRepository.AddCartAsync(activeCart);
+            
+            return StoreEntityToDtoMapper.MapToCartDto(activeCart, new List<CartItemDto>());
         }
 
-        return StoreEntityToDtoMapper.MapToCartDto(activeCart);
+        if (!await IsCartRelevantAsync(activeCart.Id))
+        {
+            return await UpdateCartAsync(activeCart.Id) ?? throw new InvalidOperationException("Cannot update cart.");
+        }
+            
+        var cartItems = await GetCartItemsByCartIdAsync(activeCart.Id);
+        return StoreEntityToDtoMapper.MapToCartDto(activeCart, cartItems);
+        
     }
 
     public async Task RemoveCartAsync(Guid cartId)
@@ -137,7 +168,189 @@ public class CartService : ICartService
 
         await _cartRepository.UpdateCartAsync(abandonedCart);
 
-        return StoreEntityToDtoMapper.MapToCartDto(abandonedCart);
+        var cartItems = await GetCartItemsByCartIdAsync(abandonedCart.Id);
+        return StoreEntityToDtoMapper.MapToCartDto(abandonedCart, cartItems);
+    }
+
+    public async Task<bool> IsCartRelevantAsync(Guid cartId)
+    {
+        if (cartId == Guid.Empty)
+        {
+            throw new ArgumentException("Cart ID cannot be empty.", nameof(cartId));
+        }
+        
+        var cart = await _cartRepository.GetCartByIdAsync(cartId);
+        if (cart == null || cart.Status != CartStatus.Active)
+        {
+            throw new InvalidOperationException("Cannot check if cart is relevant. Cart is not active.");
+        }
+        
+        var cartItems = await _cartItemRepository.GetCartItemsByCartIdAsync(cartId);
+        var cartItemsList = cartItems.ToList();
+        if (!cartItemsList.Any())
+        {
+            return true;
+        }
+        
+        List<Guid> checkedBundleIds = [];
+
+        foreach (var cartItem in cartItemsList)
+        {
+            if (cartItem.BundleId != null)
+            {
+                if (!checkedBundleIds.Contains(cartItem.BundleId.Value))
+                {
+                    var bundle = await _bundleRepository.GetByIdAsync(cartItem.BundleId.Value);
+                    if (bundle == null)
+                    {
+                        throw new InvalidOperationException("Bundle not found.");
+                    }
+
+                    var bundleCartItems = cartItemsList.Where(ci => ci.BundleId == cartItem.BundleId).ToList();
+                    var bundleCartItemsTotalPrice = bundleCartItems.Sum(ci => ci.Price);
+                    
+                    var bundleProductIds = bundle.BundleProducts.Select(bp => bp.ProductId).ToList();
+                    var cartProductIds = cartItemsList.Select(ci => ci.ProductId).ToList();
+
+                    if (bundleCartItems.Count != bundle.BundleProducts.Count
+                        || _priceCalculator.ArePricesDifferent(bundle.TotalPrice, bundleCartItemsTotalPrice) 
+                        || !bundleProductIds.ToHashSet().SetEquals(cartProductIds.ToHashSet()))
+                    {
+                        return false;
+                    }
+                
+                    checkedBundleIds.Add(cartItem.BundleId.Value);
+                }
+            }
+            else
+            {
+                var productDiscounts =
+                    await _productDiscountRepository.GetProductDiscountsByProductIdAsync(cartItem.ProductId);
+                var product = await _productRepository.GetByIdAsync(cartItem.ProductId);
+                if (product == null)
+                {
+                    throw new InvalidOperationException("Product not found.");
+                }
+                if (_priceCalculator.ArePricesDifferent(cartItem.Price, _priceCalculator.ApplyDiscount(product.Price, productDiscounts)))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public async Task<CartDto?> UpdateCartAsync(Guid cartId)
+    {
+        if (cartId == Guid.Empty)
+        {
+            throw new ArgumentException("Cart ID cannot be empty.", nameof(cartId));
+        }
+        
+        var cart = await _cartRepository.GetCartByIdAsync(cartId);
+        if (cart == null || cart.Status != CartStatus.Active)
+        {
+            throw new InvalidOperationException("Cannot update a non-active cart.");
+        }
+        
+        var cartItems = await _cartItemRepository.GetCartItemsByCartIdAsync(cartId);
+        var cartItemsList = cartItems.ToList();
+        if (!cartItemsList.Any())
+        {
+            return StoreEntityToDtoMapper.MapToCartDto(cart, new List<CartItemDto>());
+        }
+        
+        List<Guid> checkedBundleIds = [];
+
+        foreach (var cartItem in cartItemsList)
+        {
+            if (cartItem.BundleId != null)
+            {
+                if (!checkedBundleIds.Contains(cartItem.BundleId.Value))
+                {
+                    var bundle = await _bundleRepository.GetByIdAsync(cartItem.BundleId.Value);
+                    if (bundle == null)
+                    {
+                        throw new InvalidOperationException("Bundle not found.");
+                    }
+
+                    var bundleCartItems = cartItemsList.Where(ci => ci.BundleId == cartItem.BundleId).ToList();
+                    var bundleCartItemsTotalPrice = bundleCartItems.Sum(ci => ci.Price);
+
+                    var bundleProductIds = bundle.BundleProducts.Select(bp => bp.ProductId).ToList();
+                    var cartProductIds = bundleCartItems.Select(ci => ci.ProductId).ToList();
+                    
+                    if (bundle.ExpiresAt < DateTime.UtcNow 
+                        || !bundle.IsActive
+                        || bundleCartItems.Count != bundle.BundleProducts.Count
+                        || !bundleProductIds.ToHashSet().SetEquals(cartProductIds.ToHashSet()))
+                    {
+                        foreach (var item in bundleCartItems)
+                        {
+                            item.Price = await GetDiscountedPriceAsync(item.ProductId);
+                            item.BundleId = null;
+                            await _cartItemRepository.UpdateCartItemAsync(item);
+                        }
+                    }
+                    else if (_priceCalculator.ArePricesDifferent(bundle.TotalPrice, bundleCartItemsTotalPrice))
+                    {
+                        if (!_priceCalculator.ArePricesDifferent(bundle.TotalPrice, bundle.BundleProducts.Sum(bp => bp.DistributedPrice)))
+                        {
+                            foreach (var item in bundleCartItems)
+                            {
+                                item.Price = bundle.BundleProducts.First(bp => bp.ProductId == item.ProductId).DistributedPrice;
+                                await _cartItemRepository.UpdateCartItemAsync(item);
+                            }
+                        }
+                        else
+                        {
+                            var bundleProducts = _bundleProductRepository.DistributeBundlePrice(bundle.BundleProducts.ToList(), bundle.TotalPrice);
+                            foreach (var product in bundleProducts)
+                            {
+                                await _bundleProductRepository.UpdateAsync(product);
+                            }
+                            foreach (var item in bundleCartItems)
+                            {
+                                item.Price = bundleProducts.First(bp => bp.ProductId == item.ProductId).DistributedPrice;
+                                await _cartItemRepository.UpdateCartItemAsync(item);
+                            }
+                        }
+                    }
+                
+                    checkedBundleIds.Add(cartItem.BundleId.Value);
+                }
+            }
+            else
+            {
+                var discountedPrice = await GetDiscountedPriceAsync(cartItem.ProductId);
+                if (_priceCalculator.ArePricesDifferent(cartItem.Price, discountedPrice))
+                {
+                    cartItem.Price = discountedPrice;
+                    await _cartItemRepository.UpdateCartItemAsync(cartItem);
+                }
+            }
+        }
+        
+        cart.TotalAmount = await _priceCalculator.CalculateTotalAsync(cartItemsList, _productDiscountRepository);
+        cart.LastModifiedAt = DateTime.UtcNow;
+        var updatedCart = await _cartRepository.UpdateCartAsync(cart);
+        if (updatedCart == null)
+        {
+            throw new InvalidOperationException("Cannot update cart.");
+        }
+        
+        var cartItemsDtos = await GetCartItemsByCartIdAsync(cartId);
+        
+        return StoreEntityToDtoMapper.MapToCartDto(updatedCart, cartItemsDtos);
+    }
+    
+    private async Task<decimal> GetDiscountedPriceAsync(Guid productId)
+    {
+        var product = await _productRepository.GetByIdAsync(productId)
+                      ?? throw new InvalidOperationException("Product not found.");
+        var discounts = await _productDiscountRepository.GetProductDiscountsByProductIdAsync(productId);
+        return _priceCalculator.ApplyDiscount(product.Price, discounts.ToList());
     }
 
     // ---------------- Cart Item Operations --------------------
@@ -150,11 +363,47 @@ public class CartService : ICartService
         }
 
         var cartItem = await _cartItemRepository.GetCartItemByIdAsync(cartItemId);
+        if (cartItem == null) return null;
         
-        return cartItem == null ? null : StoreEntityToDtoMapper.MapToCartItemDto(cartItem);
+        if (cartItem.Product == null)
+        {
+            throw new InvalidOperationException("Product not found.");
+        }
+        
+        var fullLogoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(cartItem.ProductId);
+        decimal? discountValue = _priceCalculator.ArePricesDifferent(cartItem.Product.Price, cartItem.Price) ? cartItem.Product.Price - cartItem.Price : null;
+        DateTime? discountExpirationDate = null;
+        
+        if (cartItem.BundleId != null)
+        {
+            var bundle = await _bundleRepository.GetByIdAsync(cartItem.BundleId.Value);
+            if (bundle == null)
+            {
+                throw new InvalidOperationException("Bundle not found.");
+            }
+            discountExpirationDate = bundle.ExpiresAt;
+        }
+        else
+        {
+            var productDiscounts = await _productDiscountRepository.GetProductDiscountsByProductIdAsync(cartItem.ProductId);
+            var now = DateTime.UtcNow;
+            var activeDiscounts = productDiscounts
+                .Where(pd =>
+                    (!pd.Discount.StartDate.HasValue || pd.Discount.StartDate <= now) &&
+                    (!pd.Discount.EndDate.HasValue || pd.Discount.EndDate >= now))
+                .ToList();
+
+            var endDates = activeDiscounts.Select(pd => pd.Discount.EndDate).ToList();
+            if (endDates.Any())
+            {
+                discountExpirationDate = endDates.Min();
+            }
+        }
+        
+        return StoreEntityToDtoMapper.MapToCartItemDto(cartItem, fullLogoUrl, discountValue, discountExpirationDate);
     }
 
-    public async Task<IEnumerable<CartItemDto>> GetCartItemsByCartIdAsync(Guid cartId)
+    public async Task<List<CartItemDto>> GetCartItemsByCartIdAsync(Guid cartId)
     {
         if (cartId == Guid.Empty)
         {
@@ -163,7 +412,59 @@ public class CartService : ICartService
 
         var cartItems = await _cartItemRepository.GetCartItemsByCartIdAsync(cartId);
         
-        return cartItems.Select(StoreEntityToDtoMapper.MapToCartItemDto);
+        var result = new List<CartItemDto>();
+
+        foreach (var cartItem in cartItems)
+        {
+            if (cartItem.Product == null)
+            {
+                throw new InvalidOperationException($"Product not found for cart item with ID: {cartItem.Id}");
+            }
+
+            var fullLogoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(cartItem.ProductId);
+            decimal? discountValue = _priceCalculator.ArePricesDifferent(cartItem.Product.Price, cartItem.Price)
+                ? cartItem.Product.Price - cartItem.Price
+                : null;
+
+            DateTime? discountExpirationDate = null;
+
+            if (cartItem.BundleId != null)
+            {
+                var bundle = await _bundleRepository.GetByIdAsync(cartItem.BundleId.Value);
+                if (bundle == null)
+                {
+                    throw new InvalidOperationException($"Bundle not found for cart item with ID: {cartItem.Id}");
+                }
+
+                discountExpirationDate = bundle.ExpiresAt;
+            }
+            else
+            {
+                var productDiscounts = await _productDiscountRepository.GetProductDiscountsByProductIdAsync(cartItem.ProductId);
+                var now = DateTime.UtcNow;
+
+                var activeDiscounts = productDiscounts
+                    .Where(pd =>
+                        (!pd.Discount.StartDate.HasValue || pd.Discount.StartDate <= now) &&
+                        (!pd.Discount.EndDate.HasValue || pd.Discount.EndDate >= now))
+                    .ToList();
+
+                var endDates = activeDiscounts
+                    .Select(pd => pd.Discount.EndDate)
+                    .Where(d => d.HasValue)
+                    .ToList();
+
+                if (endDates.Any())
+                {
+                    discountExpirationDate = endDates.Min();
+                }
+            }
+
+            var dto = StoreEntityToDtoMapper.MapToCartItemDto(cartItem, fullLogoUrl, discountValue, discountExpirationDate);
+            result.Add(dto);
+        }
+
+        return result;
     }
 
     public async Task<CartItemDto?> AddCartItemAsync(CartItemCreateRequest request)
@@ -184,50 +485,46 @@ public class CartService : ICartService
         {
             throw new InvalidOperationException("Product not found.");
         }
+        
+        var productDiscounts = await _productDiscountRepository.GetProductDiscountsByProductIdAsync(request.ProductId);
+        var productDiscountsList = productDiscounts.ToList();
+        var now = DateTime.UtcNow;
+        var activeDiscounts = productDiscountsList
+            .Where(pd =>
+                (!pd.Discount.StartDate.HasValue || pd.Discount.StartDate <= now) &&
+                (!pd.Discount.EndDate.HasValue || pd.Discount.EndDate >= now))
+            .ToList();
 
         var cartItem = new CartItem
         {
             Id = Guid.NewGuid(),
             CartId = request.CartId,
             ProductId = request.ProductId,
-            Price = product.Price
+            BundleId = null,
+            Price = _priceCalculator.ApplyDiscount(product.Price, activeDiscounts)
         };
 
-        var result = await _cartItemRepository.AddCartItemAsync(cartItem);
-
-        await RecalculateCartTotalAsync(request.CartId);
-
-        return result == null ? null : StoreEntityToDtoMapper.MapToCartItemDto(result);
-    }
-
-    public async Task<CartItemDto?> UpdateCartItemAsync(CartItemUpdateRequest request)
-    {
-        if (!StoreRequestsValidator.ValidateCartItemUpdateRequest(request, out var errors))
-        {
-            throw new ArgumentException($"Invalid request. Errors: {errors}", nameof(request));
-        }
-
-        var cartItem = await _cartItemRepository.GetCartItemByIdAsync(request.Id);
-        if (cartItem == null)
-        {
-            throw new KeyNotFoundException($"CartItem with ID {request.Id} not found.");
-        }
+        var addedCartItem = await _cartItemRepository.AddCartItemAsync(cartItem);
+        if (addedCartItem == null) return null;
         
-        var product = await _productRepository.GetByIdAsync(request.ProductId);
-        if (product == null)
+        await RecalculateCartTotalAsync(request.CartId);
+        
+        if (addedCartItem.Product == null)
         {
             throw new InvalidOperationException("Product not found.");
         }
-
-        cartItem.CartId = request.CartId;
-        cartItem.ProductId = request.ProductId;
-        cartItem.Price = product.Price;
-
-        var result = await _cartItemRepository.UpdateCartItemAsync(cartItem);
-
-        await RecalculateCartTotalAsync(request.CartId);
         
-        return result == null ? null : StoreEntityToDtoMapper.MapToCartItemDto(result);
+        var fullLogoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(addedCartItem.ProductId);
+        decimal? discountValue = _priceCalculator.ArePricesDifferent(addedCartItem.Product.Price, addedCartItem.Price) ? addedCartItem.Product.Price - addedCartItem.Price : null;
+        DateTime? discountExpirationDate = null;
+        
+        var endDates = activeDiscounts.Select(pd => pd.Discount.EndDate).ToList();
+        if (endDates.Any())
+        {
+            discountExpirationDate = endDates.Min();
+        }
+        
+        return StoreEntityToDtoMapper.MapToCartItemDto(addedCartItem, fullLogoUrl, discountValue, discountExpirationDate);
     }
 
     public async Task RemoveCartItemAsync(Guid cartItemId)
@@ -266,5 +563,71 @@ public class CartService : ICartService
             cart.LastModifiedAt = DateTime.UtcNow;
             await _cartRepository.UpdateCartAsync(cart);
         }
+    }
+
+    public async Task<List<CartItemDto>> AddBundleToCartAsync(CartAddBundleRequest request)
+    {
+        if (!StoreRequestsValidator.ValidateCartAddBundleRequest(request, out var errors))
+        {
+            throw new ArgumentException($"Invalid request. Errors: {errors}", nameof(request));
+        }
+        var bundle = await _bundleRepository.GetByIdAsync(request.BundleId);
+        if (bundle == null)
+        {
+            throw new InvalidOperationException("Bundle not found.");
+        }
+        if (bundle.BundleProducts == null || bundle.BundleProducts.Count == 0)
+        {
+            throw new InvalidOperationException("Bundle has no products.");
+        }
+        
+        List<CartItem> addedCartItems = [];
+        foreach (var bundleProduct in bundle.BundleProducts)
+        {
+            var product = await _productRepository.GetByIdAsync(bundleProduct.ProductId);
+            if (product == null)
+            {
+                throw new InvalidOperationException("Product not found.");
+            }
+            
+            var cartItem = new CartItem
+            {
+                Id = Guid.NewGuid(),
+                CartId = request.CartId,
+                ProductId = bundleProduct.ProductId,
+                BundleId = request.BundleId,
+                Price = bundleProduct.DistributedPrice
+            };
+
+            var addedCartItem = await _cartItemRepository.AddCartItemAsync(cartItem);
+            if (addedCartItem == null)
+            {
+                foreach (var item in addedCartItems)
+                {
+                    await _cartItemRepository.DeleteCartItemAsync(item.Id);
+                }
+                
+                throw new InvalidOperationException("Cannot add bundle to cart.");
+            }
+            addedCartItems.Add(addedCartItem);
+        }
+        
+        await RecalculateCartTotalAsync(request.CartId);
+        
+        var result = new List<CartItemDto>();
+
+        foreach (var cartItem in addedCartItems)
+        {
+            var fullLogoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(cartItem.ProductId);
+            decimal? discountValue = _priceCalculator.ArePricesDifferent(cartItem.Product.Price, cartItem.Price)
+                ? cartItem.Product.Price - cartItem.Price
+                : null;
+            DateTime? discountExpirationDate =  bundle.ExpiresAt;
+
+            var dto = StoreEntityToDtoMapper.MapToCartItemDto(cartItem, fullLogoUrl, discountValue, discountExpirationDate);
+            result.Add(dto);
+        }
+
+        return result;
     }
 }

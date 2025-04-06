@@ -26,6 +26,7 @@ public class CartRepository : ICartRepository
         
         return await _carts
             .Include(c => c.CartItems)
+                .ThenInclude(ci => ci.Product)
             .FirstOrDefaultAsync(c => c.Id == cartId);
     }
 
@@ -58,7 +59,7 @@ public class CartRepository : ICartRepository
     }
 
     /// <inheritdoc />
-    public async Task AddCartAsync(Cart cart)
+    public async Task<Cart?> AddCartAsync(Cart cart)
     {
         if (!StoreModelValidator.ValidateCartModel(cart, out string errors))
         {
@@ -67,10 +68,17 @@ public class CartRepository : ICartRepository
         
         await _carts.AddAsync(cart);
         await _context.SaveChangesAsync();
+        
+        var createdCart = await _carts
+            .Include(c => c.CartItems)
+                .ThenInclude(ci => ci.Product)
+            .FirstOrDefaultAsync(c => c.Id == cart.Id);
+        
+        return createdCart;
     }
 
     /// <inheritdoc />
-    public async Task UpdateCartAsync(Cart cart)
+    public async Task<Cart?> UpdateCartAsync(Cart cart)
     {
         if (!StoreModelValidator.ValidateCartModel(cart, out string errors))
         {
@@ -79,6 +87,13 @@ public class CartRepository : ICartRepository
         
         _carts.Update(cart);
         await _context.SaveChangesAsync();
+        
+        var updatedCart = await _carts
+            .Include(c => c.CartItems)
+            .ThenInclude(ci => ci.Product)
+            .FirstOrDefaultAsync(c => c.Id == cart.Id);
+        
+        return updatedCart;
     }
 
     /// <inheritdoc />
