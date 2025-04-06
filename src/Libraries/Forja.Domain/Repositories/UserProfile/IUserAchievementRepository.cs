@@ -55,14 +55,14 @@ public interface IUserAchievementRepository
     /// </summary>
     /// <param name="userAchievement">The user achievement object to add.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task AddAsync(UserAchievement userAchievement);
+    Task<UserAchievement?> AddAsync(UserAchievement userAchievement);
 
     /// <summary>
     /// Updates an existing user achievement in the repository.
     /// </summary>
     /// <param name="userAchievement">The user achievement entity to be updated.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task UpdateAsync(UserAchievement userAchievement);
+    Task<UserAchievement?> UpdateAsync(UserAchievement userAchievement);
 
     /// <summary>
     /// Asynchronously deletes a user achievement by its unique identifier.

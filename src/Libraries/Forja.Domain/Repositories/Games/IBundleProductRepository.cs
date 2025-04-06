@@ -52,5 +52,12 @@ public interface IBundleProductRepository
     /// <param name="bundleProducts">A list of the products included in the bundle.</param>
     /// <param name="bundleTotalPrice">The total price of the bundle to be distributed.</param>
     /// <returns>A list of bundle products with their respective distributed prices updated.</returns>
-    List<BundleProduct> DistributeBundlePrice(List<BundleProduct> bundleProducts, decimal bundleTotalPrice);
+    Task<List<BundleProduct>> DistributeBundlePrice(List<BundleProduct> bundleProducts, decimal bundleTotalPrice);
+
+    /// <summary>
+    /// Checks if the specified bundle contains any products.
+    /// </summary>
+    /// <param name="bundleId">The unique identifier of the bundle.</param>
+    /// <returns>A boolean value indicating whether the bundle has products.</returns>
+    Task<bool> HasBundleProducts(Guid bundleId);
 }

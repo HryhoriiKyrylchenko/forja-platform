@@ -27,7 +27,6 @@ public class AchievementCreateRequest
     /// <summary>
     /// The URL of the logo associated with the achievement (optional).
     /// </summary>
-    [Url]
     public string? LogoUrl { get; set; }
 
     /// <summary>

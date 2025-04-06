@@ -24,12 +24,18 @@ public class BundleProductService : IBundleProductService
     {
         var bundleProducts = await _bundleProductRepository.GetAllAsync();
 
-        var result = await Task.WhenAll(bundleProducts.Select(async bp => GamesEntityToDtoMapper.MapToBundleProductDto(
-            bp,
-            await _fileManagerService.GetPresignedProductLogoUrlAsync(bp.ProductId, 1900)
-        )));
-        
-        return result.ToList();
+        var result = new List<BundleProductDto>();
+
+        foreach (var bundleProduct in bundleProducts)
+        {
+            var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(bundleProduct.ProductId, 1900);
+
+            var mappedBundleProductDto = GamesEntityToDtoMapper.MapToBundleProductDto(bundleProduct, logoUrl);
+
+            result.Add(mappedBundleProductDto);
+        }
+
+        return result;
     }
 
     /// <inheritdoc />
@@ -54,14 +60,21 @@ public class BundleProductService : IBundleProductService
         {
             throw new ArgumentException("Id cannot be empty.", nameof(bundleId));
         }
+
         var bundleProducts = await _bundleProductRepository.GetByBundleIdAsync(bundleId);
 
-        var result = await Task.WhenAll(bundleProducts.Select(async bp => GamesEntityToDtoMapper.MapToBundleProductDto(
-            bp,
-            await _fileManagerService.GetPresignedProductLogoUrlAsync(bp.ProductId, 1900)
-        )));
-        
-        return result.ToList();
+        var result = new List<BundleProductDto>();
+
+        foreach (var bundleProduct in bundleProducts)
+        {
+            var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(bundleProduct.ProductId, 1900);
+
+            var mappedProductDto = GamesEntityToDtoMapper.MapToBundleProductDto(bundleProduct, logoUrl);
+
+            result.Add(mappedProductDto);
+        }
+
+        return result;
     }
 
     /// <inheritdoc />
@@ -71,43 +84,50 @@ public class BundleProductService : IBundleProductService
         {
             throw new ArgumentException($"Invalid request. Error: {errorMessage}", nameof(request));
         }
+
+        if (await _bundleProductRepository.HasBundleProducts(request.BundleId))
+        {
+            throw new ArgumentException("Bundle already has products.", nameof(request));
+        }
         
         var bundleProducts = new List<BundleProduct>();
-
         foreach (var productId in request.ProductIds)
         {
-            var newBundleProduct = new BundleProduct
+            bundleProducts.Add(new BundleProduct
             {
                 Id = Guid.NewGuid(),
                 BundleId = request.BundleId,
                 ProductId = productId,
                 DistributedPrice = 0m
-            };
-            bundleProducts.Add(newBundleProduct);
+            });
         }
 
-        var result = _bundleProductRepository.DistributeBundlePrice(bundleProducts, request.BundleTotalPrice);
-        if (result == null || result.Count != bundleProducts.Count)
+        var distributedProducts = await _bundleProductRepository.DistributeBundlePrice(bundleProducts, request.BundleTotalPrice);
+        if (distributedProducts == null || distributedProducts.Count != bundleProducts.Count)
         {
             throw new ArgumentException("Invalid request.", nameof(request));
         }
 
-        foreach (var bundleProduct in result)
+        var savedProducts = new List<BundleProduct>();
+        foreach (var bundleProduct in distributedProducts)
         {
-            var createdBundleProduct = await _bundleProductRepository.AddAsync(bundleProduct);
-            if (createdBundleProduct == null)
+            var savedProduct = await _bundleProductRepository.AddAsync(bundleProduct);
+            if (savedProduct == null)
             {
-                throw new ArgumentException("Invalid request.", nameof(request));
+                throw new ArgumentException("Saving bundle product failed.");
             }
+            savedProducts.Add(savedProduct);
         }
 
-        var createdBundleProducts = await Task.WhenAll(result.Select(async bp =>
-            GamesEntityToDtoMapper.MapToBundleProductDto(
-                bp,
-                await _fileManagerService.GetPresignedProductLogoUrlAsync(bp.ProductId, 1900))
-        ));
-        
-        return createdBundleProducts.ToList();
+        var createdBundleProducts = new List<BundleProductDto>();
+        foreach (var savedProduct in savedProducts)
+        {
+            var presignedLogoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(savedProduct.ProductId, 1900);
+            var bundleProductDto = GamesEntityToDtoMapper.MapToBundleProductDto(savedProduct, presignedLogoUrl);
+            createdBundleProducts.Add(bundleProductDto);
+        }
+
+        return createdBundleProducts;
     }
 
     /// <inheritdoc />

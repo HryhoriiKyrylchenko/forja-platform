@@ -24,4 +24,11 @@ public interface IProductRepository
     /// <typeparam name="T">The specific type of product (e.g., Game, GameAddon).</typeparam>
     /// <returns>A collection of products of the specified type.</returns>
     Task<IEnumerable<T>> GetByTypeAsync<T>() where T : Product;
+
+    /// <summary>
+    /// Retrieves a list of products based on their unique identifiers.
+    /// </summary>
+    /// <param name="productIds">A list of unique identifiers for the products to retrieve.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a list of products corresponding to the specified identifiers.</returns>
+    Task<List<Product>> GetProductsByIdsAsync(List<Guid> productIds);
 }

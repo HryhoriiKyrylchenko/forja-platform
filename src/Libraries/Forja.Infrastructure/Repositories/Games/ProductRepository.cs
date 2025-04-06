@@ -47,4 +47,16 @@ public class ProductRepository : IProductRepository
             .AsNoTracking()
             .ToListAsync();
     }
+
+    public async Task<List<Product>> GetProductsByIdsAsync(List<Guid> productIds)
+    {
+        if (productIds.Count == 0)
+        {
+            return new List<Product>();
+        }
+        
+        return await _products
+            .Where(p => productIds.Contains(p.Id))
+            .ToListAsync();
+    }
 }

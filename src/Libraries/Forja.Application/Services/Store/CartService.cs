@@ -305,7 +305,7 @@ public class CartService : ICartService
                         }
                         else
                         {
-                            var bundleProducts = _bundleProductRepository.DistributeBundlePrice(bundle.BundleProducts.ToList(), bundle.TotalPrice);
+                            var bundleProducts =  await _bundleProductRepository.DistributeBundlePrice(bundle.BundleProducts.ToList(), bundle.TotalPrice);
                             foreach (var product in bundleProducts)
                             {
                                 await _bundleProductRepository.UpdateAsync(product);

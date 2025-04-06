@@ -1,5 +1,3 @@
-using Forja.Domain.Entities.UserProfile;
-
 namespace Forja.Infrastructure.Repositories.UserProfile;
 
 public class UserAchievementRepository : IUserAchievementRepository
@@ -23,6 +21,7 @@ public class UserAchievementRepository : IUserAchievementRepository
         
         return await _userAchievements
             .Include(ua => ua.Achievement)
+                .ThenInclude(a => a.Game)
             .Include(ua => ua.User)
             .FirstOrDefaultAsync(ua => ua.Id == id);
     }
@@ -32,6 +31,7 @@ public class UserAchievementRepository : IUserAchievementRepository
     {
         return await _userAchievements
             .Include(ua => ua.Achievement)
+                .ThenInclude(a => a.Game)
             .Include(ua => ua.User)
             .ToListAsync();
     }
@@ -46,7 +46,7 @@ public class UserAchievementRepository : IUserAchievementRepository
         
         return await _userAchievements
             .Include(ua => ua.Achievement)
-            .Include(ua => ua.Achievement.Game)
+                .ThenInclude(a => a.Game)
             .Where(ua => ua.UserId == userId)
             .ToListAsync();
     }
@@ -61,7 +61,7 @@ public class UserAchievementRepository : IUserAchievementRepository
 
         return await _userAchievements
             .Include(ua => ua.Achievement)
-            .Include(ua => ua.Achievement.Game)
+                .ThenInclude(a => a.Game)
             .Where(ua => ua.UserId == userId)
             .OrderByDescending(ua => ua.AchievedAt)
             .Take(num) 
@@ -72,7 +72,8 @@ public class UserAchievementRepository : IUserAchievementRepository
     {
         return await _userAchievements
             .Where(ua => ua.UserId == userId)
-            .Include(ua => ua.Achievement.Game)
+            .Include(ua => ua.Achievement)
+                .ThenInclude(a => a.Game)
             .Select(ua => ua.Achievement)
             .ToListAsync();
     }
@@ -93,7 +94,7 @@ public class UserAchievementRepository : IUserAchievementRepository
     }
 
     /// <inheritdoc />
-    public async Task AddAsync(UserAchievement userAchievement)
+    public async Task<UserAchievement?> AddAsync(UserAchievement userAchievement)
     {
         if (!UserProfileModelValidator.ValidateUserAchievement(userAchievement))
         {
@@ -102,10 +103,13 @@ public class UserAchievementRepository : IUserAchievementRepository
         
         await _userAchievements.AddAsync(userAchievement);
         await _context.SaveChangesAsync();
+        
+        var addedUserAchievement = await GetByIdAsync(userAchievement.Id);
+        return addedUserAchievement;
     }
 
     /// <inheritdoc />
-    public async Task UpdateAsync(UserAchievement userAchievement)
+    public async Task<UserAchievement?> UpdateAsync(UserAchievement userAchievement)
     {
         if (!UserProfileModelValidator.ValidateUserAchievement(userAchievement))
         {
@@ -114,6 +118,9 @@ public class UserAchievementRepository : IUserAchievementRepository
         
         _userAchievements.Update(userAchievement);
         await _context.SaveChangesAsync();
+        
+        var updatedUserAchievement = await GetByIdAsync(userAchievement.Id);
+        return updatedUserAchievement;
     }
 
     /// <inheritdoc />
