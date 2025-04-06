@@ -60,12 +60,6 @@ public static class GamesModelValidator
             return false;
         }
 
-        if (!bundle.BundleProducts.Any())
-        {
-            errorMessage = "Bundle must contain at least one product.";
-            return false;
-        }
-
         errorMessage = string.Empty;
         return true;
     }

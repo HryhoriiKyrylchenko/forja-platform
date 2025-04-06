@@ -39,7 +39,6 @@ public static class UserProfileEntityToDtoMapper
         {
             Id = userAchievement.Id,
             UserId = userAchievement.UserId,
-            // User = MapToUserProfileDto(userAchievement.User),
             Achievement = MapToAchievementDto(userAchievement.Achievement),
             AchievedAt = userAchievement.AchievedAt
         };

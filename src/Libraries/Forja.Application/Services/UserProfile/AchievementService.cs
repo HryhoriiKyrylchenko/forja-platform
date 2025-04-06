@@ -10,12 +10,15 @@ public class AchievementService : IAchievementService
     private readonly IUserRepository _userRepository;
     private readonly IGameRepository _gameRepository;
 
-    public AchievementService(IAchievementRepository achievementRepository, IUserAchievementRepository userAchievementRepository, IUserRepository userRepository, IGameRepository gameRepository)
+    public AchievementService(IAchievementRepository achievementRepository, 
+        IUserAchievementRepository userAchievementRepository, 
+        IUserRepository userRepository, 
+        IGameRepository gameRepository)
     {
-        _achievementRepository = achievementRepository ?? throw new ArgumentNullException(nameof(achievementRepository));
-        _userAchievementRepository = userAchievementRepository ?? throw new ArgumentNullException(nameof(userAchievementRepository));
-        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
-        _gameRepository = gameRepository ?? throw new ArgumentNullException(nameof(gameRepository));
+        _achievementRepository = achievementRepository;
+        _userAchievementRepository = userAchievementRepository;
+        _userRepository = userRepository;
+        _gameRepository = gameRepository;
     }
     
     #region Achievement Methods
@@ -109,7 +112,7 @@ public class AchievementService : IAchievementService
     }
 
     /// <inheritdoc />
-    public async Task<AchievementDto> RestoreAchievementAsync(Guid achievementId)
+    public async Task<AchievementDto?> RestoreAchievementAsync(Guid achievementId)
     {
         if (achievementId == Guid.Empty)
         {
@@ -118,7 +121,7 @@ public class AchievementService : IAchievementService
         
         var achievement = await _achievementRepository.RestoreAsync(achievementId);
         
-        return UserProfileEntityToDtoMapper.MapToAchievementDto(achievement);
+        return achievement == null ? null : UserProfileEntityToDtoMapper.MapToAchievementDto(achievement);
     }
 
     /// <inheritdoc />
@@ -186,7 +189,7 @@ public class AchievementService : IAchievementService
     #region UserAchievement Methods
     
     /// <inheritdoc />
-    public async Task<UserAchievementDto> AddUserAchievementAsync(UserAchievementCreateRequest request)
+    public async Task<UserAchievementDto?> AddUserAchievementAsync(UserAchievementCreateRequest request)
     {
         if (!UserProfileRequestsValidator.ValidateUserAchievementCreateRequest(request))
         {
@@ -201,9 +204,9 @@ public class AchievementService : IAchievementService
             AchievedAt = request.AchievedAt
         };
         
-        await _userAchievementRepository.AddAsync(userAchievement);
+        var addedAchievement = await _userAchievementRepository.AddAsync(userAchievement);
         
-        return UserProfileEntityToDtoMapper.MapToUserAchievementDto(userAchievement);
+        return addedAchievement == null ? null : UserProfileEntityToDtoMapper.MapToUserAchievementDto(addedAchievement);
     }
 
     /// <inheritdoc />
@@ -220,7 +223,7 @@ public class AchievementService : IAchievementService
     }
 
     /// <inheritdoc />
-    public async Task UpdateUserAchievement(UserAchievementUpdateRequest request)
+    public async Task<UserAchievementDto?> UpdateUserAchievement(UserAchievementUpdateRequest request)
     {
         if (!UserProfileRequestsValidator.ValidateUserAchievementUpdateRequest(request))
         {
@@ -237,7 +240,9 @@ public class AchievementService : IAchievementService
         userAchievement.UserId = request.UserId;
         userAchievement.AchievementId = request.AchievementId;
         
-        await _userAchievementRepository.UpdateAsync(userAchievement);
+        var updatedUserAchievement = await _userAchievementRepository.UpdateAsync(userAchievement);
+        
+        return updatedUserAchievement == null ? null : UserProfileEntityToDtoMapper.MapToUserAchievementDto(updatedUserAchievement);
     }
 
     /// <inheritdoc />

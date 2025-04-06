@@ -47,14 +47,14 @@ public interface IAchievementRepository
     /// </summary>
     /// <param name="achievement">The achievement entity to be added to the repository.</param>
     /// <returns>A task that represents the asynchronous add operation.</returns>
-    Task AddAsync(Achievement achievement);
+    Task<Achievement?>  AddAsync(Achievement achievement);
 
     /// <summary>
     /// Updates an existing achievement with new values.
     /// </summary>
     /// <param name="achievement">The achievement entity containing updated data.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    Task UpdateAsync(Achievement achievement);
+    Task<Achievement?>  UpdateAsync(Achievement achievement);
 
     /// <summary>
     /// Deletes an achievement from the repository using the provided achievement ID.
@@ -69,5 +69,5 @@ public interface IAchievementRepository
     /// </summary>
     /// <param name="achievementId">The unique identifier of the achievement to restore.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the restored achievement if successful.</returns>
-    Task<Achievement> RestoreAsync(Guid achievementId); 
+    Task<Achievement?> RestoreAsync(Guid achievementId); 
 }

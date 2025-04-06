@@ -74,7 +74,7 @@ public class AchievementRepository : IAchievementRepository
     }
 
     /// <inheritdoc />
-    public async Task AddAsync(Achievement achievement)
+    public async Task<Achievement?>  AddAsync(Achievement achievement)
     {
         if (!UserProfileModelValidator.ValidateAchievement(achievement))
         {
@@ -83,10 +83,16 @@ public class AchievementRepository : IAchievementRepository
         
         await _achievements.AddAsync(achievement);
         await _context.SaveChangesAsync();
+        
+        var addedAchievement = _achievements
+            .Where(a => !a.IsDeleted)
+            .Include(a => a.Game)
+            .FirstOrDefault(a => a.Id == achievement.Id);
+        return addedAchievement;
     }
 
     /// <inheritdoc />
-    public async Task UpdateAsync(Achievement achievement)
+    public async Task<Achievement?> UpdateAsync(Achievement achievement)
     {
         if (!UserProfileModelValidator.ValidateAchievement(achievement))
         {
@@ -95,6 +101,11 @@ public class AchievementRepository : IAchievementRepository
         
         _achievements.Update(achievement);
         await _context.SaveChangesAsync();
+        
+        var updatedAchievement = _achievements
+            .Include(a => a.Game)
+            .FirstOrDefault(a => a.Id == achievement.Id);
+        return updatedAchievement;
     }
 
     /// <inheritdoc />
@@ -105,8 +116,11 @@ public class AchievementRepository : IAchievementRepository
             throw new ArgumentException("Achievement id cannot be empty.", nameof(achievementId));
         }
         
-        var achievement = await GetByIdAsync(achievementId) 
-                          ?? throw new ArgumentException("Achievement not found.", nameof(achievementId));
+        var achievement = _achievements.FirstOrDefault(a => a.Id == achievementId);
+        if (achievement == null)
+        {
+            throw new ArgumentException("Achievement not found.", nameof(achievementId));
+        }
         
         achievement.IsDeleted = true;
         _achievements.Update(achievement);
@@ -114,14 +128,18 @@ public class AchievementRepository : IAchievementRepository
     }
 
     /// <inheritdoc />
-    public async Task<Achievement> RestoreAsync(Guid achievementId)
+    public async Task<Achievement?> RestoreAsync(Guid achievementId)
     {
         if (achievementId == Guid.Empty)
         {
             throw new ArgumentException("Achievement id cannot be empty.", nameof(achievementId));
         }
         
-        var achievement = await GetByIdAsync(achievementId) ?? throw new ArgumentException("Achievement not found.", nameof(achievementId));
+        var achievement = _achievements.FirstOrDefault(a => a.Id == achievementId);
+        if (achievement == null)
+        {
+            throw new ArgumentException("Achievement not found.", nameof(achievementId));
+        }
         
         if (!achievement.IsDeleted)
         {
@@ -132,6 +150,11 @@ public class AchievementRepository : IAchievementRepository
         _achievements.Update(achievement);
         await _context.SaveChangesAsync();
         
-        return achievement;
+        var restoredAchievement = _achievements
+            .Where(a => a.IsDeleted == false)
+            .Include(a => a.Game)
+            .FirstOrDefault(a => a.Id == achievementId);
+        
+        return restoredAchievement;
     }
 }

@@ -40,7 +40,7 @@ public interface IAchievementService
     /// </summary>
     /// <param name="achievementId">The unique identifier of the achievement to restore.</param>
     /// <returns>A Task representing the asynchronous operation. The task result contains the restored AchievementDto.</returns>
-    Task<AchievementDto> RestoreAchievementAsync(Guid achievementId);
+    Task<AchievementDto?> RestoreAchievementAsync(Guid achievementId);
 
     /// <summary>
     /// Retrieves all achievements associated with the specified game ID.
@@ -73,7 +73,7 @@ public interface IAchievementService
     /// </summary>
     /// <param name="request">The UserAchievementCreateRequest object containing the details of the achievement and user association.</param>
     /// <returns>A Task representing the asynchronous operation that returns the unique identifier of the newly created user achievement.</returns>
-    Task<UserAchievementDto> AddUserAchievementAsync(UserAchievementCreateRequest request);
+    Task<UserAchievementDto?> AddUserAchievementAsync(UserAchievementCreateRequest request);
 
     /// <summary>
     /// Retrieves the user achievement associated with the specified achievement ID.
@@ -87,7 +87,7 @@ public interface IAchievementService
     /// </summary>
     /// <param name="request">The UserAchievementUpdateRequest containing updated information for the user achievement.</param>
     /// <returns>A Task representing the asynchronous operation.</returns>
-    Task UpdateUserAchievement(UserAchievementUpdateRequest request);
+    Task<UserAchievementDto?> UpdateUserAchievement(UserAchievementUpdateRequest request);
 
     /// <summary>
     /// Deletes a specific user achievement identified by the provided ID.
@@ -116,11 +116,13 @@ public interface IAchievementService
     /// <returns></returns>
     Task<List<UserAchievementDto>> GetAllAchievementsByUserIdAsync(Guid userId);
 
+
     /// <summary>
-    /// Retrieves all achievements associated with the specified user's ID.
+    /// Retrieves a specified number of achievements associated with a user, identified by their user ID.
     /// </summary>
-    /// <param name="userId"></param>
-    /// <returns></returns>
+    /// <param name="userId">The unique identifier of the user whose achievements are to be retrieved.</param>
+    /// <param name="num">The number of achievements to retrieve. Must be greater than zero.</param>
+    /// <returns>A Task representing the result of the asynchronous operation. The task result contains a list of UserAchievementDto objects representing the retrieved achievements.</returns>
     Task<List<UserAchievementDto>> GetNumberOfAchievementsByUserIdAsync(Guid userId, int num);
 
     /// <summary>

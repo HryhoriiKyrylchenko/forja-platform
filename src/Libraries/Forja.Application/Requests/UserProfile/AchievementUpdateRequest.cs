@@ -33,7 +33,6 @@ public class AchievementUpdateRequest
     /// <summary>
     /// The updated URL of the logo associated with the achievement (optional).
     /// </summary>
-    [Url]
     public string? LogoUrl { get; set; }
 
     /// <summary>

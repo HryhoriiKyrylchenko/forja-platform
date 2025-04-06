@@ -20,17 +20,23 @@ public class BundleService : IBundleService
     public async Task<IEnumerable<BundleDto>> GetAllAsync()
     {
         var allBundles = await _bundleRepository.GetAllActiveAsync();
-        var bundles = await Task.WhenAll(allBundles.Select(async b =>
-        {
-            var bundleProductDtos = await Task.WhenAll(b.BundleProducts.Select(async bp =>
-            {
-                var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(bp.ProductId);
-                return GamesEntityToDtoMapper.MapToBundleProductDto(bp, logoUrl);
-            }));
 
-            return GamesEntityToDtoMapper.MapToBundleDto(b, bundleProductDtos.ToList());
-        }));
-        
+        var bundles = new List<BundleDto>();
+
+        foreach (var bundle in allBundles)
+        {
+            var bundleProductDtos = new List<BundleProductDto>();
+            foreach (var bundleProduct in bundle.BundleProducts)
+            {
+                var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(bundleProduct.ProductId);
+                var mappedProductDto = GamesEntityToDtoMapper.MapToBundleProductDto(bundleProduct, logoUrl);
+                bundleProductDtos.Add(mappedProductDto);
+            }
+
+            var bundleDto = GamesEntityToDtoMapper.MapToBundleDto(bundle, bundleProductDtos);
+            bundles.Add(bundleDto);
+        }
+
         return bundles;
     }
 
@@ -38,17 +44,25 @@ public class BundleService : IBundleService
     public async Task<IEnumerable<BundleDto>> GetActiveBundlesAsync()
     {
         var activeBundles = await _bundleRepository.GetActiveBundlesAsync();
-        var bundles = await Task.WhenAll(activeBundles.Select(async b =>
-        {
-            var bundleProductDtos = await Task.WhenAll(b.BundleProducts.Select(async bp =>
-            {
-                var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(bp.ProductId);
-                return GamesEntityToDtoMapper.MapToBundleProductDto(bp, logoUrl);
-            }));
 
-            return GamesEntityToDtoMapper.MapToBundleDto(b, bundleProductDtos.ToList());
-        }));
-        
+        var bundles = new List<BundleDto>();
+
+        foreach (var bundle in activeBundles)
+        {
+            var bundleProductDtos = new List<BundleProductDto>();
+            foreach (var bundleProduct in bundle.BundleProducts)
+            {
+                var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(bundleProduct.ProductId);
+
+                var bundleProductDto = GamesEntityToDtoMapper.MapToBundleProductDto(bundleProduct, logoUrl);
+
+                bundleProductDtos.Add(bundleProductDto);
+            }
+
+            var bundleDto = GamesEntityToDtoMapper.MapToBundleDto(bundle, bundleProductDtos);
+            bundles.Add(bundleDto);
+        }
+
         return bundles;
     }
 
@@ -59,21 +73,25 @@ public class BundleService : IBundleService
         {
             throw new ArgumentException("Id cannot be empty.", nameof(id));
         }
+
         var bundle = await _bundleRepository.GetByIdAsync(id);
         if (bundle == null)
         {
             return null;
         }
 
-        var bundleProductDtos = await Task.WhenAll(
-            bundle.BundleProducts.Select(async bp =>
-            {
-                var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(bp.Product.Id);
-                return GamesEntityToDtoMapper.MapToBundleProductDto(bp, logoUrl);
-            })
-        );
+        var bundleProductDtos = new List<BundleProductDto>();
+        foreach (var bundleProduct in bundle.BundleProducts)
+        {
+            var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(bundleProduct.Product.Id);
 
-        var bundleDto = GamesEntityToDtoMapper.MapToBundleDto(bundle, bundleProductDtos.ToList());
+            var bundleProductDto = GamesEntityToDtoMapper.MapToBundleProductDto(bundleProduct, logoUrl);
+
+            bundleProductDtos.Add(bundleProductDto);
+        }
+
+        var bundleDto = GamesEntityToDtoMapper.MapToBundleDto(bundle, bundleProductDtos);
+
         return bundleDto;
     }
 

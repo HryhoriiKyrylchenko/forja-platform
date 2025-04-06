@@ -7,15 +7,14 @@ public class BundleProductRepository : IBundleProductRepository
 {
     private readonly ForjaDbContext _context;
     private readonly DbSet<BundleProduct> _bundleProducts;
+    private readonly IProductRepository _productRepository;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="BundleProductRepository"/> class with the provided DbContext.
-    /// </summary>
-    /// <param name="context">The database context to be used.</param>
-    public BundleProductRepository(ForjaDbContext context)
+    public BundleProductRepository(ForjaDbContext context,
+        IProductRepository productRepository)
     {
         _context = context;
         _bundleProducts = context.Set<BundleProduct>();
+        _productRepository = productRepository;
     }
 
     /// <inheritdoc />
@@ -51,7 +50,12 @@ public class BundleProductRepository : IBundleProductRepository
         
         await _bundleProducts.AddAsync(bundleProduct);
         await _context.SaveChangesAsync();
-        return bundleProduct;
+        
+        var createdBundleProduct = await _bundleProducts
+                                    .Include(bp => bp.Bundle) 
+                                    .Include(bp => bp.Product) 
+                                    .FirstOrDefaultAsync(bp => bp.Id == bundleProduct.Id);
+        return createdBundleProduct;
     }
 
     /// <inheritdoc />
@@ -64,7 +68,12 @@ public class BundleProductRepository : IBundleProductRepository
         
         _bundleProducts.Update(bundleProduct);
         await _context.SaveChangesAsync();
-        return bundleProduct;
+        
+        var updatedBundleProduct = await _bundleProducts
+                                        .Include(bp => bp.Bundle) 
+                                        .Include(bp => bp.Product) 
+                                        .FirstOrDefaultAsync(bp => bp.Id == bundleProduct.Id);
+        return updatedBundleProduct;
     }
 
     /// <inheritdoc />
@@ -100,21 +109,28 @@ public class BundleProductRepository : IBundleProductRepository
     }
     
     /// <inheritdoc />
-    public List<BundleProduct> DistributeBundlePrice(List<BundleProduct> bundleProducts, decimal bundleTotalPrice)
+    public async Task<List<BundleProduct>> DistributeBundlePrice(List<BundleProduct> bundleProducts, decimal bundleTotalPrice)
     {
         if (bundleProducts == null || bundleProducts.Count == 0)
         {
             throw new ArgumentException("Bundle products cannot be null or empty", nameof(bundleProducts));
         }
+        
+        var productIds = bundleProducts.Select(bp => bp.ProductId).ToList();
 
-        var totalOriginalPrice = bundleProducts.Sum(p => p.Product.Price);
+        var products = await _productRepository.GetProductsByIdsAsync(productIds);
+
+        var productMap = products.ToDictionary(p => p.Id, p => p.Price);
+
+        var totalOriginalPrice = bundleProducts.Sum(bp =>
+            productMap.GetValueOrDefault(bp.ProductId, 0m));
 
         if (totalOriginalPrice == 0)
         {
-            var equalPrice = bundleTotalPrice / bundleProducts.Count;
+            var equalPrice = Math.Round(bundleTotalPrice / bundleProducts.Count, 2);
             foreach (var bp in bundleProducts)
             {
-                bp.DistributedPrice = Math.Round(equalPrice, 2);
+                bp.DistributedPrice = equalPrice;
             }
         }
         else
@@ -123,7 +139,8 @@ public class BundleProductRepository : IBundleProductRepository
 
             for (int i = 0; i < bundleProducts.Count; i++)
             {
-                var productPrice = bundleProducts[i].Product.Price;
+                var productId = bundleProducts[i].ProductId;
+                var productPrice = productMap.GetValueOrDefault(productId, 0m);
 
                 if (i == bundleProducts.Count - 1)
                 {
@@ -140,5 +157,16 @@ public class BundleProductRepository : IBundleProductRepository
         }
         
         return bundleProducts;
+    }
+
+    public async Task<bool> HasBundleProducts(Guid bundleId)
+    {
+        if (bundleId == Guid.Empty)
+        {
+            throw new ArgumentException("Bundle id cannot be empty", nameof(bundleId));
+        }
+        
+        return await _bundleProducts
+            .AnyAsync(bp => bp.BundleId == bundleId);
     }
 }

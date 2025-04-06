@@ -5,6 +5,5 @@ public class UserAchievementDto
     public Guid Id { get; set; }
     public AchievementDto Achievement { get; set; } = null!;
     public Guid UserId { get; set; }
-    // public UserProfileDto User { get; set; } = null!;
     public DateTime AchievedAt { get; set; }
 }
