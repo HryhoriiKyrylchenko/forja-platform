@@ -88,9 +88,13 @@ public class CartService : ICartService
                 CreatedAt = DateTime.UtcNow
             };
             
-            await _cartRepository.AddCartAsync(activeCart);
+            var createdCart = await _cartRepository.AddCartAsync(activeCart);
+            if (createdCart == null)
+            {
+                throw new InvalidOperationException("Cannot create cart.");
+            }
             
-            return StoreEntityToDtoMapper.MapToCartDto(activeCart, new List<CartItemDto>());
+            return StoreEntityToDtoMapper.MapToCartDto(createdCart, new List<CartItemDto>());
         }
 
         if (!await IsCartRelevantAsync(activeCart.Id))

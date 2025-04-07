@@ -355,6 +355,7 @@ public class CartController : ControllerBase
         try
         {
             var item = await _cartService.AddCartItemAsync(request);
+            if (item == null) return NotFound(new { error = $"Cart item was not added for product with ID {request.ProductId}." });
             return Ok(item);
         }
         catch (Exception ex)
@@ -372,6 +373,44 @@ public class CartController : ControllerBase
                     Details = new Dictionary<string, string>
                     {
                         { "Message", $"Failed add cart item with product id: {request.ProductId}" }
+                    }
+                };
+                
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+    
+    [HttpPost("/bundle")]
+    public async Task<IActionResult> AddBundleToCartItems([FromBody] CartAddBundleRequest request)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+        try
+        {
+            var items = await _cartService.AddBundleToCartAsync(request);
+            if (items.Count == 0) return NotFound(new { error = $"No items found for bundle with ID {request.BundleId}." });
+            return Ok(items);
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.Create,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed add bundle with id {request.BundleId} - to cart items" }
                     }
                 };
                 

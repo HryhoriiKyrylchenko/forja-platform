@@ -608,7 +608,7 @@ public class ReviewController : ControllerBase
         try
         {
             var result = await _reviewService.GetProductApprovedReviewsCountAsync(productId);
-            return Ok(result);
+            return Ok(new { PositiveReviews = result.positive, NegativeReviews = result.negative });
         }
         catch (Exception ex)
         {
