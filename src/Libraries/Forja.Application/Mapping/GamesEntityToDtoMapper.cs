@@ -68,7 +68,8 @@ public static class GamesEntityToDtoMapper
             Tags = game.GameTags.Select(gt => MapToTagDto(gt.Tag)).ToList(),
             Mechanics = mechanics,
             MatureContent = matureContents,
-            Rating = rating
+            PositiveReviewsCount = rating.positiveReviews,
+            NegativeReviewsCount = rating.negativeReviews
         };
     }
     
