@@ -23,5 +23,6 @@ public class GameExtendedDto
     public List<TagDto> Tags { get; set; } = [];
     public List<MechanicDto> Mechanics { get; set; } = [];
     public List<MatureContentDto> MatureContent { get; set; } = [];
-    public (int positive, int negative) Rating { get; set; }
+    public int PositiveReviewsCount { get; set; }
+    public int NegativeReviewsCount { get; set; }
 }

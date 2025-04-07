@@ -75,6 +75,7 @@ public class GameRepository : IGameRepository
         }
         
         return await _games
+            .AsNoTracking()
             .Where(g => !g.IsDeleted)
             .Include(g => g.ProductImages)
                 .ThenInclude(pi => pi.ItemImage)
