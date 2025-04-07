@@ -94,7 +94,7 @@ public class GameService : IGameService
         Dictionary<Guid, string> mechanicsLogoUrls = [];
         foreach (var gm in game.GameMechanics)
         {
-            var mechanicLogoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(gm.MechanicId, 1900);
+            var mechanicLogoUrl = await _fileManagerService.GetPresignedMechanicImageUrlAsync(gm.MechanicId, 1900);
             mechanicsLogoUrls[gm.MechanicId] = mechanicLogoUrl;
         }
         

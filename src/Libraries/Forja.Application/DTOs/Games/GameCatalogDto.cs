@@ -10,5 +10,6 @@ public class GameCatalogDto
     public List<DiscountDto> Discounts { get; set; } = [];
     public List<GenreDto> Genres { get; set; } = [];
     public List<TagDto> Tags { get; set; } = [];
-    public (int positive, int negative) Rating { get; set; }
+    public int PositiveRating { get; set; }
+    public int NegativeRating { get; set; }
 }

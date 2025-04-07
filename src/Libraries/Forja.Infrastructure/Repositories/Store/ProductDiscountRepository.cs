@@ -49,7 +49,6 @@ public class ProductDiscountRepository : IProductDiscountRepository
         }
 
         return await _productDiscounts
-            .Include(pd => pd.Product)
             .Include(pd => pd.Discount)
             .Where(pd => pd.ProductId == productId)
             .ToListAsync();

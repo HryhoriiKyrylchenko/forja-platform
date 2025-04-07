@@ -20,20 +20,18 @@ public class MatureContentService : IMatureContentService
     public async Task<IEnumerable<MatureContentDto>> GetAllAsync()
     {
         var matureContents = await _matureContentRepository.GetAllAsync();
+        var result = new List<MatureContentDto>();
 
-        return await Task.WhenAll(matureContents.Select(async mc =>
+        foreach (var mc in matureContents)
         {
-            if (mc.LogoUrl != null)
-                return GamesEntityToDtoMapper.MapToMatureContentDto(
-                    mc,
-                    await _fileManagerService.GetPresignedUrlAsync(mc.LogoUrl, 1900)
-                );
+            string logoUrl = mc.LogoUrl != null
+                ? await _fileManagerService.GetPresignedUrlAsync(mc.LogoUrl, 1900)
+                : string.Empty;
 
-            return GamesEntityToDtoMapper.MapToMatureContentDto(
-                mc,
-                string.Empty
-            );
-        }));
+            result.Add(GamesEntityToDtoMapper.MapToMatureContentDto(mc, logoUrl));
+        }
+
+        return result;
     }
 
     /// <inheritdoc />

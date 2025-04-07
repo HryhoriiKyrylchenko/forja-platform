@@ -140,7 +140,8 @@ public static class GamesEntityToDtoMapper
                     (!dto.EndDate.HasValue || dto.EndDate >= DateTime.UtcNow))
                 .OrderBy(dto => dto.StartDate)
                 .ToList(),
-            Rating = rating
+            PositiveRating = rating.positiveReviews,
+            NegativeRating = rating.negativeReviews
         };
     }
 
