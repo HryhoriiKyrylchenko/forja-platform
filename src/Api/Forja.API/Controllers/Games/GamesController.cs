@@ -107,8 +107,14 @@ public class GamesController : ControllerBase
 
     [HttpGet("games-catalog")]
     public async Task<ActionResult<PaginatedResult<GameCatalogDto>>> GetAllGamesForCatalogAsync(
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10)
+        [FromQuery] int pageNumber = 1, 
+        [FromQuery] int pageSize = 10,
+        [FromQuery] List<string>? genres = null, 
+        [FromQuery] List<string>? mechanics = null,
+        [FromQuery] List<string>? tags = null, 
+        [FromQuery] List<string>? matureContents = null,
+        [FromQuery] bool? discountOnly = null,
+        [FromQuery] string? search = null)
     {
         try
         {
@@ -134,7 +140,41 @@ public class GamesController : ControllerBase
             
             if (allGames == null) return NoContent();
             
-            var paginatedGames = allGames
+            var filteredGames = allGames.AsQueryable();
+            
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                filteredGames = filteredGames.Where(g =>
+                    g.Title.Contains(search, StringComparison.OrdinalIgnoreCase));
+            }
+            
+            if (genres != null && genres.Any())
+            {
+                filteredGames = filteredGames.Where(g => g.Genres.Any(genre => genres.Contains(genre.Name)));
+            }
+
+            if (mechanics != null && mechanics.Any())
+            {
+                filteredGames = filteredGames.Where(g => g.Mechanics.Any(mech => mechanics.Contains(mech.Name)));
+            }
+
+            if (tags != null && tags.Any())
+            {
+                filteredGames = filteredGames.Where(g => g.Tags.Any(tag => tags.Contains(tag.Title)));
+            }
+
+            if (matureContents != null && matureContents.Any())
+            {
+                filteredGames = filteredGames.Where(g => g.MatureContents.Any(mc => matureContents.Contains(mc.Name)));
+            }
+            
+            if (discountOnly == true)
+            {
+                filteredGames = filteredGames.Where(g => g.Discounts.Any());
+            }
+            
+            var finalList = filteredGames.ToList();
+            var paginatedGames = finalList
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToList();

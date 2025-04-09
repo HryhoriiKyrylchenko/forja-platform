@@ -61,7 +61,7 @@ public class CartItemRepository : ICartItemRepository
     /// <returns>A task representing the asynchronous operation.</returns>
     public async Task<CartItem?> AddCartItemAsync(CartItem cartItem)
     {
-        if (StoreModelValidator.ValidateCartItemModel(cartItem, out string errors))
+        if (!StoreModelValidator.ValidateCartItemModel(cartItem, out string errors))
         {
             throw new ArgumentException(errors);
         }

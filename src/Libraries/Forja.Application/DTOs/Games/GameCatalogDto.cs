@@ -10,6 +10,8 @@ public class GameCatalogDto
     public List<DiscountDto> Discounts { get; set; } = [];
     public List<GenreDto> Genres { get; set; } = [];
     public List<TagDto> Tags { get; set; } = [];
+    public List<MechanicDto> Mechanics { get; set; } = [];
+    public List<MatureContentDto> MatureContents { get; set; } = [];
     public int PositiveRating { get; set; }
     public int NegativeRating { get; set; }
 }
