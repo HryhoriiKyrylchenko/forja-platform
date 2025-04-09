@@ -228,27 +228,32 @@ public class UserLibraryService : IUserLibraryService
         foreach (var userLibraryGame in userLibraryGamesList)
         {
             string gameLogoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(userLibraryGame.GameId, 1900);
-            
-            var achievementDtos = await Task.WhenAll(userLibraryGame.Game.Achievements
-                .Select(async a =>
-                {
-                    var logoUrl = await _fileManagerService.GetPresignedAchievementImageUrlAsync(a.Id);
-                    return UserProfileEntityToDtoMapper.MapToAchievementShortDto(a, logoUrl);
-                }));
 
-            var addonDtos = await Task.WhenAll(userLibraryGame.PurchasedAddons
-                .Select(async addon =>
-                {
-                    var addonLogoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(addon.AddonId, 1900);
-                    return UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(addon, addonLogoUrl);
-                }));
+            Dictionary<Guid, string> achievementImageUrls = [];
+            var userAchievements = userLibraryGame.User.UserAchievements
+                .Where(ua => ua.AchievementId == userLibraryGame.Game.Id).ToList();
+            foreach (var achievement in userAchievements)
+            {
+                achievementImageUrls[achievement.AchievementId] = await _fileManagerService.GetPresignedAchievementImageUrlAsync(achievement.AchievementId);
+            }
+                
+            Dictionary<Guid, string> addonImageUrls = [];
+            foreach (var addon in userLibraryGame.PurchasedAddons)
+            {
+                addonImageUrls[addon.AddonId] = await _fileManagerService.GetPresignedProductLogoUrlAsync(addon.AddonId, 1900);
+            }
 
             var dto = UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(
                 userLibraryGame,
                 gameLogoUrl,
-                achievementDtos.ToList(),
-                addonDtos.ToList()
-            );
+                userAchievements.Select(ua =>
+                    UserProfileEntityToDtoMapper.MapToAchievementShortDto(
+                        ua.Achievement,
+                        achievementImageUrls[ua.AchievementId])).ToList(),
+                userLibraryGame.PurchasedAddons.Select(a =>
+                    UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(
+                        a,
+                        addonImageUrls[a.AddonId])).ToList());
 
             userLibraryGameDtos.Add(dto);
         }
@@ -326,10 +331,14 @@ public class UserLibraryService : IUserLibraryService
         
         var result = await _userLibraryAddonRepository.AddAsync(userLibraryAddon);
     
-        return result == null ? null : UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(
-            result,
-            await _fileManagerService.GetPresignedProductLogoUrlAsync(userLibraryAddon.AddonId, 1900)
-            );
+        if (result == null)
+        {
+            return null;
+        }
+        
+        return UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(
+            result, 
+            await _fileManagerService.GetPresignedProductLogoUrlAsync(result.AddonId, 1900));
     }
 
     /// <inheritdoc />
@@ -469,15 +478,18 @@ public class UserLibraryService : IUserLibraryService
     public async Task<List<UserLibraryAddonDto>> GetAllUserLibraryAddonsAsync()
     {
         var libraryAddons = await _userLibraryAddonRepository.GetAllAsync();
-        var addonDtos = await Task.WhenAll(
-            libraryAddons.Select(async la =>
-            {
-                var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(la.AddonId, 1900);
-                return UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(la, logoUrl);
-            })
-        );
+        var libraryAddonsList = libraryAddons.ToList();
+        Dictionary<Guid, string> addonImageUrls = [];
+        foreach (var la in libraryAddonsList)
+        {
+            addonImageUrls[la.AddonId] = await _fileManagerService.GetPresignedProductLogoUrlAsync(la.AddonId, 1900);
+        }
 
-        return addonDtos.ToList();
+        return libraryAddonsList.Select(la =>
+            
+                UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(
+                    la, 
+                    addonImageUrls[la.AddonId])).ToList();
     }
 
     /// <inheritdoc />

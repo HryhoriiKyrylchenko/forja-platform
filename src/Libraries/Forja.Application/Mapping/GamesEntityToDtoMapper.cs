@@ -133,6 +133,8 @@ public static class GamesEntityToDtoMapper
             ReleaseDate = game.ReleaseDate,
             Genres = game.ProductGenres.Select(pg => MapToGenreDto(pg.Genre)).ToList(),
             Tags = game.GameTags.Select(gt => MapToTagDto(gt.Tag)).ToList(),
+            Mechanics = game.GameMechanics.Select(gm => MapToMechanicDto(gm.Mechanic, string.Empty)).ToList(),
+            MatureContents = game.ProductMatureContents.Select(pm => MapToMatureContentDto(pm.MatureContent, string.Empty)).ToList(),
             Price = game.Price,
             Discounts = game.ProductDiscounts.Select(pd => StoreEntityToDtoMapper.MapToDiscountDto(pd.Discount))
                 .Where(dto => 
