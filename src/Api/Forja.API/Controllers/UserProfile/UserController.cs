@@ -1,8 +1,3 @@
-
-using Forja.Application.Interfaces.UserProfile;
-using Forja.Application.Services.UserProfile;
-using System.Security.Claims;
-
 namespace Forja.API.Controllers.UserProfile;
 
 /// <summary>
@@ -383,7 +378,7 @@ public class UserController : ControllerBase
     /// </returns>
     [Authorize]
     [HttpGet("self-profile")]
-    public async Task<ActionResult<UserProfileDto>> GetSelfUserProfile()
+    public async Task<IActionResult> GetSelfUserProfile()
     {
         try
         {
@@ -398,7 +393,18 @@ public class UserController : ControllerBase
             if (!string.IsNullOrWhiteSpace(cachedProfile))
             {
                 var userProfile = JsonSerializer.Deserialize<UserProfileDto>(cachedProfile);
-                return Ok(userProfile);
+                var cachedRoles = await _cache.GetStringAsync($"user_roles_{keycloakUserId}");
+                List<string>? userRoles = [];
+                if (!string.IsNullOrWhiteSpace(cachedRoles))
+                {
+                    userRoles = JsonSerializer.Deserialize<List<string>>(cachedRoles);
+                }
+                
+                return Ok( new
+                {
+                    UserProfile = userProfile,
+                    UserRoles = userRoles
+                });
             }
 
             var result = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
@@ -406,10 +412,18 @@ public class UserController : ControllerBase
             {
                 return NotFound(new { error = $"User with Keycloak ID {keycloakUserId} not found." });
             }
+            
+            var roles = await _keycloakClient.GetUserRolesAsync(keycloakUserId);
+            var userRolesList = roles.Select(r => r.Name).ToList();
 
-            var serializedData = JsonSerializer.Serialize(result);
-
-            await _cache.SetStringAsync($"user_profile_{keycloakUserId}", serializedData, new DistributedCacheEntryOptions
+            var serializedProfileData = JsonSerializer.Serialize(result);
+            await _cache.SetStringAsync($"user_profile_{keycloakUserId}", serializedProfileData, new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+            });
+            
+            var serializedRolesData = JsonSerializer.Serialize(userRolesList);
+            await _cache.SetStringAsync($"user_roles_{keycloakUserId}", serializedRolesData, new DistributedCacheEntryOptions
             {
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
             });
