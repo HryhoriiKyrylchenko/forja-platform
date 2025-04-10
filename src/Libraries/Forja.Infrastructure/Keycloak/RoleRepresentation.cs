@@ -1,3 +1,5 @@
+namespace Forja.Infrastructure.Keycloak;
+
 /// <summary>
 /// Represents a role in Keycloak.
 /// </summary>

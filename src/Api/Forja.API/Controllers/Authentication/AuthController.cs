@@ -666,7 +666,8 @@ public class AuthController : ControllerBase
             }
             
             var roles = await _authService.GetUserRolesAsync(keycloakUserId);
-            return Ok(roles);
+            var userRoles = roles.Select(r => r.Name).ToList();
+            return Ok(userRoles);
         }
         catch(Exception ex)
         {
