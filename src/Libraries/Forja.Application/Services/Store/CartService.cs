@@ -10,6 +10,7 @@ public class CartService : ICartService
     private readonly IBundleRepository _bundleRepository;
     private readonly IBundleProductRepository _bundleProductRepository;
     private readonly IFileManagerService _fileManagerService;
+    private readonly IUserLibraryService _userLibraryService;
 
     public CartService(ICartRepository cartRepository, 
         ICartItemRepository cartItemRepository,
@@ -18,7 +19,8 @@ public class CartService : ICartService
         IProductRepository productRepository,
         IBundleRepository bundleRepository,
         IBundleProductRepository bundleProductRepository,
-        IFileManagerService fileManagerService)
+        IFileManagerService fileManagerService,
+        IUserLibraryService userLibraryService)
     {
         _cartRepository = cartRepository;
         _cartItemRepository = cartItemRepository;
@@ -28,6 +30,7 @@ public class CartService : ICartService
         _bundleRepository = bundleRepository;
         _bundleProductRepository = bundleProductRepository;
         _fileManagerService = fileManagerService;
+        _userLibraryService = userLibraryService;
     }
 
     // ---------------- Cart Operations --------------------
@@ -80,7 +83,7 @@ public class CartService : ICartService
 
         if (activeCart == null)
         {
-            activeCart = new Cart
+            var newCart = new Cart
             {
                 Id = Guid.NewGuid(),
                 UserId = request.UserId,
@@ -88,23 +91,27 @@ public class CartService : ICartService
                 CreatedAt = DateTime.UtcNow
             };
             
-            var createdCart = await _cartRepository.AddCartAsync(activeCart);
-            if (createdCart == null)
+            activeCart = await _cartRepository.AddCartAsync(newCart);
+            if (activeCart == null)
             {
                 throw new InvalidOperationException("Cannot create cart.");
             }
             
-            return StoreEntityToDtoMapper.MapToCartDto(createdCart, new List<CartItemDto>());
+            return StoreEntityToDtoMapper.MapToCartDto(activeCart, new List<CartItemDto>());
         }
 
         if (!await IsCartRelevantAsync(activeCart.Id))
         {
-            return await UpdateCartAsync(activeCart.Id) ?? throw new InvalidOperationException("Cannot update cart.");
+            var updatedCart = await UpdateCartAsync(activeCart.Id);
+            if (updatedCart == null)
+            {
+                throw new InvalidOperationException("Cannot update cart.");
+            }
+            return updatedCart;
         }
             
         var cartItems = await GetCartItemsByCartIdAsync(activeCart.Id);
         return StoreEntityToDtoMapper.MapToCartDto(activeCart, cartItems);
-        
     }
 
     public async Task RemoveCartAsync(Guid cartId)
@@ -188,9 +195,8 @@ public class CartService : ICartService
         {
             throw new InvalidOperationException("Cannot check if cart is relevant. Cart is not active.");
         }
-        
-        var cartItems = await _cartItemRepository.GetCartItemsByCartIdAsync(cartId);
-        var cartItemsList = cartItems.ToList();
+
+        var cartItemsList = cart.CartItems.ToList();
         if (!cartItemsList.Any())
         {
             return true;
@@ -242,111 +248,263 @@ public class CartService : ICartService
             }
         }
 
+        if (cart.TotalAmount != cartItemsList.Sum(ci => ci.Price))
+        {
+            return false;
+        }
+
         return true;
     }
 
+    // public async Task<CartDto?> UpdateCartAsync(Guid cartId)
+    // {
+    //     if (cartId == Guid.Empty)
+    //     {
+    //         throw new ArgumentException("Cart ID cannot be empty.", nameof(cartId));
+    //     }
+    //     
+    //     var cart = await _cartRepository.GetCartByIdAsync(cartId);
+    //     if (cart == null || cart.Status != CartStatus.Active)
+    //     {
+    //         throw new InvalidOperationException("Cannot update a non-active cart.");
+    //     }
+    //     
+    //     var cartItemsList = cart.CartItems.ToList();
+    //     if (!cartItemsList.Any())
+    //     {
+    //         return StoreEntityToDtoMapper.MapToCartDto(cart, new List<CartItemDto>());
+    //     }
+    //     
+    //     List<Guid> checkedBundleIds = [];
+    //
+    //     foreach (var cartItem in cartItemsList)
+    //     {
+    //         if (cartItem.BundleId != null)
+    //         {
+    //             var bundleId = cartItem.BundleId.Value;
+    //             if (!checkedBundleIds.Contains(bundleId))
+    //             {
+    //                 var bundle = await _bundleRepository.GetByIdAsync(bundleId);
+    //                 if (bundle == null)
+    //                 {
+    //                     throw new InvalidOperationException("Bundle not found.");
+    //                 }
+    //
+    //                 var bundleCartItems = cartItemsList.Where(ci => ci.BundleId == cartItem.BundleId).ToList();
+    //                 var bundleProductIds = bundle.BundleProducts.Select(bp => bp.ProductId).ToList();
+    //                 var cartProductIds = bundleCartItems.Select(ci => ci.ProductId).ToList();
+    //
+    //                 bool bundleIsInvalid =
+    //                     bundle.ExpiresAt < DateTime.UtcNow
+    //                     || !bundle.IsActive
+    //                     || bundleCartItems.Count != bundle.BundleProducts.Count
+    //                     || !bundleProductIds.ToHashSet().SetEquals(cartProductIds.ToHashSet());
+    //                         
+    //                 if (bundleIsInvalid)
+    //                 {
+    //                     foreach (var item in bundleCartItems)
+    //                     {
+    //                         item.Price = await GetDiscountedPriceAsync(item.ProductId);
+    //                         item.BundleId = null;
+    //                         await _cartItemRepository.UpdateCartItemAsync(item);
+    //                     }
+    //                 }
+    //                 else
+    //                 {
+    //                     var bundleCartItemsTotalPrice = bundleCartItems.Sum(ci => ci.Price);
+    //                     var bundleDistributedSum = bundle.BundleProducts.Sum(bp => bp.DistributedPrice);
+    //
+    //                     if (_priceCalculator.ArePricesDifferent(bundle.TotalPrice, bundleCartItemsTotalPrice))
+    //                     {
+    //                         if (!_priceCalculator.ArePricesDifferent(bundle.TotalPrice, bundleDistributedSum))
+    //                         {
+    //                             foreach (var item in bundleCartItems)
+    //                             {
+    //                                 var matching = bundle.BundleProducts.FirstOrDefault(bp => bp.ProductId == item.ProductId);
+    //                                 if (matching != null)
+    //                                 {
+    //                                     item.Price = matching.DistributedPrice;
+    //                                     await _cartItemRepository.UpdateCartItemAsync(item);
+    //                                 }
+    //                             }
+    //                         }
+    //                         else
+    //                         {
+    //                             var redistributed = await _bundleProductRepository
+    //                                 .DistributeBundlePrice(bundle.BundleProducts.ToList(), bundle.TotalPrice);
+    //
+    //                             foreach (var updated in redistributed)
+    //                             {
+    //                                 await _bundleProductRepository.UpdateAsync(updated);
+    //                             }
+    //
+    //                             foreach (var item in bundleCartItems)
+    //                             {
+    //                                 var matching = redistributed.FirstOrDefault(bp => bp.ProductId == item.ProductId);
+    //                                 if (matching != null)
+    //                                 {
+    //                                     item.Price = matching.DistributedPrice;
+    //                                     await _cartItemRepository.UpdateCartItemAsync(item);
+    //                                 }
+    //                             }
+    //                         }
+    //                     }
+    //                 }
+    //                 
+    //                 checkedBundleIds.Add(cartItem.BundleId.Value);
+    //             }
+    //         }
+    //         else
+    //         {
+    //             var discountedPrice = await GetDiscountedPriceAsync(cartItem.ProductId);
+    //             if (_priceCalculator.ArePricesDifferent(cartItem.Price, discountedPrice))
+    //             {
+    //                 cartItem.Price = discountedPrice;
+    //                 await _cartItemRepository.UpdateCartItemAsync(cartItem);
+    //             }
+    //         }
+    //     }
+    //     
+    //     cart.TotalAmount = await _priceCalculator.CalculateTotalAsync(cartItemsList, _productDiscountRepository);
+    //     cart.LastModifiedAt = DateTime.UtcNow;
+    //     var updatedCart = await _cartRepository.UpdateCartAsync(cart);
+    //     if (updatedCart == null)
+    //     {
+    //         throw new InvalidOperationException("Cannot update cart.");
+    //     }
+    //     
+    //     var cartItemsDtos = await GetCartItemsByCartIdAsync(cartId);
+    //     
+    //     return StoreEntityToDtoMapper.MapToCartDto(updatedCart, cartItemsDtos);
+    // }
+    
     public async Task<CartDto?> UpdateCartAsync(Guid cartId)
     {
         if (cartId == Guid.Empty)
-        {
             throw new ArgumentException("Cart ID cannot be empty.", nameof(cartId));
-        }
-        
-        var cart = await _cartRepository.GetCartByIdAsync(cartId);
-        if (cart == null || cart.Status != CartStatus.Active)
-        {
-            throw new InvalidOperationException("Cannot update a non-active cart.");
-        }
-        
+
+        var cart = await ValidateAndGetCartAsync(cartId);
         var cartItems = await _cartItemRepository.GetCartItemsByCartIdAsync(cartId);
         var cartItemsList = cartItems.ToList();
         if (!cartItemsList.Any())
-        {
             return StoreEntityToDtoMapper.MapToCartDto(cart, new List<CartItemDto>());
-        }
-        
-        List<Guid> checkedBundleIds = [];
 
-        foreach (var cartItem in cartItemsList)
+        var checkedBundleIds = new HashSet<Guid>();
+
+        foreach (var item in cartItemsList)
         {
-            if (cartItem.BundleId != null)
+            if (item.BundleId != null)
             {
-                if (!checkedBundleIds.Contains(cartItem.BundleId.Value))
+                if (!checkedBundleIds.Contains((Guid)item.BundleId))
                 {
-                    var bundle = await _bundleRepository.GetByIdAsync(cartItem.BundleId.Value);
-                    if (bundle == null)
-                    {
-                        throw new InvalidOperationException("Bundle not found.");
-                    }
-
-                    var bundleCartItems = cartItemsList.Where(ci => ci.BundleId == cartItem.BundleId).ToList();
-                    var bundleCartItemsTotalPrice = bundleCartItems.Sum(ci => ci.Price);
-
-                    var bundleProductIds = bundle.BundleProducts.Select(bp => bp.ProductId).ToList();
-                    var cartProductIds = bundleCartItems.Select(ci => ci.ProductId).ToList();
-                    
-                    if (bundle.ExpiresAt < DateTime.UtcNow 
-                        || !bundle.IsActive
-                        || bundleCartItems.Count != bundle.BundleProducts.Count
-                        || !bundleProductIds.ToHashSet().SetEquals(cartProductIds.ToHashSet()))
-                    {
-                        foreach (var item in bundleCartItems)
-                        {
-                            item.Price = await GetDiscountedPriceAsync(item.ProductId);
-                            item.BundleId = null;
-                            await _cartItemRepository.UpdateCartItemAsync(item);
-                        }
-                    }
-                    else if (_priceCalculator.ArePricesDifferent(bundle.TotalPrice, bundleCartItemsTotalPrice))
-                    {
-                        if (!_priceCalculator.ArePricesDifferent(bundle.TotalPrice, bundle.BundleProducts.Sum(bp => bp.DistributedPrice)))
-                        {
-                            foreach (var item in bundleCartItems)
-                            {
-                                item.Price = bundle.BundleProducts.First(bp => bp.ProductId == item.ProductId).DistributedPrice;
-                                await _cartItemRepository.UpdateCartItemAsync(item);
-                            }
-                        }
-                        else
-                        {
-                            var bundleProducts =  await _bundleProductRepository.DistributeBundlePrice(bundle.BundleProducts.ToList(), bundle.TotalPrice);
-                            foreach (var product in bundleProducts)
-                            {
-                                await _bundleProductRepository.UpdateAsync(product);
-                            }
-                            foreach (var item in bundleCartItems)
-                            {
-                                item.Price = bundleProducts.First(bp => bp.ProductId == item.ProductId).DistributedPrice;
-                                await _cartItemRepository.UpdateCartItemAsync(item);
-                            }
-                        }
-                    }
-                
-                    checkedBundleIds.Add(cartItem.BundleId.Value);
+                    await HandleBundleCartItemAsync((Guid)item.BundleId, cartItemsList);
+                    checkedBundleIds.Add((Guid)item.BundleId);
                 }
             }
             else
             {
-                var discountedPrice = await GetDiscountedPriceAsync(cartItem.ProductId);
-                if (_priceCalculator.ArePricesDifferent(cartItem.Price, discountedPrice))
+                await HandleRegularCartItemAsync(item);
+            }
+        }
+
+        await UpdateCartTotalAsync(cart, cartItemsList);
+
+        var updatedCart = await _cartRepository.UpdateCartAsync(cart)
+                          ?? throw new InvalidOperationException("Cannot update cart.");
+
+        var cartItemsDtos = await GetCartItemsByCartIdAsync(cartId);
+        return StoreEntityToDtoMapper.MapToCartDto(updatedCart, cartItemsDtos);
+    }
+
+    private async Task<Cart> ValidateAndGetCartAsync(Guid cartId)
+    {
+        var cart = await _cartRepository.GetCartByIdAsync(cartId);
+        if (cart == null || cart.Status != CartStatus.Active)
+            throw new InvalidOperationException("Cannot update a non-active cart.");
+
+        return cart;
+    }
+
+    private async Task HandleRegularCartItemAsync(CartItem cartItem)
+    {
+        var discountedPrice = await GetDiscountedPriceAsync(cartItem.ProductId);
+        if (_priceCalculator.ArePricesDifferent(cartItem.Price, discountedPrice))
+        {
+            cartItem.Price = discountedPrice;
+            await _cartItemRepository.UpdateCartItemAsync(cartItem);
+        }
+    }
+    
+    private async Task HandleBundleCartItemAsync(Guid bundleId, List<CartItem> allCartItems)
+    {
+        var bundle = await _bundleRepository.GetByIdAsync(bundleId)
+                     ?? throw new InvalidOperationException($"Bundle {bundleId} not found.");
+
+        var bundleCartItems = allCartItems.Where(ci => ci.BundleId == bundleId).ToList();
+        var bundleProductIds = bundle.BundleProducts.Select(bp => bp.ProductId).ToHashSet();
+        var cartProductIds = bundleCartItems.Select(ci => ci.ProductId).ToHashSet();
+
+        bool isInvalid = 
+            bundle.ExpiresAt < DateTime.UtcNow ||
+            !bundle.IsActive ||
+            bundleProductIds.Count != bundleCartItems.Count ||
+            !bundleProductIds.SetEquals(cartProductIds);
+
+        if (isInvalid)
+        {
+            foreach (var item in bundleCartItems)
+            {
+                item.Price = await GetDiscountedPriceAsync(item.ProductId);
+                item.BundleId = null;
+                await _cartItemRepository.UpdateCartItemAsync(item);
+            }
+            return;
+        }
+
+        var bundleCartTotal = bundleCartItems.Sum(ci => ci.Price);
+        var bundleDistributedSum = bundle.BundleProducts.Sum(bp => bp.DistributedPrice);
+
+        if (_priceCalculator.ArePricesDifferent(bundle.TotalPrice, bundleCartTotal))
+        {
+            if (!_priceCalculator.ArePricesDifferent(bundle.TotalPrice, bundleDistributedSum))
+            {
+                foreach (var item in bundleCartItems)
                 {
-                    cartItem.Price = discountedPrice;
-                    await _cartItemRepository.UpdateCartItemAsync(cartItem);
+                    var matching = bundle.BundleProducts.FirstOrDefault(bp => bp.ProductId == item.ProductId);
+                    if (matching != null)
+                    {
+                        item.Price = matching.DistributedPrice;
+                        await _cartItemRepository.UpdateCartItemAsync(item);
+                    }
+                }
+            }
+            else
+            {
+                var redistributed = await _bundleProductRepository
+                    .DistributeBundlePrice(bundle.BundleProducts.ToList(), bundle.TotalPrice);
+
+                foreach (var updated in redistributed)
+                    await _bundleProductRepository.UpdateAsync(updated);
+
+                foreach (var item in bundleCartItems)
+                {
+                    var match = redistributed.FirstOrDefault(bp => bp.ProductId == item.ProductId);
+                    if (match != null)
+                    {
+                        item.Price = match.DistributedPrice;
+                        var updatedItem = await _cartItemRepository.UpdateCartItemAsync(item);
+                        if (updatedItem == null)
+                            throw new InvalidOperationException("Cannot update cart item.");
+                    }
                 }
             }
         }
-        
-        cart.TotalAmount = await _priceCalculator.CalculateTotalAsync(cartItemsList, _productDiscountRepository);
+    }
+
+    private async Task UpdateCartTotalAsync(Cart cart, List<CartItem> items)
+    {
+        cart.TotalAmount = await _priceCalculator.CalculateTotalAsync(items, _productDiscountRepository);
         cart.LastModifiedAt = DateTime.UtcNow;
-        var updatedCart = await _cartRepository.UpdateCartAsync(cart);
-        if (updatedCart == null)
-        {
-            throw new InvalidOperationException("Cannot update cart.");
-        }
-        
-        var cartItemsDtos = await GetCartItemsByCartIdAsync(cartId);
-        
-        return StoreEntityToDtoMapper.MapToCartDto(updatedCart, cartItemsDtos);
     }
     
     private async Task<decimal> GetDiscountedPriceAsync(Guid productId)
@@ -484,6 +642,12 @@ public class CartService : ICartService
             throw new InvalidOperationException("Cannot add items to a non-active cart.");
         }
         
+        var userLibraryProducts = await _userLibraryService.GetUserLibraryProductIdsByUserIdAsync(cart.UserId);
+        if (userLibraryProducts.Any(p => p == request.ProductId))
+        {
+            throw new InvalidOperationException("User already has this product in their library.");
+        }
+        
         var product = await _productRepository.GetByIdAsync(request.ProductId);
         if (product == null)
         {
@@ -575,6 +739,13 @@ public class CartService : ICartService
         {
             throw new ArgumentException($"Invalid request. Errors: {errors}", nameof(request));
         }
+        
+        var cart = await _cartRepository.GetCartByIdAsync(request.CartId);
+        if (cart == null || cart.Status != CartStatus.Active)
+        {
+            throw new InvalidOperationException("Cannot add items to a non-active cart.");
+        }
+        
         var bundle = await _bundleRepository.GetByIdAsync(request.BundleId);
         if (bundle == null)
         {
@@ -583,6 +754,12 @@ public class CartService : ICartService
         if (bundle.BundleProducts == null || bundle.BundleProducts.Count == 0)
         {
             throw new InvalidOperationException("Bundle has no products.");
+        }
+        
+        var userLibraryProducts = await _userLibraryService.GetUserLibraryProductIdsByUserIdAsync(cart.UserId);
+        if (userLibraryProducts.Any(p => bundle.BundleProducts.Any(bp => bp.ProductId == p)))
+        {
+            throw new InvalidOperationException($"Couldn't add bundle to the cart. User already has product from bundle in their library.");
         }
         
         List<CartItem> addedCartItems = [];

@@ -34,7 +34,8 @@ public class OrderRepository : IOrderRepository
             .Where(o => !o.IsDeleted)
             .Include(o => o.Cart)
                 .ThenInclude(c => c.CartItems)
-                .ThenInclude(ci => ci.Product)
+                    .ThenInclude(ci => ci.Product)
+            .Include(o => o.Cart)
             .Include(o => o.Payment)
             .FirstOrDefaultAsync(o => o.Id == orderId);
     }

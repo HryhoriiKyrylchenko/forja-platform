@@ -55,6 +55,8 @@ public class CartRepository : ICartRepository
         return await _carts
             .Where(c => c.UserId == userId)
             .Where(c => c.Status == CartStatus.Active)
+            .Include(c => c.CartItems)
+                .ThenInclude(ci => ci.Product)
             .FirstOrDefaultAsync();
     }
 

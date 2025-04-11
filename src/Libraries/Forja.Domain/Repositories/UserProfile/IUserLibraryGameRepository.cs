@@ -37,14 +37,14 @@ public interface IUserLibraryGameRepository
     Task<UserLibraryGame?> GetByGameIdAndUserIdAsync(Guid gameId, Guid userId);
 
     /// <summary>
-    /// Retrieves all user library games associated with the specified game identifier.
+    /// Retrieves a user library game associated with the specified game identifier.
     /// </summary>
-    /// <param name="gameId">The unique identifier of the game to search for.</param>
+    /// <param name="gameId">The unique identifier of the game to retrieve from the user's library.</param>
     /// <returns>
-    /// A task that represents the asynchronous operation. The task result contains a collection of
-    /// <see cref="UserLibraryGame"/> objects associated with the specified game identifier.
+    /// A task that represents the asynchronous operation. The task result contains the
+    /// <see cref="UserLibraryGame"/> object if found; otherwise, null.
     /// </returns>
-    Task<IEnumerable<UserLibraryGame>> GetByGameIdAsync(Guid gameId);
+    Task<UserLibraryGame?> GetByGameIdAsync(Guid gameId);
 
     /// <summary>
     /// Asynchronously retrieves all user library games.
