@@ -6,12 +6,15 @@ public class PaymentService : IPaymentService
 {
     private readonly IPaymentRepository _paymentRepository;
     private readonly ITestPaymentService _testPaymentService;
+    private readonly IOrderService _iOrderService;
 
     public PaymentService(IPaymentRepository paymentRepository,
-        ITestPaymentService testPaymentService)
+        ITestPaymentService testPaymentService,
+        IOrderService orderService)
     {
         _paymentRepository = paymentRepository;
         _testPaymentService = testPaymentService;
+        _iOrderService = orderService;
     }
 
     public async Task<PaymentDto?> GetPaymentByIdAsync(Guid paymentId)
@@ -96,7 +99,13 @@ public class PaymentService : IPaymentService
             PaymentDate = DateTime.UtcNow
         };
 
-        await _paymentRepository.AddPaymentAsync(payment);
+        var addedPayment = await _paymentRepository.AddPaymentAsync(payment);
+        if (addedPayment == null)
+        {
+            throw new InvalidOperationException("Failed to add payment to the database.");
+        }
+
+        await ProcessPaymentStatus(addedPayment);
 
         return transactionId;
     }
@@ -118,9 +127,14 @@ public class PaymentService : IPaymentService
 
         payment.ProviderResponse = newStatus;
 
-        var result = await _paymentRepository.UpdatePaymentAsync(payment);
+        var updatedPayment = await _paymentRepository.UpdatePaymentAsync(payment);
+        if (updatedPayment == null)
+        {
+            throw new InvalidOperationException("Failed to update payment status.");
+        }
+        await ProcessPaymentStatus(updatedPayment);
         
-        return result == null ? null : StoreEntityToDtoMapper.MapToPaymentDto(result);
+        return StoreEntityToDtoMapper.MapToPaymentDto(updatedPayment);
     }
 
     public async Task<bool> RefundPaymentAsync(Guid paymentId)
@@ -136,9 +150,104 @@ public class PaymentService : IPaymentService
         if (result)
         {
             payment.ProviderResponse = PaymentStatus.Refunded;
-            await _paymentRepository.UpdatePaymentAsync(payment);
+            var refundedPayment = await _paymentRepository.UpdatePaymentAsync(payment);
+            if (refundedPayment == null)
+            {
+                throw new InvalidOperationException("Failed to update payment status.");
+            }
+            await ProcessPaymentStatus(refundedPayment);
         }
 
         return result;
+    }
+
+    private async Task ProcessPaymentStatus(Payment payment)
+    {
+        if (payment == null)
+        {
+            throw new ArgumentNullException(nameof(payment));
+        }
+
+        var order = await _iOrderService.GetOrderByIdAsync(payment.OrderId);
+        if (order == null)
+        {
+            throw new KeyNotFoundException($"Order with ID {payment.OrderId} not found.");
+        }
+
+
+        switch (payment.ProviderResponse)
+        {
+            case PaymentStatus.Pending:
+                if (order.Status.Contains(OrderStatus.Canceled.ToString()))
+                {
+                    throw new InvalidOperationException("Order is already canceled.");
+                }
+
+                var pendingOrder = await _iOrderService.UpdateOrderStatusAsync(new OrderUpdateRequest
+                {
+                    Id = payment.OrderId,
+                    Status = OrderStatus.Pending
+                });
+                if (pendingOrder == null)
+                {
+                    throw new KeyNotFoundException($"Failed to update the order with ID {payment.OrderId}");
+                }
+
+                break;
+            case PaymentStatus.Failed:
+                if (order.Status.Contains(OrderStatus.Completed.ToString())
+                    || order.Status.Contains(OrderStatus.Canceled.ToString()))
+                {
+                    throw new InvalidOperationException("Order is already completed.");
+                }
+
+                var faidelOrder = await _iOrderService.UpdateOrderStatusAsync(new OrderUpdateRequest
+                {
+                    Id = payment.OrderId,
+                    Status = OrderStatus.Failed
+                });
+                if (faidelOrder == null)
+                {
+                    throw new KeyNotFoundException($"Failed to update the order with ID {payment.OrderId}");
+                }
+
+                break;
+            case PaymentStatus.Refunded:
+                if (!order.Status.Contains(OrderStatus.Completed.ToString()))
+                {
+                    throw new InvalidOperationException("Order is not completed.");
+                }
+
+                var refundedOrder = await _iOrderService.UpdateOrderStatusAsync(new OrderUpdateRequest
+                {
+                    Id = payment.OrderId,
+                    Status = OrderStatus.Canceled
+                });
+                if (refundedOrder == null)
+                {
+                    throw new KeyNotFoundException($"Failed to update the order with ID {payment.OrderId}");
+                }
+
+                break;
+            case PaymentStatus.Completed:
+                if (order.Status.Contains(OrderStatus.Canceled.ToString()))
+                {
+                    throw new InvalidOperationException("Order is already canceled.");
+                }
+
+                var completedOrder = await _iOrderService.UpdateOrderStatusAsync(new OrderUpdateRequest
+                {
+                    Id = payment.OrderId,
+                    Status = OrderStatus.Canceled
+                });
+                if (completedOrder == null)
+                {
+                    throw new KeyNotFoundException($"Failed to update the order with ID {payment.OrderId}");
+                }
+
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(payment.ProviderResponse), payment.ProviderResponse, null);
+        }
     }
 }

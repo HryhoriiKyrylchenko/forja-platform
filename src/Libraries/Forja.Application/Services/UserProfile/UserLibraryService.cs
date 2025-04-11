@@ -153,21 +153,21 @@ public class UserLibraryService : IUserLibraryService
     }
 
     /// <inheritdoc />
-    public async Task<List<UserLibraryGameDto>> GetUserLibraryGamesByGameIdAsync(Guid gameId)
+    public async Task<UserLibraryGameDto?> GetUserLibraryGameByGameIdAsync(Guid gameId)
     {
         if (gameId == Guid.Empty)
         {
             throw new ArgumentException("Game ID cannot be an empty Guid.", nameof(gameId));
         }
         
-        var userLibraryGames = await _userLibraryGameRepository.GetByGameIdAsync(gameId);
+        var userLibraryGame = await _userLibraryGameRepository.GetByGameIdAsync(gameId);
 
-        var libraryGames = await Task.WhenAll(userLibraryGames.Select(async ulg => UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(
-            ulg,
-            await _fileManagerService.GetPresignedProductLogoUrlAsync(ulg.GameId, 1900)
-        )));
-        
-        return libraryGames.ToList();
+        return userLibraryGame == null
+            ? null
+            : UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(
+                userLibraryGame,
+                await _fileManagerService.GetPresignedProductLogoUrlAsync(userLibraryGame.GameId, 1900)
+            );
     }
 
     /// <inheritdoc />
@@ -597,6 +597,22 @@ public class UserLibraryService : IUserLibraryService
         var totalAddons = await _userLibraryAddonRepository.GetAllAddonsCountByUserIdAsync(userId);
 
         return totalAddons;
+    }
+
+    public async Task<List<Guid>> GetUserLibraryProductIdsByUserIdAsync(Guid userId)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User ID cannot be an empty.", nameof(userId));
+        }
+
+        List<Guid> userLibraryProductIds = [];
+        var userLibraryGames = await _userLibraryGameRepository.GetAllByUserIdAsync(userId);
+        userLibraryProductIds.AddRange(userLibraryGames.Select(ug => ug.GameId));
+        var userLibraryAddons = await _userLibraryAddonRepository.GetAllByUserIdAsync(userId);
+        userLibraryProductIds.AddRange(userLibraryAddons.Select(ug => ug.AddonId));
+        
+        return userLibraryProductIds;
     }
 
     #endregion

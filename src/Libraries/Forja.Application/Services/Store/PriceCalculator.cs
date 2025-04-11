@@ -39,7 +39,7 @@ public class PriceCalculator : IPriceCalculator
         foreach (var cartItem in cartItems)
         {
             var productDiscounts = await productDiscountRepository.GetProductDiscountsByProductIdAsync(cartItem.ProductId);
-            var priceAfterDiscount = ApplyDiscount(cartItem.Price, productDiscounts);
+            var priceAfterDiscount = ApplyDiscount(cartItem.Product.Price, productDiscounts);
             totalPrice += priceAfterDiscount;
         }
 

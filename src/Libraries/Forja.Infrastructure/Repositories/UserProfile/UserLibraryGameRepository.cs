@@ -60,7 +60,7 @@ public class UserLibraryGameRepository : IUserLibraryGameRepository
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<UserLibraryGame>> GetByGameIdAsync(Guid gameId)
+    public async Task<UserLibraryGame?> GetByGameIdAsync(Guid gameId)
     {
         if (gameId == Guid.Empty)
         {
@@ -69,7 +69,7 @@ public class UserLibraryGameRepository : IUserLibraryGameRepository
         
         return await _userLibraryGames
             .Where(ulg => !ulg.IsDeleted)
-            .ToListAsync();
+            .FirstOrDefaultAsync(ulg => ulg.GameId == gameId);
     }
 
     /// <inheritdoc />

@@ -428,7 +428,11 @@ public class UserController : ControllerBase
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
             });
 
-            return Ok(result);
+            return Ok( new
+            {
+                UserProfile = result,
+                UserRoles = roles
+            });
         }
         catch (Exception ex)
         {

@@ -57,11 +57,11 @@ public interface IUserLibraryService
     Task<UserLibraryGameDto?> GetUserLibraryGameByGameIdAndUserIdAsync(Guid gameId, Guid userId);
 
     /// <summary>
-    /// Retrieves a list of user library games associated with the specified game ID.
+    /// Retrieves all user library games associated with a specific game ID.
     /// </summary>
-    /// <param name="gameId">The unique identifier of the game.</param>
-    /// <returns>A Task representing the asynchronous operation that returns a list of UserLibraryGameDto objects.</returns>
-    Task<List<UserLibraryGameDto>> GetUserLibraryGamesByGameIdAsync(Guid gameId);
+    /// <param name="gameId">The unique identifier of the game for which to retrieve all associated user library games.</param>
+    /// <returns>A Task containing a UserLibraryGameDto object representing the user library game associated with the specified game ID, or null if no such game is found.</returns>
+    Task<UserLibraryGameDto?> GetUserLibraryGameByGameIdAsync(Guid gameId);
 
     /// <summary>
     /// Retrieves a list of all user library games.
@@ -183,10 +183,11 @@ public interface IUserLibraryService
     /// <returns>A Task that represents the asynchronous operation. The task result contains a boolean indicating whether the user owns the specified product.</returns>
     Task<bool> IsUserOwnedProductAsync(Guid userId, Guid productId);
 
-    /// Retrieves the count of games associated with a specific user.
+    /// <summary>
+    /// Retrieves the total count of games owned by a specific user.
     /// </summary>
-    /// <param name="userId">The unique identifier for the user whose game count is being retrieved.</param>
-    /// <returns>An asynchronous task that returns the number of games for the specified user.</returns>
+    /// <param name="userId">The unique identifier of the user whose games count is being retrieved.</param>
+    /// <returns>A Task representing the asynchronous operation, containing the count of games owned by the user.</returns>
     Task<int> GetUsersGamesCountAsync(Guid userId);
 
     /// <summary>
@@ -195,4 +196,11 @@ public interface IUserLibraryService
     /// <param name="userId">The unique identifier for the user whose addons count is being retrieved.</param>
     /// <returns>An integer representing the total number of addons for the specified user.</returns>
     Task<int> GetUsersAddonsCountAsync(Guid userId);
+
+    /// <summary>
+    /// Retrieves a list of products from the user's library based on the user's ID.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user whose library products are to be retrieved.</param>
+    /// <returns>A Task representing the asynchronous operation. The task result contains a list of products from the user's library.</returns>
+    Task<List<Guid>> GetUserLibraryProductIdsByUserIdAsync(Guid userId);
 }
