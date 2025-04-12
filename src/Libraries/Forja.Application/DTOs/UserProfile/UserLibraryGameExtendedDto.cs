@@ -4,7 +4,7 @@ public class UserLibraryGameExtendedDto
 {
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
-    public required GameSmallDto Game { get; set; }
+    public required GameLibraryDto Game { get; set; }
     public TimeSpan? TimePlayed { get; set; }
     public DateTime PurchaseDate { get; set; }
     public int TotalGameAchievements { get; set; }

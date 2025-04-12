@@ -102,13 +102,18 @@ public static class UserProfileEntityToDtoMapper
         };
     }
     
-    public static UserLibraryGameExtendedDto MapToUserLibraryGameDto(UserLibraryGame userLibraryGame, string gameLogoUrl, List<AchievementShortDto> achievements, List<UserLibraryAddonDto> addons)
+    public static UserLibraryGameExtendedDto MapToUserLibraryGameExtendedDto(UserLibraryGame userLibraryGame, 
+                                                                    string gameLogoUrl, 
+                                                                    List<AchievementShortDto> achievements, 
+                                                                    List<UserLibraryAddonDto> addons,
+                                                                    List<MatureContentDto> matureContents,
+                                                                    List<MechanicDto> gameMechanics)
     {
         return new UserLibraryGameExtendedDto
         {
             Id = userLibraryGame.Id,
             UserId = userLibraryGame.UserId,
-            Game = GamesEntityToDtoMapper.MapToGameSmallDto(userLibraryGame.Game, gameLogoUrl),
+            Game = GamesEntityToDtoMapper.MapToGameLibraryDto(userLibraryGame.Game, gameLogoUrl, matureContents, gameMechanics),
             TimePlayed = userLibraryGame.TimePlayed,
             PurchaseDate = userLibraryGame.PurchaseDate,
             TotalGameAchievements = userLibraryGame.Game.Achievements.Count,

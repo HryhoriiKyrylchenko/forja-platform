@@ -10,22 +10,119 @@ public class UserLibraryController : ControllerBase
 {
     private readonly IUserLibraryService _userLibraryService;
     private readonly IAuditLogService _auditLogService;
+    private readonly IUserService _userService;
 
     public UserLibraryController(IUserLibraryService userLibraryService,
-        IAuditLogService auditLogService)
+        IAuditLogService auditLogService,
+        IUserService userService)
     {
         _userLibraryService = userLibraryService;
         _auditLogService = auditLogService;
+        _userService = userService;
+    }
+
+    [Authorize]
+    [HttpGet]
+    public async Task<ActionResult<UserLibraryGameExtendedDto>> GetSelfUserLibrary(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] List<string>? genres = null,
+        [FromQuery] List<string>? mechanics = null,
+        [FromQuery] List<string>? tags = null,
+        [FromQuery] List<string>? matureContents = null,
+        [FromQuery] string? search = null)
+    {
+        var keycloakUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(keycloakUserId))
+        {
+            return Unauthorized(new { error = "User ID not found in token claims." });
+        }
+
+        var user = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
+        if (user == null)
+        {
+            return NotFound(new { error = $"User with Keycloak ID {keycloakUserId} not found." });
+        }
+
+        try
+        {
+            var userLibrary = await _userLibraryService.GetAllUserLibraryGamesByUserIdAsync(user.Id);
+            
+            var filtered = userLibrary.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                filtered = filtered.Where(libraryGame =>
+                    (!string.IsNullOrEmpty(libraryGame.Game.Title) && libraryGame.Game.Title.Contains(search, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            if (genres is { Count: > 0 })
+            {
+                filtered = filtered.Where(libraryGame => libraryGame.Game.Genres.Any(g => genres.Contains(g.Name)));
+            }
+
+            if (mechanics is { Count: > 0 })
+            {
+                filtered = filtered.Where(libraryGame => libraryGame.Game.Mechanics.Any(m => mechanics.Contains(m.Name)));
+            }
+
+            if (tags is { Count: > 0 })
+            {
+                filtered = filtered.Where(libraryGame => libraryGame.Game.Tags.Any(t => tags.Contains(t.Title)));
+            }
+
+            if (matureContents is { Count: > 0 })
+            {
+                filtered = filtered.Where(libraryGame => libraryGame.Game.MatureContent.Any(mc => matureContents.Contains(mc.Name)));
+            }
+
+            var pagedResult = filtered
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+            
+            return Ok(pagedResult);
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all user library games by user id: {user.Id}" }
+                    }
+                };
+
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     /// <summary>
     /// Adds a new game to the user's library.
     /// </summary>
-    /// <param name="request">The request object containing the user ID and game ID for the new library game.</param>
+    /// <param name="request">The request object containing the details for the game to be added to the user's library.</param>
     /// <returns>
-    /// An IActionResult indicating the result of the operation.
-    /// Returns a 200 OK response with the created resource if successful, or a 400 BadRequest response if the operation fails or the model-state is invalid.
+    /// An ActionResult containing the created UserLibraryGameExtendedDto if the operation is successful.
+    /// Returns a 200 OK response with the created resource if successful, a 400 BadRequest response if the operation fails or the model-state is invalid,
+    /// or in case of an exception, an error message with a 400 BadRequest response.
     /// </returns>
+    [Authorize(Policy = "UserManagePolicy")]
     [HttpPost("game")]
     public async Task<ActionResult<UserLibraryGameExtendedDto>> AddUserLibraryGame([FromBody] UserLibraryGameCreateRequest request)
     {
@@ -67,15 +164,15 @@ public class UserLibraryController : ControllerBase
     }
 
     /// <summary>
-    /// Updates a game entry in the user's library with the specified details.
+    /// Updates an existing game in the user's library.
     /// </summary>
-    /// <param name="request">The details required to update a user library game, including the game ID, user ID, and purchase date.</param>
+    /// <param name="request">The request object containing the updated details of the user library game.</param>
     /// <returns>
-    /// Returns an IActionResult indicating the result of the update operation.
-    /// If the operation is successful, returns an "Ok" response with the updated game details.
-    /// If the game is not found, returns a "NotFound" response.
-    /// If the operation fails due to an error, returns a "BadRequest" response with the error details.
+    /// An ActionResult containing the updated UserLibraryGameExtendedDto if the operation is successful.
+    /// Returns a 200 OK response with the updated resource if successful, a 404 NotFound response if the game is not found,
+    /// or a 400 BadRequest response if the operation fails or the model-state is invalid.
     /// </returns>
+    [Authorize(Policy = "UserManagePolicy")]
     [HttpPut("game")]
     public async Task<ActionResult<UserLibraryGameExtendedDto>> UpdateUserLibraryGame([FromBody] UserLibraryGameUpdateRequest request)
     {
@@ -121,6 +218,7 @@ public class UserLibraryController : ControllerBase
     /// </summary>
     /// <param name="userLibraryGameId">The unique identifier of the user's library game to be deleted.</param>
     /// <returns>An <see cref="IActionResult"/> indicating the result of the operation, such as success or error messages.</returns>
+    [Authorize(Policy = "UserManagePolicy")]
     [HttpDelete("game/{userLibraryGameId}")]
     public async Task<IActionResult> DeleteUserLibraryGame([FromRoute] Guid userLibraryGameId)
     {
@@ -170,6 +268,7 @@ public class UserLibraryController : ControllerBase
     /// An <see cref="IActionResult"/> containing the restored game details if successful,
     /// or an appropriate error message if the restoration fails or the game is not found.
     /// </returns>
+    [Authorize(Policy = "UserManagePolicy")]
     [HttpPut("game/restore/{userLibraryGameId}")]
     public async Task<ActionResult<UserLibraryGameExtendedDto>> RestoreUserLibraryGame([FromRoute] Guid userLibraryGameId)
     {
@@ -218,6 +317,7 @@ public class UserLibraryController : ControllerBase
     /// <returns>
     /// An <see cref="IActionResult"/> containing the details of the user library game if found
     /// </returns>
+    [Authorize(Policy = "UserManagePolicy")]
     [HttpGet("game/{userLibraryGameId}")]
     public async Task<ActionResult<UserLibraryGameExtendedDto>> GetUserLibraryGameById([FromRoute] Guid userLibraryGameId)
     {
@@ -267,6 +367,7 @@ public class UserLibraryController : ControllerBase
     /// <returns>
     /// An <see cref="IActionResult"/> containing the deleted game details if found, or an error response if the game is not found or if the request is invalid.
     /// </returns>
+    [Authorize(Policy = "UserManagePolicy")]
     [HttpGet("game/deleted/{userLibraryGameId}")]
     public async Task<ActionResult<UserLibraryGameExtendedDto>> GetDeletedUserLibraryGameById([FromRoute] Guid userLibraryGameId)
     {
@@ -306,7 +407,6 @@ public class UserLibraryController : ControllerBase
             }
             return BadRequest(new { error = ex.Message });
         }
-
     }
 
     /// <summary>
@@ -314,6 +414,7 @@ public class UserLibraryController : ControllerBase
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.
     /// The task result contains a collection of user library games.</returns>
+    [Authorize(Policy = "UserManagePolicy")]
     [HttpGet("games")]
     public async Task<ActionResult<List<UserLibraryGameExtendedDto>>> GetAllUserLibraryGames()
     {
@@ -355,6 +456,7 @@ public class UserLibraryController : ControllerBase
     /// Retrieves a list of all deleted games in the user library.
     /// </summary>
     /// <returns>A task representing the asynchronous operation, containing a list of deleted user library games.</returns>
+    [Authorize(Policy = "UserManagePolicy")]
     [HttpGet("games/deleted")]
     public async Task<ActionResult<List<UserLibraryGameExtendedDto>>> GetAllDeletedUserLibraryGames()
     {
@@ -396,6 +498,7 @@ public class UserLibraryController : ControllerBase
     /// </summary>
     /// <param name="userId">The unique identifier of the user whose library games are to be retrieved.</param>
     /// <returns>A task representing the asynchronous operation, containing the HTTP response with the list of user library games.</returns>
+    [Authorize(Policy = "UserManagePolicy")]
     [HttpGet("games/user/{userId}")]
     public async Task<ActionResult<List<UserLibraryGameExtendedDto>>> GetAllUserLibraryGamesByUserId(Guid userId)
     {
@@ -443,6 +546,7 @@ public class UserLibraryController : ControllerBase
     /// </summary>
     /// <param name="userId">The unique identifier of the user whose deleted games are to be retrieved.</param>
     /// <returns>An IActionResult containing a list of deleted games associated with the specified user ID or an appropriate error message.</returns>
+    [Authorize(Policy = "UserManagePolicy")]
     [HttpGet("games/deleted/user/{userId}")]
     public async Task<ActionResult<List<UserLibraryGameExtendedDto>>> GetAllDeletedUserLibraryGamesByUserId(Guid userId)
     {
@@ -491,6 +595,7 @@ public class UserLibraryController : ControllerBase
     /// An <see cref="IActionResult"/> indicating the result of the operation.
     /// Returns an HTTP 200 OK response with the added addon details if successful, or an HTTP 400 Bad Request with an error message if the operation fails.
     /// </returns>
+    [Authorize(Policy = "UserManagePolicy")]
     [HttpPost("addon")]
     public async Task<ActionResult<UserLibraryAddonDto>> AddUserLibraryAddon([FromBody] UserLibraryAddonCreateRequest request)
     {
@@ -540,6 +645,7 @@ public class UserLibraryController : ControllerBase
     /// An <see cref="IActionResult"/> that represents the result of the operation.
     /// The response is an updated user library addon object if successful, otherwise a NotFound or BadRequest result is returned.
     /// </returns>
+    [Authorize(Policy = "UserManagePolicy")]
     [HttpPut("addon")]
     public async Task<ActionResult<UserLibraryAddonDto>> UpdateUserLibraryAddon([FromBody] UserLibraryAddonUpdateRequest request)
     {
@@ -586,6 +692,7 @@ public class UserLibraryController : ControllerBase
     /// <param name="userLibraryAddonId">The unique identifier of the user library addon to delete.</param>
     /// <returns>An IActionResult indicating the result of the operation. Returns NoContent if successful,
     /// or BadRequest if an error occurs or the provided ID is invalid.</returns>
+    [Authorize(Policy = "UserManagePolicy")]
     [HttpDelete("addon/{userLibraryAddonId}")]
     public async Task<IActionResult> DeleteUserLibraryAddon([FromRoute] Guid userLibraryAddonId)
     {
@@ -636,6 +743,7 @@ public class UserLibraryController : ControllerBase
     /// An <see cref="IActionResult"/> containing the restored user library addon if found and restored successfully,
     /// a <c>NotFound</c> result if the addon does not exist, or a <c>BadRequest</c> result if an error occurs.
     /// </returns>
+    [Authorize(Policy = "UserManagePolicy")]
     [HttpPut("addon/restore/{userLibraryAddonId}")]
     public async Task<ActionResult<UserLibraryAddonDto>> RestoreUserLibraryAddon([FromRoute] Guid userLibraryAddonId)
     {
@@ -682,6 +790,7 @@ public class UserLibraryController : ControllerBase
     /// </summary>
     /// <param name="userLibraryAddonId">The unique identifier of the user library addon to retrieve.</param>
     /// <returns>An IActionResult containing the user library addon data if found, or an error response if the addon is not found or the identifier is invalid.</returns>
+    [Authorize(Policy = "UserManagePolicy")]
     [HttpGet("addon/{userLibraryAddonId}")]
     public async Task<ActionResult<UserLibraryAddonDto>> GetUserLibraryAddonById([FromRoute] Guid userLibraryAddonId)
     {
@@ -731,6 +840,7 @@ public class UserLibraryController : ControllerBase
     /// Returns an <see cref="IActionResult"/> containing the details of the deleted user library add-on
     /// if found; otherwise, returns a NotFound or BadRequest result.
     /// </returns>
+    [Authorize(Policy = "UserManagePolicy")]
     [HttpGet("addon/deleted/{userLibraryAddonId}")]
     public async Task<ActionResult<UserLibraryAddonDto>> GetDeletedUserLibraryAddonById([FromRoute] Guid userLibraryAddonId)
     {
@@ -776,6 +886,7 @@ public class UserLibraryController : ControllerBase
     /// Retrieves all user library addons from the system.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation. The task result contains a list of user library addons.</returns>
+    [Authorize(Policy = "UserManagePolicy")]
     [HttpGet("addons")]
     public async Task<ActionResult<List<UserLibraryAddonDto>>> GetAllUserLibraryAddons()
     {
@@ -821,8 +932,9 @@ public class UserLibraryController : ControllerBase
     /// An IActionResult containing either a list of deleted user library addon DTOs
     /// or a BadRequest with an error message in case of an exception.
     /// </returns>
+    [Authorize(Policy = "UserManagePolicy")]
     [HttpGet("addons/deleted")]
-   public async Task<ActionResult<List<UserLibraryAddonDto>>> GetAllDeletedUserLibraryAddons()
+    public async Task<ActionResult<List<UserLibraryAddonDto>>> GetAllDeletedUserLibraryAddons()
     {
         try
         {
@@ -862,6 +974,7 @@ public class UserLibraryController : ControllerBase
     /// </summary>
     /// <param name="gameId">The unique identifier of the game whose addons are to be retrieved.</param>
     /// <returns>An <see cref="IActionResult"/> containing a list of addons or an error message if the retrieval fails.</returns>
+    [Authorize(Policy = "UserManagePolicy")]
     [HttpGet("addons/game/{gameId}")]
     public async Task<ActionResult<List<UserLibraryAddonDto>>> GetAllUserLibraryAddonsByGameId([FromRoute] Guid gameId)
     {
@@ -908,6 +1021,7 @@ public class UserLibraryController : ControllerBase
     /// </summary>
     /// <param name="gameId">The unique identifier of the game to retrieve deleted addons for.</param>
     /// <returns>A list of deleted user library addons associated with the specified game ID.</returns>
+    [Authorize(Policy = "UserManagePolicy")]
     [HttpGet("addons/deleted/game/{gameId}")]
     public async Task<ActionResult<List<UserLibraryAddonDto>>> GetAllDeletedUserLibraryAddonsByGameId([FromRoute] Guid gameId)
     {
