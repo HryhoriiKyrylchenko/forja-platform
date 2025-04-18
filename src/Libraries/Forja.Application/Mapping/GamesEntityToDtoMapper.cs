@@ -84,6 +84,24 @@ public static class GamesEntityToDtoMapper
         };
     }
     
+    public static GameLibraryDto MapToGameLibraryDto(Game game, 
+                                                    string logoUrl,
+                                                    List<MatureContentDto> matureContents,
+                                                    List<MechanicDto> mechanics)
+    {
+        return new GameLibraryDto
+        {
+            Id = game.Id,
+            Title = game.Title,
+            ShortDescription = game.ShortDescription,
+            LogoUrl = logoUrl,
+            Genres = game.ProductGenres.Select(pg => MapToGenreDto(pg.Genre)).ToList(),
+            Tags = game.GameTags.Select(gt => MapToTagDto(gt.Tag)).ToList(),
+            Mechanics = mechanics,
+            MatureContent = matureContents,
+        };
+    }
+    
     public static GameAddonSmallDto MapToGameAddonSmallDto(GameAddon gameAddon, string addonLogoUrl)
     {
         return new GameAddonSmallDto

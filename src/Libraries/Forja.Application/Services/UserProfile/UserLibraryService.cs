@@ -245,8 +245,22 @@ public class UserLibraryService : IUserLibraryService
             {
                 addonImageUrls[addon.AddonId] = await _fileManagerService.GetPresignedProductLogoUrlAsync(addon.AddonId, 1900);
             }
+            
+            Dictionary<Guid, string> matureContentLogos = [];
+            var matureContentList = userLibraryGame.Game.ProductMatureContents.Select(m => m.MatureContent).ToList();
+            foreach (var matureContent in matureContentList)
+            {
+                matureContentLogos[matureContent.Id] = await _fileManagerService.GetPresignedMatureContentImageUrlAsync(matureContent.Id, 1900);
+            }
+            
+            Dictionary<Guid, string> mechanicLogos = [];
+            var mechanicsList = userLibraryGame.Game.GameMechanics.Select(gm => gm.Mechanic).ToList();
+            foreach (var mechanic in mechanicsList)
+            {
+                mechanicLogos[mechanic.Id] = await _fileManagerService.GetPresignedMechanicImageUrlAsync(mechanic.Id, 1900);
+            }
 
-            var dto = UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(
+            var dto = UserProfileEntityToDtoMapper.MapToUserLibraryGameExtendedDto(
                 userLibraryGame,
                 gameLogoUrl,
                 userAchievements.Select(ua =>
@@ -256,7 +270,15 @@ public class UserLibraryService : IUserLibraryService
                 userLibraryGame.PurchasedAddons.Select(a =>
                     UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(
                         a,
-                        addonImageUrls[a.AddonId])).ToList());
+                        addonImageUrls[a.AddonId])).ToList(),
+                matureContentList.Select(mc => 
+                    GamesEntityToDtoMapper.MapToMatureContentDto(
+                        mc,
+                        matureContentLogos[mc.Id])).ToList(),
+                mechanicsList.Select(m => 
+                        GamesEntityToDtoMapper.MapToMechanicDto(
+                            m,
+                            mechanicLogos[m.Id])).ToList());
 
             userLibraryGameDtos.Add(dto);
         }
@@ -298,12 +320,36 @@ public class UserLibraryService : IUserLibraryService
                     var addonLogoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(addon.AddonId, 1900);
                     return UserProfileEntityToDtoMapper.MapToUserLibraryAddonDto(addon, addonLogoUrl);
                 }));
+            
+            Dictionary<Guid, string> matureContentLogos = [];
+            var matureContentList = userLibraryGame.Game.ProductMatureContents.Select(m => m.MatureContent).ToList();
+            foreach (var matureContent in matureContentList)
+            {
+                matureContentLogos[matureContent.Id] = await _fileManagerService.GetPresignedMatureContentImageUrlAsync(matureContent.Id, 1900);
+            }
+            
+            Dictionary<Guid, string> mechanicLogos = [];
+            var mechanicsList = userLibraryGame.Game.GameMechanics.Select(gm => gm.Mechanic).ToList();
+            foreach (var mechanic in mechanicsList)
+            {
+                mechanicLogos[mechanic.Id] = await _fileManagerService.GetPresignedMechanicImageUrlAsync(mechanic.Id, 1900);
+            }
+            
+            
 
-            var dto = UserProfileEntityToDtoMapper.MapToUserLibraryGameDto(
+            var dto = UserProfileEntityToDtoMapper.MapToUserLibraryGameExtendedDto(
                 userLibraryGame,
                 gameLogoUrl,
                 achievementDtos.ToList(),
-                addonDtos.ToList()
+                addonDtos.ToList(),
+                matureContentList.Select(mc => 
+                    GamesEntityToDtoMapper.MapToMatureContentDto(
+                        mc,
+                        matureContentLogos[mc.Id])).ToList(),
+                mechanicsList.Select(m => 
+                    GamesEntityToDtoMapper.MapToMechanicDto(
+                        m,
+                        mechanicLogos[m.Id])).ToList()
             );
 
             userLibraryGameDtos.Add(dto);
