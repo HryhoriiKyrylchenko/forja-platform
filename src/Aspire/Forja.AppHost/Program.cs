@@ -41,6 +41,8 @@ builder.AddKeycloak("keycloak", 8080, keycloakUsername, keycloakPassword)
     .WithEnvironment("KC_DB_USERNAME", "postgres")
     .WithEnvironment("KC_DB_PASSWORD", postgresPassword)
     .WithEnvironment("KC_HOSTNAME", "localhost")
+    .WithEnvironment("KC_DB_POOL_INITIAL_SIZE", "5") 
+    .WithEnvironment("KC_DB_POOL_MAX_SIZE", "20")    
     .WithLifetime(ContainerLifetime.Persistent);
 
 //MinIO Configuration

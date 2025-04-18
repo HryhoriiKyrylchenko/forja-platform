@@ -25,7 +25,7 @@ public class FilesController : ControllerBase
  
     [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("start-chunked-upload")]
-    public async Task<IActionResult> StartChunkedUpload([FromBody] StartChunkedUploadRequest request)
+    public async Task<IActionResult> StartChunkedUpload([FromForm] StartChunkedUploadRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         try
@@ -63,7 +63,7 @@ public class FilesController : ControllerBase
 
     [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("upload-chunk")]
-    public async Task<IActionResult> UploadChunk([FromBody] UploadChunkRequest request)
+    public async Task<IActionResult> UploadChunk([FromForm] UploadChunkRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         try
@@ -102,7 +102,7 @@ public class FilesController : ControllerBase
 
     [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("complete-chunked-upload")]
-    public async Task<IActionResult> CompleteChunkedUpload([FromBody] CompleteChunkedUploadRequest request)
+    public async Task<IActionResult> CompleteChunkedUpload([FromForm] CompleteChunkedUploadRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         try
@@ -141,7 +141,7 @@ public class FilesController : ControllerBase
 
     [Authorize(Policy = "ContentManagePolicy")]
     [HttpDelete("file")]
-    public async Task<IActionResult> DeleteGameFile([FromBody] DeleteObjectRequest request)
+    public async Task<IActionResult> DeleteGameFile([FromForm] DeleteObjectRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         try
@@ -180,7 +180,7 @@ public class FilesController : ControllerBase
 
     [Authorize]
     [HttpPost("avatar")]
-    public async Task<IActionResult> UploadUserAvatar([FromBody] UploadObjectImageRequest request)
+    public async Task<IActionResult> UploadUserAvatar([FromForm] UploadObjectImageRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         try
@@ -242,7 +242,7 @@ public class FilesController : ControllerBase
     
     [Authorize]
     [HttpDelete("avatar")]
-    public async Task<IActionResult> DeleteUserAvatar([FromBody] DeleteObjectRequest request)
+    public async Task<IActionResult> DeleteUserAvatar([FromForm] DeleteObjectRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         try
@@ -304,7 +304,7 @@ public class FilesController : ControllerBase
     
     [Authorize(Policy = "UserManagePolicy")]
     [HttpDelete("delete-avatar")]
-    public async Task<IActionResult> DeleteUserAvatarForManager([FromBody] DeleteObjectRequest request)
+    public async Task<IActionResult> DeleteUserAvatarForManager([FromForm] DeleteObjectRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         try
@@ -343,7 +343,7 @@ public class FilesController : ControllerBase
     
     [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("product-logo")]
-    public async Task<IActionResult> UploadProductLogo([FromBody] UploadObjectImageRequest request)
+    public async Task<IActionResult> UploadProductLogo([FromForm] UploadObjectImageRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         try
@@ -382,7 +382,7 @@ public class FilesController : ControllerBase
     
     [Authorize(Policy = "ContentManagePolicy")]
     [HttpDelete("product-logo")]
-    public async Task<IActionResult> DeleteProductLogo([FromBody] DeleteObjectRequest request)
+    public async Task<IActionResult> DeleteProductLogo([FromForm] DeleteObjectRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         try
@@ -421,7 +421,7 @@ public class FilesController : ControllerBase
     
     [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("achievement-image")]
-    public async Task<IActionResult> UploadAchievementImage([FromBody] UploadObjectImageRequest request)
+    public async Task<IActionResult> UploadAchievementImage([FromForm] UploadObjectImageRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         try
@@ -460,7 +460,7 @@ public class FilesController : ControllerBase
     
     [Authorize(Policy = "ContentManagePolicy")]
     [HttpDelete("achievement-image")]
-    public async Task<IActionResult> DeleteAchievementImageLogo([FromBody] DeleteObjectRequest request)
+    public async Task<IActionResult> DeleteAchievementImageLogo([FromForm] DeleteObjectRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         try
@@ -499,7 +499,7 @@ public class FilesController : ControllerBase
     
     [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("news-article")]
-    public async Task<IActionResult> UploadNewsArticleImage([FromBody] UploadObjectImageRequest request)
+    public async Task<IActionResult> UploadNewsArticleImage([FromForm] UploadObjectImageRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         try
@@ -538,7 +538,7 @@ public class FilesController : ControllerBase
     
     [Authorize(Policy = "ContentManagePolicy")]
     [HttpDelete("news-article")]
-    public async Task<IActionResult> DeleteNewsArticleImageLogo([FromBody] DeleteObjectRequest request)
+    public async Task<IActionResult> DeleteNewsArticleImageLogo([FromForm] DeleteObjectRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         try
@@ -577,7 +577,7 @@ public class FilesController : ControllerBase
     
     [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("mature-content-image")]
-    public async Task<IActionResult> UploadMatureContentImage([FromBody] UploadObjectImageRequest request)
+    public async Task<IActionResult> UploadMatureContentImage([FromForm] UploadObjectImageRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         try
@@ -616,7 +616,7 @@ public class FilesController : ControllerBase
     
     [Authorize(Policy = "ContentManagePolicy")]
     [HttpDelete("mature-content-image")]
-    public async Task<IActionResult> DeleteMatureContentImageLogo([FromBody] DeleteObjectRequest request)
+    public async Task<IActionResult> DeleteMatureContentImageLogo([FromForm] DeleteObjectRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         try
@@ -655,7 +655,7 @@ public class FilesController : ControllerBase
     
     [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("mechanic-image")]
-    public async Task<IActionResult> UploadMechanicImage([FromBody] UploadObjectImageRequest request)
+    public async Task<IActionResult> UploadMechanicImage([FromForm] UploadObjectImageRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         try
@@ -694,7 +694,7 @@ public class FilesController : ControllerBase
     
     [Authorize(Policy = "ContentManagePolicy")]
     [HttpDelete("mechanic-image")]
-    public async Task<IActionResult> DeleteMechanicImageLogo([FromBody] DeleteObjectRequest request)
+    public async Task<IActionResult> DeleteMechanicImageLogo([FromForm] DeleteObjectRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         try
@@ -733,7 +733,7 @@ public class FilesController : ControllerBase
     
     [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("product-image")]
-    public async Task<IActionResult> UploadProductImage([FromBody] UploadImageRequest request)
+    public async Task<IActionResult> UploadProductImage([FromForm] UploadImageRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         try
@@ -772,7 +772,7 @@ public class FilesController : ControllerBase
 
     [Authorize(Policy = "ContentManagePolicy")]
     [HttpDelete("product-image")]
-    public async Task<IActionResult> DeleteProductImage([FromBody] DeleteObjectRequest request)
+    public async Task<IActionResult> DeleteProductImage([FromForm] DeleteObjectRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         try
@@ -811,7 +811,7 @@ public class FilesController : ControllerBase
     
     [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("profile-hat-variant")]
-    public async Task<IActionResult> UploadProfileHatVariantFile([FromBody] ProfileHatVariantFileUploadRequest request)
+    public async Task<IActionResult> UploadProfileHatVariantFile([FromForm] ProfileHatVariantFileUploadRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         try
@@ -850,7 +850,7 @@ public class FilesController : ControllerBase
 
     [Authorize(Policy = "ContentManagePolicy")]
     [HttpDelete("profile-hat-variant")]
-    public async Task<IActionResult> DeleteProfileHatVariantFile([FromBody] ProfileHatVariantFileDeleteRequest request)
+    public async Task<IActionResult> DeleteProfileHatVariantFile([FromForm] ProfileHatVariantFileDeleteRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         try

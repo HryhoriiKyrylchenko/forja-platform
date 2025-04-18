@@ -229,9 +229,12 @@ public class UserLibraryService : IUserLibraryService
         {
             string gameLogoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(userLibraryGame.GameId, 1900);
 
-            Dictionary<Guid, string> achievementImageUrls = [];
+            Dictionary<Guid, string> achievementImageUrls = [];     
             var userAchievements = userLibraryGame.User.UserAchievements
-                .Where(ua => ua.AchievementId == userLibraryGame.Game.Id).ToList();
+                    .Where(ua =>
+                        ua.UserId == userId &&                        
+                        ua.Achievement.GameId == userLibraryGame.Game.Id)
+                    .ToList();
             foreach (var achievement in userAchievements)
             {
                 achievementImageUrls[achievement.AchievementId] = await _fileManagerService.GetPresignedAchievementImageUrlAsync(achievement.AchievementId);

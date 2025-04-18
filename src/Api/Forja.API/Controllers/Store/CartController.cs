@@ -222,7 +222,7 @@ public class CartController : ControllerBase
     }
 
     [Authorize]
-    [HttpPost("/recover")]
+    [HttpPost("recover")]
     public async Task<IActionResult> RecoverAbandonedCart()
     {
         try
@@ -273,7 +273,7 @@ public class CartController : ControllerBase
     }
 
 
-    [HttpGet("/item/{cartItemId:guid}")]
+    [HttpGet("item/{cartItemId:guid}")]
     public async Task<IActionResult> GetCartItemById([FromRoute] Guid cartItemId)
     {
         if (cartItemId == Guid.Empty) return BadRequest(new { error = "Cart item ID is required." });
@@ -348,7 +348,7 @@ public class CartController : ControllerBase
         }
     }
 
-    [HttpPost("/items")]
+    [HttpPost("items")]
     public async Task<IActionResult> AddCartItem([FromBody] CartItemCreateRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -386,7 +386,7 @@ public class CartController : ControllerBase
         }
     }
     
-    [HttpPost("/bundle")]
+    [HttpPost("bundle")]
     public async Task<IActionResult> AddBundleToCartItems([FromBody] CartAddBundleRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -424,7 +424,7 @@ public class CartController : ControllerBase
         }
     }
     
-    [HttpDelete("/items/{itemId:guid}")]
+    [HttpDelete("items/{itemId:guid}")]
     public async Task<IActionResult> RemoveCartItem([FromRoute] Guid itemId)
     {
         if (itemId == Guid.Empty) return BadRequest(new { error = "Cart item ID is required." });
