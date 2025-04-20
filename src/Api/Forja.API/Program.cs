@@ -22,10 +22,15 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowSpecificOrigin",
        policy =>
        {
-           policy.WithOrigins("https://localhost:3003") 
-                 .AllowCredentials() 
-                 .AllowAnyHeader()
-                 .AllowAnyMethod();
+           policy.WithOrigins(
+                   "http://localhost:3000",
+                   "https://localhost:3000",
+                   "http://localhost:3003",
+                   "https://localhost:3003"
+               )
+               .AllowCredentials() 
+               .AllowAnyHeader()
+               .AllowAnyMethod();
        });
 });
 
@@ -124,7 +129,7 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-app.UseCors("AllowSpecificOrigin"); // CORS
+app.UseCors("AllowSpecificOrigin");
 
 
 // Configure the HTTP request pipeline.
