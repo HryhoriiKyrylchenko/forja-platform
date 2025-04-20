@@ -911,7 +911,7 @@ public class AchievementController : ControllerBase
     /// <param name="gameId">
     /// The unique identifier of the game for which user achievements are being retrieved.
     /// </param>
-    /// <returns>
+    /// <returns> ò
     /// An <see cref="ActionResult"/> containing a list of user achievements for the specified game.
     /// Returns a status of 200 (OK) with the retrieved achievements if successful.
     /// If the provided game ID is invalid or an exception occurs, returns a status of 400 (Bad Request) with an error message.

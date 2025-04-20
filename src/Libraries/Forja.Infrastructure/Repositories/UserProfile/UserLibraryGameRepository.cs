@@ -222,7 +222,8 @@ public class UserLibraryGameRepository : IUserLibraryGameRepository
         }
 
         return await _userLibraryGames
-            .Where(ulg => ulg.UserId == userId)
+            .Where(ulg => ulg.UserId == userId &&
+                   ulg.IsDeleted != true)
             .CountAsync();
     }
 }

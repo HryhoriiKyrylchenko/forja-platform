@@ -349,7 +349,7 @@ public class AuthController : ControllerBase
             return BadRequest(new { error = ex.Message });
         }
     }
-    
+
     /// <summary>
     /// Refreshes the authentication token for a user using a provided refresh token.
     /// </summary>
@@ -357,15 +357,23 @@ public class AuthController : ControllerBase
     /// <returns>An <see cref="IActionResult"/> containing the new token if the process is successful,
     /// or a Bad Request response with an error message if the refresh token is invalid or the process fails.</returns>
     [HttpPost("refresh")]
-    public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
+    public async Task<IActionResult> Refresh()
     {
         try
         {
-            var tokenResponse = await _authService.RefreshTokenAsync(request);
-            
             var httpContext = _httpContextAccessor.HttpContext ?? throw new InvalidOperationException("HTTP Context is unavailable.");
 
-            // set `access_token` & `refresh_token` in the HttpOnly Cookies**
+            // ќтримуЇмо refresh_token з HttpOnly cookie
+            if (!httpContext.Request.Cookies.TryGetValue("refresh_token", out var refreshToken) || string.IsNullOrWhiteSpace(refreshToken))
+            {
+                return BadRequest(new { error = "Refresh token is missing." });
+            }
+
+            var tokenResponse = await _authService.RefreshTokenAsync(new RefreshTokenRequest
+            {
+                RefreshToken = refreshToken
+            });
+
             var accessTokenOptions = new CookieOptions
             {
                 HttpOnly = true,
@@ -384,10 +392,10 @@ public class AuthController : ControllerBase
 
             httpContext.Response.Cookies.Append("access_token", tokenResponse.AccessToken, accessTokenOptions);
             httpContext.Response.Cookies.Append("refresh_token", tokenResponse.RefreshToken, refreshTokenOptions);
-            
+
             return Ok(tokenResponse);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             try
             {
@@ -400,11 +408,11 @@ public class AuthController : ControllerBase
                     EntityType = AuditEntityType.User,
                     LogLevel = LogLevel.Error,
                     Details = new Dictionary<string, string>
-                    {
-                        { "Message", "Failed to refresh tokens" }
-                    }
+                {
+                    { "Message", "Failed to refresh tokens" }
+                }
                 };
-                
+
                 await _auditLogService.LogWithLogEntryAsync(logEntry);
             }
             catch (Exception e)
@@ -414,7 +422,7 @@ public class AuthController : ControllerBase
             return BadRequest(new { error = ex.Message });
         }
     }
-    
+
     // Role management endpoints
 
     /// <summary>

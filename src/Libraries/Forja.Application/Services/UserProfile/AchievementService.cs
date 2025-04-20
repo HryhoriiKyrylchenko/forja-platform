@@ -9,16 +9,19 @@ public class AchievementService : IAchievementService
     private readonly IUserAchievementRepository _userAchievementRepository;
     private readonly IUserRepository _userRepository;
     private readonly IGameRepository _gameRepository;
+    private readonly IFileManagerService _fileManagerService;
 
     public AchievementService(IAchievementRepository achievementRepository, 
         IUserAchievementRepository userAchievementRepository, 
         IUserRepository userRepository, 
-        IGameRepository gameRepository)
+        IGameRepository gameRepository,
+        IFileManagerService fileManagerService)
     {
         _achievementRepository = achievementRepository;
         _userAchievementRepository = userAchievementRepository;
         _userRepository = userRepository;
         _gameRepository = gameRepository;
+        _fileManagerService = fileManagerService;
     }
     
     #region Achievement Methods
@@ -134,13 +137,18 @@ public class AchievementService : IAchievementService
         
         var gameAchievements = await _achievementRepository.GetAllByGameIdAsync(gameId);
 
-        var achievements = gameAchievements.ToList();
-        if (!achievements.Any())
+        var achievementsList = gameAchievements.ToList();
+        foreach (var achievement in achievementsList)
+        {
+            achievement.LogoUrl = await _fileManagerService.GetPresignedAchievementImageUrlAsync(achievement.Id);
+        }
+
+        if (!achievementsList.Any())
         {
             return new List<AchievementDto>();
         }
         
-        return achievements.Select(UserProfileEntityToDtoMapper.MapToAchievementDto).ToList();
+        return achievementsList.Select(UserProfileEntityToDtoMapper.MapToAchievementDto).ToList();
     }
 
     /// <inheritdoc />
@@ -314,9 +322,15 @@ public class AchievementService : IAchievementService
     public async Task<List<UserAchievementDto>> GetNumberOfAchievementsByUserIdAsync(Guid userId, int num)
     {
         var userAchievements = await _userAchievementRepository.GetNumByUserIdAsync(userId, num);
-
-        return userAchievements
+        var userAchievementsList = userAchievements
             .Select(UserProfileEntityToDtoMapper.MapToUserAchievementDto).ToList();
+
+        foreach (var achievement in userAchievementsList)
+        {
+            achievement.Achievement.LogoUrl = await _fileManagerService.GetPresignedAchievementImageUrlAsync(achievement.Achievement.Id);
+        }
+
+        return userAchievementsList;
     }
 
     /// <inheritdoc />
