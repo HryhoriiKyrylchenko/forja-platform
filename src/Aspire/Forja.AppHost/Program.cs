@@ -15,18 +15,18 @@ builder.AddPostgres("postgres", password: postgresPassword)
         isProxied: false)
     .WithLifetime(ContainerLifetime.Persistent);
 
-    //Redis Configuration
-    var redis = builder.AddRedis("redis")
-        .WithImage("redis")
-        .WithImageTag("7.4")
-        .WithContainerName("forja-redis")
-        .WithEndpoint(name: "redisendpoint",
-            scheme: "tcp",
-            port: 6379,
-            targetPort: 6379,
-            isProxied: false)
-        .WithVolume("redis-data", "/data", isReadOnly: false)
-        .WithLifetime(ContainerLifetime.Persistent);
+//Redis Configuration
+var redis = builder.AddRedis("redis")
+    .WithImage("redis")
+    .WithImageTag("7.4")
+    .WithContainerName("forja-redis")
+    .WithEndpoint(name: "redisendpoint",
+        scheme: "tcp",
+        port: 6379,
+        targetPort: 6379,
+        isProxied: false)
+    .WithVolume("redis-data", "/data", isReadOnly: false)
+    .WithLifetime(ContainerLifetime.Persistent);
 
 //Keycloak Configuration
 var keycloakUsername = builder.AddParameter("keycloak-admin", secret: true);
@@ -69,7 +69,7 @@ var forjaApi = builder.AddProject<Projects.Forja_API>("forjaapi")
     .WithReference(redis);
 
 //frontend
-builder.AddNpmApp("forja-react", "../../Web/forja-react")
+builder.AddNpmApp("forja-next", "../../Web/forja-next") //, scriptName: "dev"
     .WaitFor(forjaApi);
 
 builder.Build().Run();
