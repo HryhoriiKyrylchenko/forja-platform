@@ -17,6 +17,7 @@ public class PaymentService : IPaymentService
         _iOrderService = orderService;
     }
 
+    ///<inheritdoc/>
     public async Task<PaymentDto?> GetPaymentByIdAsync(Guid paymentId)
     {
         if (paymentId == Guid.Empty)
@@ -29,6 +30,7 @@ public class PaymentService : IPaymentService
         return result == null ? null : StoreEntityToDtoMapper.MapToPaymentDto(result);
     }
 
+    ///<inheritdoc/>
     public async Task<PaymentDto?> GetPaymentByTransactionIdAsync(string transactionId)
     {
         if (string.IsNullOrWhiteSpace(transactionId))
@@ -41,6 +43,7 @@ public class PaymentService : IPaymentService
         return result == null ? null : StoreEntityToDtoMapper.MapToPaymentDto(result);
     }
 
+    ///<inheritdoc/>
     public async Task<IEnumerable<PaymentDto>> GetPaymentsByOrderIdAsync(Guid orderId)
     {
         if (orderId == Guid.Empty)
@@ -53,6 +56,7 @@ public class PaymentService : IPaymentService
         return payments.Select(StoreEntityToDtoMapper.MapToPaymentDto);
     }
 
+    ///<inheritdoc/>
     public async Task DeletePaymentAsync(Guid paymentId)
     {
         if (paymentId == Guid.Empty)
@@ -63,6 +67,7 @@ public class PaymentService : IPaymentService
         await _paymentRepository.DeletePaymentAsync(paymentId);
     }
     
+    ///<inheritdoc/>
     public async Task<string> ExecutePaymentAsync(PaymentRequest request)
     {
         if (!StoreRequestsValidator.ValidatePaymentRequest(request, out var errors))
@@ -110,6 +115,7 @@ public class PaymentService : IPaymentService
         return transactionId;
     }
     
+    ///<inheritdoc/>
     public async Task<PaymentDto?> UpdatePaymentStatusAsync(PaymentUpdateSatusRequest satusRequest)
     {
         if (!StoreRequestsValidator.ValidatePaymentUpdateRequest(satusRequest, out var errors))
@@ -137,6 +143,7 @@ public class PaymentService : IPaymentService
         return StoreEntityToDtoMapper.MapToPaymentDto(updatedPayment);
     }
 
+    ///<inheritdoc/>
     public async Task<bool> RefundPaymentAsync(Guid paymentId)
     {
         var payment = await _paymentRepository.GetPaymentByIdAsync(paymentId);
@@ -161,6 +168,7 @@ public class PaymentService : IPaymentService
         return result;
     }
 
+    ///<inheritdoc/>
     private async Task ProcessPaymentStatus(Payment payment)
     {
         if (payment == null)

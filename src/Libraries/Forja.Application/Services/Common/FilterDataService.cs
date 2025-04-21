@@ -18,6 +18,7 @@ public class FilterDataService : IFilterDataService
         _matureContentRepository = matureContentRepository;
     }
     
+    ///<inheritdoc/>
     public async Task<ProductsFilterDataDto> GetGameFilterDataAsync()
     {
         var genres = await _genreRepository.GetAllAsync();
