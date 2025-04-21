@@ -220,6 +220,7 @@ public class FileManagerService : IFileManagerService
         await _storageService.DeleteFileAsync(request.ObjectPath);
     }
 
+    ///<inheritdoc/>
     public async Task<string> UploadAchievementImageAsync(UploadObjectImageRequest request)
     {
         if (!StorageRequestsValidator.ValidateUploadObjectImageRequest(request, out var errors))
@@ -243,6 +244,7 @@ public class FileManagerService : IFileManagerService
         return destinationFilePath;
     }
 
+    ///<inheritdoc/>
     public async Task DeleteAchievementImageAsync(DeleteObjectRequest request)
     {
         if (!StorageRequestsValidator.ValidateDeleteObjectRequest(request, out var errors))
@@ -258,6 +260,7 @@ public class FileManagerService : IFileManagerService
         await _storageService.DeleteFileAsync(request.ObjectPath);
     }
 
+    ///<inheritdoc/>
     public async Task<string> UploadMatureContentImageAsync(UploadObjectImageRequest request)
     {
         if (!StorageRequestsValidator.ValidateUploadObjectImageRequest(request, out var errors))
@@ -281,6 +284,7 @@ public class FileManagerService : IFileManagerService
         return destinationFilePath;
     }
 
+    ///<inheritdoc/>
     public async Task DeleteMatureContentImageAsync(DeleteObjectRequest request)
     {
         if (!StorageRequestsValidator.ValidateDeleteObjectRequest(request, out var errors))
@@ -296,6 +300,7 @@ public class FileManagerService : IFileManagerService
         await _storageService.DeleteFileAsync(request.ObjectPath);
     }
 
+    ///<inheritdoc/>
     public async Task<string> UploadMechanicImageAsync(UploadObjectImageRequest request)
     {
         if (!StorageRequestsValidator.ValidateUploadObjectImageRequest(request, out var errors))
@@ -319,6 +324,7 @@ public class FileManagerService : IFileManagerService
         return destinationFilePath;
     }
 
+    ///<inheritdoc/>
     public async Task DeleteMechanicImageAsync(DeleteObjectRequest request)
     {
         if (!StorageRequestsValidator.ValidateDeleteObjectRequest(request, out var errors))
@@ -334,6 +340,7 @@ public class FileManagerService : IFileManagerService
         await _storageService.DeleteFileAsync(request.ObjectPath);
     }
 
+    ///<inheritdoc/>
     public async Task<string> UploadNewsArticleImageAsync(UploadObjectImageRequest request)
     {
         if (!StorageRequestsValidator.ValidateUploadObjectImageRequest(request, out var errors))
@@ -357,6 +364,7 @@ public class FileManagerService : IFileManagerService
         return destinationFilePath;
     }
 
+    ///<inheritdoc/>
     public async Task DeleteNewsArticleImageAsync(DeleteObjectRequest request)
     {
         if (!StorageRequestsValidator.ValidateDeleteObjectRequest(request, out var errors))
@@ -375,11 +383,6 @@ public class FileManagerService : IFileManagerService
     /// <inheritdoc />
     public async Task<string> GetPresignedUrlAsync(string objectPath, int expiresInSeconds = 3600)
     {
-        // if (string.IsNullOrWhiteSpace(objectPath))
-        // {
-        //     throw new ArgumentException("Object path cannot be empty.", nameof(objectPath));
-        // }
-
         if (expiresInSeconds <= 10)
         {
             throw new ArgumentException("Expiration time cannot be less than 10 seconds.", nameof(expiresInSeconds));
@@ -457,6 +460,7 @@ public class FileManagerService : IFileManagerService
         return result;
     }
 
+    ///<inheritdoc/>
     public async Task<List<string>> GetPresignedProductImagesUrlsAsync(Guid productId, int expiresInSeconds = 3600)
     {
         if (productId == Guid.Empty)
@@ -484,6 +488,7 @@ public class FileManagerService : IFileManagerService
         return presignedUrls.ToList();
     }
 
+    ///<inheritdoc/>
     public async Task<string> GetPresignedUserAvatarUrlAsync(Guid userId, int expiresInSeconds = 3600)
     {
         if (userId == Guid.Empty)
@@ -511,6 +516,7 @@ public class FileManagerService : IFileManagerService
         return result;
     }
 
+    ///<inheritdoc/>
     public async Task<string> GetPresignedProductLogoUrlAsync(Guid productId, int expiresInSeconds = 3600)
     {
         if (productId == Guid.Empty)
@@ -538,6 +544,7 @@ public class FileManagerService : IFileManagerService
         return result;
     }
 
+    ///<inheritdoc/>
     public async Task<string> GetPresignedAchievementImageUrlAsync(Guid achievementId, int expiresInSeconds = 3600)
     {
         if (achievementId == Guid.Empty)
@@ -565,6 +572,7 @@ public class FileManagerService : IFileManagerService
         return result;
     }
 
+    ///<inheritdoc/>
     public async Task<string> GetPresignedMatureContentImageUrlAsync(Guid matureContentId, int expiresInSeconds = 3600)
     {
         if (matureContentId == Guid.Empty)
@@ -592,6 +600,7 @@ public class FileManagerService : IFileManagerService
         return result;
     }
 
+    ///<inheritdoc/>
     public async Task<string> GetPresignedMechanicImageUrlAsync(Guid mechanicId, int expiresInSeconds = 3600)
     {
         if (mechanicId == Guid.Empty)
@@ -619,6 +628,7 @@ public class FileManagerService : IFileManagerService
         return result;
     }
 
+    ///<inheritdoc/>
     public async Task<string> GetPresignedNewsArticleImageUrlAsync(Guid newsArticleId, int expiresInSeconds = 3600)
     {
         if (newsArticleId == Guid.Empty)
@@ -645,7 +655,7 @@ public class FileManagerService : IFileManagerService
         
         return result;
     }
-
+    
     private async Task<string?> FindProfileHatVariantPathAsync(short profileHatVariantId)
     {
         string[] possibleExtensions = [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"];

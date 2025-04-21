@@ -9,6 +9,7 @@ public class GameFileService : IGameFileService
         _gameFileRepository = gameFileRepository;
     }
     
+    ///<inheritdoc/>
     public async Task<GameFileDto?> AddGameFile(GameFileCreateRequest request)
     {
         if (!GamesRequestsValidator.ValidateGameFileCreateRequest(request, out var errors))
@@ -32,6 +33,7 @@ public class GameFileService : IGameFileService
         return result == null ? null : GamesEntityToDtoMapper.MapToGameFileDto(result);
     }
 
+    ///<inheritdoc/>
     public async Task<GameFileDto?> UpdateGameFile(GameFileUpdateRequest request)
     {
         if (!GamesRequestsValidator.ValidateGameFileUpdateRequest(request, out var errors))
@@ -52,6 +54,7 @@ public class GameFileService : IGameFileService
         return result == null ? null : GamesEntityToDtoMapper.MapToGameFileDto(result);
     }
 
+    ///<inheritdoc/>
     public async Task<GameFileDto?> GetGameFileByGameVersionIdAndFileName(Guid gameVersionId, string fileName)
     {
         if (gameVersionId == Guid.Empty)

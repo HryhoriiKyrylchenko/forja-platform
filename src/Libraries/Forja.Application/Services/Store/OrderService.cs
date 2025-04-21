@@ -18,6 +18,7 @@ public class OrderService : IOrderService
         _userLibraryService = userLibraryService;
     }
     
+    ///<inheritdoc/>
     public async Task<OrderDto?> GetOrderByIdAsync(Guid orderId)
     {
         if (orderId == Guid.Empty)
@@ -30,6 +31,7 @@ public class OrderService : IOrderService
         return order == null ? null : StoreEntityToDtoMapper.MapToOrderDto(order);
     }
 
+    ///<inheritdoc/>
     public async Task<IEnumerable<OrderDto>> GetOrdersByUserIdAsync(Guid userId)
     {
         if (userId == Guid.Empty)
@@ -42,6 +44,7 @@ public class OrderService : IOrderService
         return orders.Select(StoreEntityToDtoMapper.MapToOrderDto);
     }
 
+    ///<inheritdoc/>
     public async Task<IEnumerable<OrderDto>> GetAllOrdersAsync()
     {
         var orders = await _orderRepository.GetAllOrdersAsync();
@@ -49,6 +52,7 @@ public class OrderService : IOrderService
         return orders.Select(StoreEntityToDtoMapper.MapToOrderDto);
     }
 
+    ///<inheritdoc/>
     public async Task<OrderDto?> AddOrderAsync(OrderCreateRequest request)
     {
         if (!StoreRequestsValidator.ValidateOrderCreateRequest(request, out var errors))
@@ -78,6 +82,7 @@ public class OrderService : IOrderService
         return result == null ? null : StoreEntityToDtoMapper.MapToOrderDto(result);
     }
 
+    ///<inheritdoc/>
     public async Task<OrderDto?> UpdateOrderStatusAsync(OrderUpdateRequest request)
     {
         if (!StoreRequestsValidator.ValidateOrderUpdateRequest(request, out var errors))
@@ -182,6 +187,7 @@ public class OrderService : IOrderService
         return StoreEntityToDtoMapper.MapToOrderDto(updatedOrder);
     }
     
+    ///<inheritdoc/>
     public async Task DeleteOrderAsync(Guid orderId)
     {
         if (orderId == Guid.Empty)

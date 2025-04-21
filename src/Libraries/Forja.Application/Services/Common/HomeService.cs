@@ -21,6 +21,7 @@ public class HomeService : IHomeService
         _fileManagerService = fileManagerService;
     }
     
+    ///<inheritdoc/>
     public async Task<HomepageDto> GetHomepageDataAsync()
     {
         var allGames = await _gameRepository.GetAllAsync();

@@ -1,8 +1,5 @@
 namespace Forja.Domain.Enums;
 
-/// <summary>
-/// Represents the types of actions that can be audited.
-/// </summary>
 public enum AuditActionType
 {
     Create,

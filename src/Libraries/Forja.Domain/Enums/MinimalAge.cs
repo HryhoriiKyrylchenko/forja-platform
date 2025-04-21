@@ -1,8 +1,5 @@
 namespace Forja.Domain.Enums;
 
-/// <summary>
-/// Represents different player age categories for games.
-/// </summary>
 public enum MinimalAge
 {
     ThreePlus = 3, // Suitable for ages 3 and up.

@@ -35,6 +35,7 @@ public class CartService : ICartService
 
     // ---------------- Cart Operations --------------------
 
+    ///<inheritdoc/>
     public async Task<CartDto?> GetCartByIdAsync(Guid cartId)
     {
         if (cartId == Guid.Empty)
@@ -50,6 +51,7 @@ public class CartService : ICartService
         return StoreEntityToDtoMapper.MapToCartDto(cart, cartItems);
     }
 
+    ///<inheritdoc/>
     public async Task<IEnumerable<CartDto>> GetCartsByUserIdAsync(Guid userId)
     {
         if (userId == Guid.Empty)
@@ -72,6 +74,7 @@ public class CartService : ICartService
         return cartDtos;
     }
 
+    ///<inheritdoc/>
     public async Task<CartDto> GetOrCreateActiveCartAsync(CartCreateRequest request)
     {
         if (!StoreRequestsValidator.ValidateCartCreateRequest(request, out var errors))
@@ -114,6 +117,7 @@ public class CartService : ICartService
         return StoreEntityToDtoMapper.MapToCartDto(activeCart, cartItems);
     }
 
+    ///<inheritdoc/>
     public async Task RemoveCartAsync(Guid cartId)
     {
         if (cartId == Guid.Empty)
@@ -124,6 +128,7 @@ public class CartService : ICartService
         await _cartRepository.DeleteCartAsync(cartId);
     }
     
+    ///<inheritdoc/>
     public async Task ArchiveCartAsync(Guid cartId)
     {
         var cart = await _cartRepository.GetCartByIdAsync(cartId);
@@ -138,6 +143,7 @@ public class CartService : ICartService
         await _cartRepository.UpdateCartAsync(cart);
     }
     
+    ///<inheritdoc/>
     public async Task HandleAbandonedCartsAsync(TimeSpan inactivityPeriod)
     {
         if (inactivityPeriod.TotalSeconds < 0)
@@ -155,6 +161,7 @@ public class CartService : ICartService
         }
     }
 
+    ///<inheritdoc/>
     public async Task<CartDto?> RecoverAbandonedCartAsync(Guid userId)
     {
         if (userId == Guid.Empty)
@@ -183,6 +190,7 @@ public class CartService : ICartService
         return StoreEntityToDtoMapper.MapToCartDto(abandonedCart, cartItems);
     }
 
+    ///<inheritdoc/>
     public async Task<bool> IsCartRelevantAsync(Guid cartId)
     {
         if (cartId == Guid.Empty)
@@ -256,128 +264,7 @@ public class CartService : ICartService
         return true;
     }
 
-    // public async Task<CartDto?> UpdateCartAsync(Guid cartId)
-    // {
-    //     if (cartId == Guid.Empty)
-    //     {
-    //         throw new ArgumentException("Cart ID cannot be empty.", nameof(cartId));
-    //     }
-    //     
-    //     var cart = await _cartRepository.GetCartByIdAsync(cartId);
-    //     if (cart == null || cart.Status != CartStatus.Active)
-    //     {
-    //         throw new InvalidOperationException("Cannot update a non-active cart.");
-    //     }
-    //     
-    //     var cartItemsList = cart.CartItems.ToList();
-    //     if (!cartItemsList.Any())
-    //     {
-    //         return StoreEntityToDtoMapper.MapToCartDto(cart, new List<CartItemDto>());
-    //     }
-    //     
-    //     List<Guid> checkedBundleIds = [];
-    //
-    //     foreach (var cartItem in cartItemsList)
-    //     {
-    //         if (cartItem.BundleId != null)
-    //         {
-    //             var bundleId = cartItem.BundleId.Value;
-    //             if (!checkedBundleIds.Contains(bundleId))
-    //             {
-    //                 var bundle = await _bundleRepository.GetByIdAsync(bundleId);
-    //                 if (bundle == null)
-    //                 {
-    //                     throw new InvalidOperationException("Bundle not found.");
-    //                 }
-    //
-    //                 var bundleCartItems = cartItemsList.Where(ci => ci.BundleId == cartItem.BundleId).ToList();
-    //                 var bundleProductIds = bundle.BundleProducts.Select(bp => bp.ProductId).ToList();
-    //                 var cartProductIds = bundleCartItems.Select(ci => ci.ProductId).ToList();
-    //
-    //                 bool bundleIsInvalid =
-    //                     bundle.ExpiresAt < DateTime.UtcNow
-    //                     || !bundle.IsActive
-    //                     || bundleCartItems.Count != bundle.BundleProducts.Count
-    //                     || !bundleProductIds.ToHashSet().SetEquals(cartProductIds.ToHashSet());
-    //                         
-    //                 if (bundleIsInvalid)
-    //                 {
-    //                     foreach (var item in bundleCartItems)
-    //                     {
-    //                         item.Price = await GetDiscountedPriceAsync(item.ProductId);
-    //                         item.BundleId = null;
-    //                         await _cartItemRepository.UpdateCartItemAsync(item);
-    //                     }
-    //                 }
-    //                 else
-    //                 {
-    //                     var bundleCartItemsTotalPrice = bundleCartItems.Sum(ci => ci.Price);
-    //                     var bundleDistributedSum = bundle.BundleProducts.Sum(bp => bp.DistributedPrice);
-    //
-    //                     if (_priceCalculator.ArePricesDifferent(bundle.TotalPrice, bundleCartItemsTotalPrice))
-    //                     {
-    //                         if (!_priceCalculator.ArePricesDifferent(bundle.TotalPrice, bundleDistributedSum))
-    //                         {
-    //                             foreach (var item in bundleCartItems)
-    //                             {
-    //                                 var matching = bundle.BundleProducts.FirstOrDefault(bp => bp.ProductId == item.ProductId);
-    //                                 if (matching != null)
-    //                                 {
-    //                                     item.Price = matching.DistributedPrice;
-    //                                     await _cartItemRepository.UpdateCartItemAsync(item);
-    //                                 }
-    //                             }
-    //                         }
-    //                         else
-    //                         {
-    //                             var redistributed = await _bundleProductRepository
-    //                                 .DistributeBundlePrice(bundle.BundleProducts.ToList(), bundle.TotalPrice);
-    //
-    //                             foreach (var updated in redistributed)
-    //                             {
-    //                                 await _bundleProductRepository.UpdateAsync(updated);
-    //                             }
-    //
-    //                             foreach (var item in bundleCartItems)
-    //                             {
-    //                                 var matching = redistributed.FirstOrDefault(bp => bp.ProductId == item.ProductId);
-    //                                 if (matching != null)
-    //                                 {
-    //                                     item.Price = matching.DistributedPrice;
-    //                                     await _cartItemRepository.UpdateCartItemAsync(item);
-    //                                 }
-    //                             }
-    //                         }
-    //                     }
-    //                 }
-    //                 
-    //                 checkedBundleIds.Add(cartItem.BundleId.Value);
-    //             }
-    //         }
-    //         else
-    //         {
-    //             var discountedPrice = await GetDiscountedPriceAsync(cartItem.ProductId);
-    //             if (_priceCalculator.ArePricesDifferent(cartItem.Price, discountedPrice))
-    //             {
-    //                 cartItem.Price = discountedPrice;
-    //                 await _cartItemRepository.UpdateCartItemAsync(cartItem);
-    //             }
-    //         }
-    //     }
-    //     
-    //     cart.TotalAmount = await _priceCalculator.CalculateTotalAsync(cartItemsList, _productDiscountRepository);
-    //     cart.LastModifiedAt = DateTime.UtcNow;
-    //     var updatedCart = await _cartRepository.UpdateCartAsync(cart);
-    //     if (updatedCart == null)
-    //     {
-    //         throw new InvalidOperationException("Cannot update cart.");
-    //     }
-    //     
-    //     var cartItemsDtos = await GetCartItemsByCartIdAsync(cartId);
-    //     
-    //     return StoreEntityToDtoMapper.MapToCartDto(updatedCart, cartItemsDtos);
-    // }
-    
+    ///<inheritdoc/>
     public async Task<CartDto?> UpdateCartAsync(Guid cartId)
     {
         if (cartId == Guid.Empty)
@@ -517,6 +404,7 @@ public class CartService : ICartService
 
     // ---------------- Cart Item Operations --------------------
 
+    ///<inheritdoc/>
     public async Task<CartItemDto?> GetCartItemByIdAsync(Guid cartItemId)
     {
         if (cartItemId == Guid.Empty)
@@ -565,6 +453,7 @@ public class CartService : ICartService
         return StoreEntityToDtoMapper.MapToCartItemDto(cartItem, fullLogoUrl, discountValue, discountExpirationDate);
     }
 
+    ///<inheritdoc/>
     public async Task<List<CartItemDto>> GetCartItemsByCartIdAsync(Guid cartId)
     {
         if (cartId == Guid.Empty)
@@ -629,6 +518,7 @@ public class CartService : ICartService
         return result;
     }
 
+    ///<inheritdoc/>
     public async Task<CartItemDto?> AddCartItemAsync(CartItemCreateRequest request)
     {
         if (!StoreRequestsValidator.ValidateCartItemCreateRequest(request, out var errors))
@@ -695,6 +585,7 @@ public class CartService : ICartService
         return StoreEntityToDtoMapper.MapToCartItemDto(addedCartItem, fullLogoUrl, discountValue, discountExpirationDate);
     }
 
+    ///<inheritdoc/>
     public async Task RemoveCartItemAsync(Guid cartItemId)
     {
         if (cartItemId == Guid.Empty)
@@ -713,6 +604,7 @@ public class CartService : ICartService
         await RecalculateCartTotalAsync(cartItem.CartId);
     }
     
+    ///<inheritdoc/>
     public async Task RecalculateCartTotalAsync(Guid cartId)
     {
         var cartItems = await _cartItemRepository.GetCartItemsByCartIdAsync(cartId);
@@ -733,6 +625,7 @@ public class CartService : ICartService
         }
     }
 
+    ///<inheritdoc/>
     public async Task<List<CartItemDto>> AddBundleToCartAsync(CartAddBundleRequest request)
     {
         if (!StoreRequestsValidator.ValidateCartAddBundleRequest(request, out var errors))
