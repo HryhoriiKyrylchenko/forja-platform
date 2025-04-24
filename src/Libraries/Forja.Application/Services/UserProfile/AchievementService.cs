@@ -65,8 +65,16 @@ public class AchievementService : IAchievementService
         }
         
         var achievement = await _achievementRepository.GetByIdAsync(achievementId);
+        
+        if (achievement == null)
+        {
+            return new AchievementDto();
+        }
+        
+        var foundAchievement = UserProfileEntityToDtoMapper.MapToAchievementDto(achievement);
+        foundAchievement.LogoUrl = await _fileManagerService.GetPresignedAchievementImageUrlAsync(foundAchievement.Id);
 
-        return achievement == null ? null : UserProfileEntityToDtoMapper.MapToAchievementDto(achievement);
+        return foundAchievement;
     }
 
     /// <inheritdoc />
@@ -135,20 +143,23 @@ public class AchievementService : IAchievementService
             throw new ArgumentException("Game ID cannot be an empty Guid.", nameof(gameId));
         }
         
-        var gameAchievements = await _achievementRepository.GetAllByGameIdAsync(gameId);
+        var gameAchievements = (await _achievementRepository.GetAllByGameIdAsync(gameId)).ToList();
+        if (!gameAchievements.Any())
+        {
+            return new List<AchievementDto>();
+        }
 
-        var achievementsList = gameAchievements.ToList();
+        var achievementsList = gameAchievements
+            .Select(UserProfileEntityToDtoMapper.MapToAchievementDto)
+            .ToList();
+
         foreach (var achievement in achievementsList)
         {
             achievement.LogoUrl = await _fileManagerService.GetPresignedAchievementImageUrlAsync(achievement.Id);
         }
 
-        if (!achievementsList.Any())
-        {
-            return new List<AchievementDto>();
-        }
-        
-        return achievementsList.Select(UserProfileEntityToDtoMapper.MapToAchievementDto).ToList();
+        return achievementsList;
+
     }
 
     /// <inheritdoc />
@@ -158,10 +169,23 @@ public class AchievementService : IAchievementService
         {
             throw new ArgumentException("Game ID cannot be an empty Guid.", nameof(gameId));
         }
-        
-        var deletedGameAchievements = await _achievementRepository.GetAllDeletedByGameIdAsync(gameId);
 
-        return deletedGameAchievements.Select(UserProfileEntityToDtoMapper.MapToAchievementDto).ToList();
+        var deletedGameAchievements = (await _achievementRepository.GetAllDeletedByGameIdAsync(gameId)).ToList();
+        if (!deletedGameAchievements.Any())
+        {
+            return new List<AchievementDto>();
+        }
+
+        var deletedGameAchievementsList = deletedGameAchievements
+            .Select(UserProfileEntityToDtoMapper.MapToAchievementDto)
+            .ToList();
+
+        foreach (var achievement in deletedGameAchievementsList)
+        {
+            achievement.LogoUrl = await _fileManagerService.GetPresignedAchievementImageUrlAsync(achievement.Id);
+        }
+
+        return deletedGameAchievementsList;
     }
 
     /// <inheritdoc />
@@ -175,7 +199,14 @@ public class AchievementService : IAchievementService
             return new List<AchievementDto>();
         }
         
-        return achievements.Select(UserProfileEntityToDtoMapper.MapToAchievementDto).ToList();
+        var achievementsList = achievements.Select(UserProfileEntityToDtoMapper.MapToAchievementDto).ToList();
+
+        foreach (var achievement in achievementsList)
+        {
+            achievement.LogoUrl = await _fileManagerService.GetPresignedAchievementImageUrlAsync(achievement.Id);
+        }
+        
+        return achievementsList;
     }
 
     /// <inheritdoc />
@@ -184,12 +215,19 @@ public class AchievementService : IAchievementService
         var allDeletedAchievements = await _achievementRepository.GetAllDeletedAsync();
 
         var achievements = allDeletedAchievements.ToList();
-        if (!achievements.Any())
+        var achievementsList = achievements.Select(UserProfileEntityToDtoMapper.MapToAchievementDto).ToList();
+        
+        if (!achievementsList.Any())
         {
             return new List<AchievementDto>();
         }
         
-        return achievements.Select(UserProfileEntityToDtoMapper.MapToAchievementDto).ToList();
+        foreach (var achievement in achievementsList)
+        {
+            achievement.LogoUrl = await _fileManagerService.GetPresignedAchievementImageUrlAsync(achievement.Id);
+        }
+        
+        return achievementsList;
     }
     
     #endregion
@@ -226,8 +264,17 @@ public class AchievementService : IAchievementService
         }
         
         var userAchievement = await _userAchievementRepository.GetByIdAsync(userAchievementId);
+        
+        if (userAchievement == null)
+        {
+            throw new KeyNotFoundException($"User achievement with ID '{userAchievementId}' was not found.");
+        }
+        
+        var outAchievement = UserProfileEntityToDtoMapper.MapToUserAchievementDto(userAchievement);
+        
+        outAchievement.Achievement.LogoUrl = await _fileManagerService.GetPresignedAchievementImageUrlAsync(outAchievement.Achievement.Id);
 
-        return userAchievement == null ? null : UserProfileEntityToDtoMapper.MapToUserAchievementDto(userAchievement);
+        return outAchievement;
     }
 
     /// <inheritdoc />
@@ -281,6 +328,11 @@ public class AchievementService : IAchievementService
             return new List<UserAchievementDto>();
         }
         
+        foreach (var achievement in userAchievements)
+        {
+            achievement.Achievement.LogoUrl = await _fileManagerService.GetPresignedAchievementImageUrlAsync(achievement.Achievement.Id);
+        }
+        
         return userAchievements.Select(UserProfileEntityToDtoMapper.MapToUserAchievementDto).ToList();
     }
 
@@ -306,7 +358,16 @@ public class AchievementService : IAchievementService
             return new List<UserAchievementDto>();
         }
         
-        return userAchievements.Select(UserProfileEntityToDtoMapper.MapToUserAchievementDto).ToList();
+        var userAchievementsList = userAchievements
+            .Select(UserProfileEntityToDtoMapper.MapToUserAchievementDto)
+            .ToList();
+        
+        foreach (var achievement in userAchievementsList)
+        {
+            achievement.Achievement.LogoUrl = await _fileManagerService.GetPresignedAchievementImageUrlAsync(achievement.Achievement.Id);
+        }
+        
+        return userAchievementsList;        
     }
 
     /// <inheritdoc />
@@ -314,8 +375,20 @@ public class AchievementService : IAchievementService
     {
         var userAchievements = await _userAchievementRepository.GetAllByUserIdAsync(userId);
 
-        return userAchievements
+        var userAchievementsList = userAchievements
             .Select(UserProfileEntityToDtoMapper.MapToUserAchievementDto).ToList();
+        
+        if (!userAchievementsList.Any())
+        {
+            return new List<UserAchievementDto>();
+        }
+        
+        foreach (var achievement in userAchievementsList)
+        {
+            achievement.Achievement.LogoUrl = await _fileManagerService.GetPresignedAchievementImageUrlAsync(achievement.Achievement.Id);
+        }
+        
+        return userAchievementsList;
     }
 
     /// <inheritdoc />
@@ -325,6 +398,11 @@ public class AchievementService : IAchievementService
         var userAchievementsList = userAchievements
             .Select(UserProfileEntityToDtoMapper.MapToUserAchievementDto).ToList();
 
+        if (!userAchievementsList.Any())
+        {
+            return new List<UserAchievementDto>();
+        }
+        
         foreach (var achievement in userAchievementsList)
         {
             achievement.Achievement.LogoUrl = await _fileManagerService.GetPresignedAchievementImageUrlAsync(achievement.Achievement.Id);

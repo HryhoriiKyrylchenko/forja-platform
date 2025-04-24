@@ -7,17 +7,16 @@ namespace Forja.Application.Services.UserProfile;
 /// This class serves as the implementation of the <see cref="IUserService"/> interface and is responsible for
 /// handling user-related operations including CRUD operations, retrieving all users, and managing deleted users.
 /// </remarks>
-public class UserService : IUserService
+public class UserService(
+    IUserRepository userRepository,
+    IKeycloakClient keycloakClient,
+    IFileManagerService fileManagerService
+) : IUserService
 {
-    private readonly IUserRepository _userRepository;
-    private readonly IKeycloakClient _keycloakClient;
+    private readonly IUserRepository _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+    private readonly IKeycloakClient _keycloakClient = keycloakClient ?? throw new ArgumentNullException(nameof(keycloakClient));
+    private readonly IFileManagerService _fileManagerService = fileManagerService ?? throw new ArgumentNullException(nameof(fileManagerService));
 
-    public UserService(IUserRepository userRepository, IKeycloakClient keycloakClient)
-    {
-        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
-        _keycloakClient = keycloakClient ?? throw new ArgumentNullException(nameof(keycloakClient));
-    }
-    
     /// <inheritdoc />
     public async Task<UserProfileDto?> GetUserByIdAsync(Guid userId)
     {
@@ -53,8 +52,13 @@ public class UserService : IUserService
         }
         
         var user = await _userRepository.GetByKeycloakIdAsync(userKeycloakId);
+        if (user == null)
+            return null;
 
-        return user == null ? null : UserProfileEntityToDtoMapper.MapToUserProfileDto(user);
+        var userWithAvatarUrl = UserProfileEntityToDtoMapper.MapToUserProfileDto(user); 
+        userWithAvatarUrl.AvatarUrl = await _fileManagerService.GetPresignedUserAvatarUrlAsync(user.Id);
+        
+        return userWithAvatarUrl;        
     }
 
     /// <inheritdoc />
