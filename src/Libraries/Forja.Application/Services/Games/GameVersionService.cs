@@ -9,6 +9,7 @@ public class GameVersionService : IGameVersionService
         _gameVersionRepository = gameVersionRepository;
     }
     
+    ///<inheritdoc/>
     public async Task<GameVersionDto?> AddGameVersionAsync(GameVersionCreateRequest request)
     {
         if (!GamesRequestsValidator.ValidateGameVersionCreateRequest(request, out var errors))
@@ -30,6 +31,7 @@ public class GameVersionService : IGameVersionService
         return result == null ? null : GamesEntityToDtoMapper.MapToGameVersionDto(result);
     }
 
+    ///<inheritdoc/>
     public async Task<GameVersionDto?> UpdateGameVersionAsync(GameVersionUpdateRequest request)
     {
         if (!GamesRequestsValidator.ValidateGameVersionUpdateRequest(request, out var errors))
@@ -50,6 +52,7 @@ public class GameVersionService : IGameVersionService
         return result == null ? null : GamesEntityToDtoMapper.MapToGameVersionDto(result);
     }
 
+    ///<inheritdoc/>
     public async Task<GameVersionDto?> GetGameVersionByGameIdAndVersionAsync(Guid gameId, string version)
     {
         if (gameId == Guid.Empty)

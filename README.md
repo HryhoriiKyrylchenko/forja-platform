@@ -29,7 +29,7 @@ Forja Platform is a modern web application built to serve as an analog to battle
 - A **.NET backend** to handle business logic, data storage, and external integrations.
 - A **React frontend** for a dynamic and responsive user interface.
 - A ***.Net Aspire** to orchestrate services.
-- Integration with third-party services such as **Keycloak** for authentication, **MinIO** for file storage, **PostgreSQL** for the database, **Redis** for caching, and **HashiCorp Vault** for secrets management.
+- Integration with third-party services such as **Keycloak** for authentication, **MinIO** for file storage, **PostgreSQL** for the database, **Redis** for caching.
 - A clean and scalable codebase suitable for further expansion and additional features like AI integration in the future.
 
 ---
@@ -41,7 +41,6 @@ Forja Platform is a modern web application built to serve as an analog to battle
 - **Secure File Storage:** Leveraging MinIO for S3-compatible storage.
 - **Robust Backend:** Developed with .NET/C# to handle business logic and API endpoints.
 - **Efficient Caching:** Redis integration for improved performance.
-- **Secrets Management:** Secure handling of credentials and secrets using HashiCorp Vault.
 - **Database:** PostgreSQL for reliable and scalable data storage.
 - **Future AI Integration:** Potential integration with Llama for AI-powered features.
 
@@ -55,9 +54,7 @@ Forja Platform is a modern web application built to serve as an analog to battle
 - **Storage:** MinIO
 - **Database:** PostgreSQL
 - **Caching:** Redis
-- **Secrets Management:** HashiCorp Vault
 - **Orchestration:** .Net Aspire
-- **Containerization:** Docker & Docker Compose
 
 ---
 
@@ -76,7 +73,7 @@ Forja Platform is a modern web application built to serve as an analog to battle
     │   │   ├── Forja.Domain/          # Domain models, entities, and interfaces
     │   │   └── Forja.Infrastructure/  # Data access and integration with external services
     │   └── Web/                      # Web applications
-    │       └── forja-react/          # React web application
+    │       └── forja-next/          # React web application
     │           ├── public/           # Static assets
     │           ├── src/              # Source code: components, pages, services, store, utils
     │           └── package.json       # Node dependencies and scripts
@@ -107,12 +104,13 @@ Before you begin, ensure you have installed:
 
 ```bash
     git clone https://github.com/HryhoriiKyrylchenko/forja-platform.git
-    cd forja-platform
+    cd forja-platform/src/Web/
+    git clone https://github.com/CheDeniss/forja-next
 ```
 
 2. **Backend Setup:**
 
-- Navigate to the `backend/` folder.
+- Navigate to the backend folder.
 - Restore dependencies and build the project:
 
 ```bash
@@ -126,6 +124,7 @@ Before you begin, ensure you have installed:
 
 ```bash
     npm install
+    npm install keycloak-js
     # or if you use Yarn:
     yarn install
 ```
@@ -145,14 +144,6 @@ You can run the project directly from Visual Studio or using the command line:
 ```bash
     dotnet run --project aspire/Forja.AppHost/Forja.AppHost.csproj
 ```
-
-### Running Locally with Docker Compose
-
-This command will build and run:
-
-- The .NET backend.
-- The React frontend on port 3000.
-- PostgreSQL, Redis, Keycloak, Vault, and MinIO containers.
 
 ## Deployment
 

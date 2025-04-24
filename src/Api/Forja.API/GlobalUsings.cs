@@ -7,7 +7,6 @@ global using Forja.Application.Interfaces.Authentication;
 global using Forja.Infrastructure.Keycloak;
 global using Forja.Application.Interfaces.UserProfile;
 global using Forja.Application.Interfaces.Games;
-global using Forja.Application.Services.UserProfile;
 global using Forja.Domain.Enums;
 global using Microsoft.IdentityModel.Tokens;
 global using Microsoft.AspNetCore.Authorization;

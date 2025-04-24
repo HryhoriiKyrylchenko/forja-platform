@@ -2,7 +2,7 @@
 
 ### Prerequisites
 
-- **Backend**: .NET 9 SDK, PostgreSQL, Redis, HashiCorp Vault
+- **Backend**: .NET 9 SDK, PostgreSQL, Redis
 - **Frontend**: Node.js, npm/yarn, React
 - **Authentication**: Keycloak configured
 - **Storage**: MinIO running
@@ -13,26 +13,11 @@
 
 ```bash
     git clone https://github.com/HryhoriiKyrylchenko/forja-platform.git
-    cd forja-platform
+    cd forja-platform/src/Web/
+    git clone https://github.com/CheDeniss/forja-next
 ```
 
-2. **Setup HashiCorp Vault**
-
-Download docker image.
-
-```bash
-    docker pull hashicorp/vault:1.18
-```
-
-When you start the Vault server in dev mode, Vault UI is automatically enabled at http://127.0.0.1:8200/ui and ready to use.
-
-When you first start the Vault server you need to create access tockens. You can do it with UI which mentioned above.
-Save this tockens, you need them to access to the vault. 
-
-For more information follow the instructions in https://hub.docker.com/r/hashicorp/vault.
-Quick start for developers https://developer.hashicorp.com/vault/docs/get-started/developer-qs.
-
-3. **Setup dotnet secrets**
+2. **Setup dotnet secrets**
 
 Init user secrets in Forja.AppHost
 
@@ -48,19 +33,7 @@ Init user secrets in Forja.AppHost
     dotnet user-secrets set Parameters:minio-root-password <password>
 ```
 
-Add configuration in appsettings.json file in Forja.API project
-
-```
-"Keycloak": {
-    "BaseUrl": "http://localhost:8080",
-    "Realm": <realm>, //"forja"
-    "ClientId": <client-id>, //"Forja.Api"
-    "ClientUUID": <client-uuid>,
-    "ClientSecret": <secret>
-  }
-```
-
-4. **Setup Postgres**
+3. **Setup Postgres**
 
 Download docker image.
 
@@ -71,7 +44,7 @@ Download docker image.
 Create manually in your postgres new database `forjadb`.
 Create manually in your postgres new database `keycloakdb`.
 
-5. **Setup Redis**
+4. **Setup Redis**
 
 Download docker image.
 
@@ -79,7 +52,7 @@ Download docker image.
     docker pull redis:7.4
 ```
 
-6. **Setup Keycloak**
+5. **Setup Keycloak**
 
 Download docker image.
 
@@ -119,9 +92,10 @@ Download docker image.
     `{
         "Keycloak": {
             "BaseUrl": "http://localhost:8080",
-            "Realm": "my_realm",
-            "ClientId": "forja-api-client",
-            "ClientSecret": "your-secret-key"
+            "Realm": <realm>, //"forja"
+            "ClientId": <client-id>, //"Forja.Api"
+            "ClientUUID": <client-uuid>,
+            "ClientSecret": <secret>
         }
     }`
     
@@ -206,7 +180,7 @@ Once you’ve filled out all the fields, click **Save** to apply the SMTP config
 
 Setup is complete!
 
-7. **Setup MinIO**
+6. **Setup MinIO**
 
 Download docker image.
 
@@ -214,7 +188,7 @@ Download docker image.
     docker pull minio/minio:RELEASE.2025-01-20T14-49-07Z
 ```
 
-8. **Setup Backend**
+7. **Setup Backend**
 
 ```bash
     cd forja-platform/src/Api/Forja.Api
@@ -224,7 +198,7 @@ Download docker image.
 9. **Setup Frontend**
 
 ```bash
-    cd forja-platform/src/Web/forja-react
+    cd forja-platform/src/Web/forja-next
     npm install
     
     npm install keycloak-js

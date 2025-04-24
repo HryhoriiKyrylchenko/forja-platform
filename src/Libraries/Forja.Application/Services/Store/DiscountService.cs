@@ -13,6 +13,7 @@ public class DiscountService : IDiscountService
 
     // ---------------- Discount Operations ----------------
 
+    ///<inheritdoc/>
     public async Task<DiscountDto?> GetDiscountByIdAsync(Guid discountId)
     {
         if (discountId == Guid.Empty)
@@ -25,6 +26,7 @@ public class DiscountService : IDiscountService
         return discount == null ? null : StoreEntityToDtoMapper.MapToDiscountDto(discount);
     }
 
+    ///<inheritdoc/>
     public async Task<IEnumerable<DiscountDto>> GetAllDiscountsAsync()
     {
         var discounts = await _discountRepository.GetAllDiscountsAsync();
@@ -32,6 +34,7 @@ public class DiscountService : IDiscountService
         return discounts.Select(StoreEntityToDtoMapper.MapToDiscountDto);
     }
 
+    ///<inheritdoc/>
     public async Task<IEnumerable<DiscountDto>> GetActiveDiscountsAsync(DateTime currentDate)
     {
         var activeDiscounts =  await _discountRepository.GetActiveDiscountsAsync(currentDate);
@@ -39,6 +42,7 @@ public class DiscountService : IDiscountService
         return activeDiscounts.Select(StoreEntityToDtoMapper.MapToDiscountDto);
     }
 
+    ///<inheritdoc/>
     public async Task<DiscountDto?> AddDiscountAsync(DiscountCreateRequest request)
     {
         if (!StoreRequestsValidator.ValidateDiscountCreateRequest(request, out string? errorMessage))
@@ -62,6 +66,7 @@ public class DiscountService : IDiscountService
         return result == null ? null : StoreEntityToDtoMapper.MapToDiscountDto(result);
     }
 
+    ///<inheritdoc/>
     public async Task<DiscountDto?> UpdateDiscountAsync(DiscountUpdateRequest request)
     {
         if (!StoreRequestsValidator.ValidateDiscountUpdateRequest(request, out string? errorMessage))
@@ -86,6 +91,7 @@ public class DiscountService : IDiscountService
         return result == null ? null : StoreEntityToDtoMapper.MapToDiscountDto(result);
     }
 
+    ///<inheritdoc/>
     public async Task DeleteDiscountAsync(Guid discountId)
     {
         if (discountId == Guid.Empty)
@@ -98,6 +104,7 @@ public class DiscountService : IDiscountService
 
     // ---------------- ProductDiscount Operations ----------------
 
+    ///<inheritdoc/>
     public async Task<ProductDiscountDto?> GetProductDiscountByIdAsync(Guid productDiscountId)
     {
         if (productDiscountId == Guid.Empty)
@@ -110,6 +117,7 @@ public class DiscountService : IDiscountService
         return productDiscount == null ? null : StoreEntityToDtoMapper.MapToProductDiscountDto(productDiscount);
     }
 
+    ///<inheritdoc/>
     public async Task<IEnumerable<ProductDiscountDto>> GetProductDiscountsByProductIdAsync(Guid productId)
     {
         if (productId == Guid.Empty)
@@ -122,6 +130,7 @@ public class DiscountService : IDiscountService
         return productDiscounts.Select(StoreEntityToDtoMapper.MapToProductDiscountDto);
     }
 
+    ///<inheritdoc/>
     public async Task<IEnumerable<ProductDiscountDto>> GetProductDiscountsByDiscountIdAsync(Guid discountId)
     {
         if (discountId == Guid.Empty)
@@ -134,6 +143,7 @@ public class DiscountService : IDiscountService
         return productDiscounts.Select(StoreEntityToDtoMapper.MapToProductDiscountDto);
     }
 
+    ///<inheritdoc/>
     public async Task<ProductDiscountDto?> AddProductDiscountAsync(ProductDiscountCreateRequest request)
     {
         if (!StoreRequestsValidator.ValidateProductDiscountCreateRequest(request, out string? errorMessage))
@@ -153,6 +163,7 @@ public class DiscountService : IDiscountService
         return result == null ? null : StoreEntityToDtoMapper.MapToProductDiscountDto(result);
     }
 
+    ///<inheritdoc/>
     public async Task<ProductDiscountDto?> UpdateProductDiscountAsync(ProductDiscountUpdateRequest request)
     {
         if (!StoreRequestsValidator.ValidateProductDiscountUpdateRequest(request, out string? errorMessage))
@@ -174,6 +185,7 @@ public class DiscountService : IDiscountService
         return result == null ? null : StoreEntityToDtoMapper.MapToProductDiscountDto(result);
     }
 
+    ///<inheritdoc/>
     public async Task DeleteProductDiscountAsync(Guid productDiscountId)
     {
         if (productDiscountId == Guid.Empty)

@@ -2,6 +2,7 @@ namespace Forja.Application.Services.Store;
 
 public class PriceCalculator : IPriceCalculator
 {
+    ///<inheritdoc/>
     public decimal ApplyDiscount(decimal originalPrice, IEnumerable<ProductDiscount> productDiscounts)
     {
         decimal discountedPrice = originalPrice;
@@ -32,6 +33,7 @@ public class PriceCalculator : IPriceCalculator
         return discountedPrice;
     }
 
+    ///<inheritdoc/>
     public async Task<decimal> CalculateTotalAsync(IEnumerable<CartItem> cartItems, IProductDiscountRepository productDiscountRepository)
     {
         decimal totalPrice = 0;
@@ -46,6 +48,7 @@ public class PriceCalculator : IPriceCalculator
         return totalPrice;
     }
     
+    ///<inheritdoc/>
     public bool ArePricesDifferent(decimal price1, decimal price2, decimal tolerance = 0.01m)
     {
         return Math.Abs(price1 - price2) > tolerance;
