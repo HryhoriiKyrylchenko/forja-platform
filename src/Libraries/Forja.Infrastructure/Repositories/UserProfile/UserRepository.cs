@@ -206,4 +206,16 @@ public class UserRepository : IUserRepository
     
         return username;
     }
+
+    public async Task<User?> GetByIdentifierAsync(string identifier)
+    {
+        if (string.IsNullOrWhiteSpace(identifier))
+        {
+            throw new ArgumentException("Identifier is required", nameof(identifier));
+        }
+        
+        return await _users
+            .Where(u => u.IsDeleted == false)
+            .FirstOrDefaultAsync(u => u.Username == identifier || u.CustomUrl == identifier);
+    }
 }

@@ -3,7 +3,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 //Postgres Configuration
 var postgresPassword = builder.AddParameter("postgresql-password", secret: true);
 
-builder.AddPostgres("postgres", password: postgresPassword)
+var postgres = builder.AddPostgres("postgres", password: postgresPassword)
     .WithImage("postgres")
     .WithImageTag("17.2")
     .WithContainerName("forja-postgres")
@@ -32,7 +32,7 @@ var redis = builder.AddRedis("redis")
 var keycloakUsername = builder.AddParameter("keycloak-admin", secret: true);
 var keycloakPassword = builder.AddParameter("keycloak-password", secret: true);
 
-builder.AddKeycloak("keycloak", 8080, keycloakUsername, keycloakPassword)
+var keycloak = builder.AddKeycloak("keycloak", 8080, keycloakUsername, keycloakPassword)
     .WithImage("keycloak/keycloak")
     .WithImageTag("26.1")
     .WithContainerName("forja-keycloak")
@@ -43,13 +43,14 @@ builder.AddKeycloak("keycloak", 8080, keycloakUsername, keycloakPassword)
     .WithEnvironment("KC_HOSTNAME", "localhost")
     .WithEnvironment("KC_DB_POOL_INITIAL_SIZE", "5") 
     .WithEnvironment("KC_DB_POOL_MAX_SIZE", "20")    
-    .WithLifetime(ContainerLifetime.Persistent);
+    .WithLifetime(ContainerLifetime.Persistent)
+    .WaitFor(postgres);
 
 //MinIO Configuration
 var minioRootUser = builder.AddParameter("minio-root-user", secret: true);
 var minioRootPassword = builder.AddParameter("minio-root-password", secret: true);
 
-builder.AddContainer("minio", "minio/minio")
+var minio = builder.AddContainer("minio", "minio/minio")
     .WithImage("minio/minio")
     .WithImageTag("RELEASE.2025-01-20T14-49-07Z")
     .WithContainerName("forja-minio")
@@ -66,10 +67,14 @@ builder.AddContainer("minio", "minio/minio")
 //backend
 var forjaApi = builder.AddProject<Projects.Forja_API>("forjaapi")
     .WithExternalHttpEndpoints()
-    .WithReference(redis);
+    .WithReference(redis)
+    .WaitFor(postgres)
+    .WaitFor(minio)
+    .WaitFor(keycloak);
 
 //frontend
 builder.AddNpmApp("forja-next", "../../Web/forja-next") //, scriptName: "dev"
+    .WithEnvironment("NODE_ENV", "production")
     .WaitFor(forjaApi);
 
 builder.Build().Run();

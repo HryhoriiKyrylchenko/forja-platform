@@ -1,0 +1,17 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Forja.Launcher.ViewModels"
+             x:Class="Forja.Launcher.Views.LoginView"
+             x:DataType="vm:LoginViewModel">
+
+    <StackPanel Margin="30" Width="300" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <TextBlock Text="Login to Forja" FontSize="24" Margin="0 0 0 20"/>
+        
+        <TextBox Watermark="Email" Text="{Binding Email}" Margin="0 0 0 10"/>
+        <TextBox Watermark="Password" Text="{Binding Password}" PasswordChar="•" Margin="0 0 0 10"/>
+        
+        <TextBlock Text="{Binding ErrorMessage}" Foreground="Red" FontSize="12" Margin="0 0 0 10"/>
+        
+        <Button Content="Login" Command="{Binding LoginCommand}" />
+    </StackPanel>
+</UserControl>

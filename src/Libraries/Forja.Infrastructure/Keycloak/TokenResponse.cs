@@ -1,3 +1,5 @@
+namespace Forja.Infrastructure.Keycloak;
+
 /// <summary>
 /// Represents the response received from Keycloak when requesting a token.
 /// </summary>

@@ -467,15 +467,6 @@ public static class UserProfileRequestsValidator
 
         if (request.Id == Guid.Empty)
             return false;
-        
-        if (request.UserId == Guid.Empty)
-            return false;
-
-        if (request.GameId == Guid.Empty)
-            return false; 
-        
-        if (request.PurchaseDate > DateTime.UtcNow)
-            return false;
 
         return true;
     }
