@@ -128,4 +128,14 @@ public interface IUserRepository
     /// A task representing the asynchronous operation, containing the generated unique username as a string.
     /// </returns>
     Task<string> GenerateUniqueUsernameAsync(string baseUsername);
+
+    /// <summary>
+    /// Asynchronously retrieves a user entity by a unique identifier.
+    /// </summary>
+    /// <param name="identifier">The unique identifier (e.g., username, email, or custom identifier) of the user to retrieve.</param>
+    /// <returns>
+    /// A task representing the asynchronous operation, containing the user entity if found,
+    /// or null if no matching user exists.
+    /// </returns>
+    Task<User?> GetByIdentifierAsync(string identifier);
 }

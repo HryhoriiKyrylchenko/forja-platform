@@ -462,6 +462,55 @@ public class UserController : ControllerBase
         }
     }
 
+    [HttpGet("profile")]
+    public async Task<ActionResult<UserProfileDto>> GetUserByIdentifier([FromQuery]string identifier)
+    {
+        if (string.IsNullOrWhiteSpace(identifier))
+        {
+            return BadRequest(new { error = "Identifier is required." });
+        }
+
+        try
+        {
+            var user = await _userService.GetUserByIdentifierAsync(identifier);
+
+            if (user == null)
+            {
+                return NotFound($"User with identifier '{identifier}' was not found.");
+            }
+
+            return Ok(user);
+
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.User,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get user profile by identifier: {identifier}." }
+                    }
+                };
+
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+            return StatusCode(500, new { error = "An internal error occurred.", details = ex.Message });
+        }
+    }
+
+
     [HttpGet("debug-token")]
     [Obsolete("This method is deprecated and will be removed in a future release.", false)]
     public IActionResult DebugToken()
@@ -1210,9 +1259,9 @@ public class UserController : ControllerBase
                     EntityType = AuditEntityType.User,
                     LogLevel = LogLevel.Error,
                     Details = new Dictionary<string, string>
-                {
-                    { "Message", $"Failed to get statistics for user {userId}" }
-                }
+                    {
+                        { "Message", $"Failed to get statistics for user {userId}" }
+                    }
                 };
 
                 await _auditLogService.LogWithLogEntryAsync(logEntry);

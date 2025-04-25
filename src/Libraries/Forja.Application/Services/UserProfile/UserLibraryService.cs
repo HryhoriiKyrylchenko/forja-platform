@@ -58,10 +58,7 @@ public class UserLibraryService : IUserLibraryService
             throw new InvalidOperationException($"User library game with ID {request.Id} does not exist.");
         }
         
-        userLibraryGame.UserId = request.UserId;
-        userLibraryGame.GameId = request.GameId;
-        userLibraryGame.TimePlayed = request.TimePlayed;
-        userLibraryGame.PurchaseDate = request.PurchaseDate;
+        userLibraryGame.TimePlayed += request.TimePlayed;
         
         var result = await _userLibraryGameRepository.UpdateAsync(userLibraryGame);
         

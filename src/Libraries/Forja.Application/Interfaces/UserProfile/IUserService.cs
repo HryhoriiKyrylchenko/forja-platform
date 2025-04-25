@@ -140,4 +140,11 @@ public interface IUserService
     /// <param name="userId">The unique identifier of the user.</param>
     /// <returns>The Keycloak user ID as a string if found, or null if the user does not exist.</returns>
     string? GetKeycloakUserIdById(Guid userId);
+
+    /// <summary>
+    /// Retrieves the user profile associated with the specified unique identifier.
+    /// </summary>
+    /// <param name="identifier">The unique identifier of the user, which could be an email, Keycloak ID, or other unique value.</param>
+    /// <returns>A task representing the asynchronous operation, containing the <see cref="UserProfileDto"/> object if found, or null if the user does not exist.</returns>
+    Task<UserProfileDto?> GetUserByIdentifierAsync(string identifier);
 }

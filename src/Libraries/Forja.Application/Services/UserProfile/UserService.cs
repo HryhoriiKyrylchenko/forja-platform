@@ -376,6 +376,19 @@ public class UserService(
         return user.KeycloakUserId;
     }
 
+    ///<inheritdoc/>
+    public async Task<UserProfileDto?> GetUserByIdentifierAsync(string identifier)
+    {
+        if (string.IsNullOrWhiteSpace(identifier))
+        {
+            throw new ArgumentNullException(nameof(identifier), "Identifier cannot be null or empty.");
+        }
+
+        var user = await _userRepository.GetByIdentifierAsync(identifier);
+    
+        return user == null ? null : UserProfileEntityToDtoMapper.MapToUserProfileDto(user);
+    }
+
     /// <summary>
     /// Asynchronously generates a unique username based on a provided base username.
     /// </summary>

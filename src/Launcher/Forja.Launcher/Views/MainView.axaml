@@ -1,0 +1,25 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Forja.Launcher.ViewModels"
+             xmlns:models="clr-namespace:Forja.Launcher.Models"
+             x:Class="Forja.Launcher.Views.MainView"
+             x:DataType="vm:MainViewModel">
+
+    <StackPanel Margin="10">
+        <ItemsControl ItemsSource="{Binding Games}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="models:Game">
+                    <StackPanel Orientation="Horizontal" Margin="0 5">
+                        <TextBlock Text="{Binding Name}" Width="150"/>
+                        <Button Content="Play"
+                                Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).PlayCommand}"
+                                CommandParameter="{Binding}" />
+                        <Button Content="Update"
+                                Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).UpdateCommand}"
+                                CommandParameter="{Binding}" Margin="10 0 0 0"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</UserControl>
