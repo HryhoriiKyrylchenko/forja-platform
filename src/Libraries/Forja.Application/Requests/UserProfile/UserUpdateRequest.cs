@@ -3,12 +3,9 @@ namespace Forja.Application.Requests.UserProfile;
 public class UserUpdateRequest
 {
     public Guid Id { get; set; }
-    
-    public string KeycloakUserId { get; set; } = string.Empty;
 
-    [Required]
     [MaxLength(30)]
-    public string Username { get; set; } = string.Empty;
+    public string? Username { get; set; }
 
     [MaxLength(30)]
     public string? Firstname { get; set; }
@@ -16,8 +13,7 @@ public class UserUpdateRequest
     [MaxLength(30)]
     public string? Lastname { get; set; }
 
-    [Required]
-    public string Email { get; set; } = string.Empty;
+    public string? Email { get; set; }
 
     public string? PhoneNumber { get; set; }
 
@@ -35,12 +31,10 @@ public class UserUpdateRequest
     [MaxLength(500)]
     public string? SelfDescription { get; set; }
 
-    public bool ShowPersonalInfo { get; set; }
-
-    public DateTime ModifiedAt { get; set; }
+    public bool? ShowPersonalInfo { get; set; }
 
     public string? CustomUrl { get; set; }
     
     [Range(1, 5)]
-    public short ProfileHatVariant { get; set; }
+    public short? ProfileHatVariant { get; set; }
 }
