@@ -68,46 +68,34 @@ public static class UserProfileRequestsValidator
         if (request.Id == Guid.Empty)
             return false;
 
-        if (string.IsNullOrWhiteSpace(request.KeycloakUserId))
+        if (request.Email != null && !IsValidEmail(request.Email))
             return false; 
 
-        if (!IsValidEmail(request.Email))
+        if (request.Username is { Length: > 30 })
             return false; 
         
-        if (request.ModifiedAt > DateTime.UtcNow)
-            return false;
-
-        if (request.ProfileHatVariant is < 1 or > 5)
-        {
-            return false;
-        }
-
-        // Optional fields validation
-        if (!string.IsNullOrWhiteSpace(request.Username) && request.Username.Length > 30)
-            return false; 
-        
-        if (!string.IsNullOrWhiteSpace(request.Firstname) && request.Firstname.Length > 30)
+        if (request.Firstname is { Length: > 30 })
             return false; 
 
-        if (!string.IsNullOrWhiteSpace(request.Lastname) && request.Lastname.Length > 30)
+        if (request.Lastname is { Length: > 30 })
             return false;
 
-        if (!string.IsNullOrWhiteSpace(request.PhoneNumber) && !IsValidPhoneNumber(request.PhoneNumber))
+        if (request.PhoneNumber != null && !IsValidPhoneNumber(request.PhoneNumber))
             return false; 
         
-        if (request.BirthDate != null && request.BirthDate > DateTime.UtcNow)
+        if (request.BirthDate.HasValue && request.BirthDate > DateTime.UtcNow)
             return false;
         
-        if (!string.IsNullOrWhiteSpace(request.Gender) && request.Gender.Length > 10)
+        if (request.Gender is { Length: > 10 })
             return false;
         
-        if (!string.IsNullOrWhiteSpace(request.Country) && request.Country.Length > 30)
+        if (request.Country is { Length: > 30 })
             return false;
         
-        if (!string.IsNullOrWhiteSpace(request.City) && request.City.Length > 30)
+        if (request.City is { Length: > 30 })
             return false;
         
-        if (!string.IsNullOrWhiteSpace(request.SelfDescription) && request.SelfDescription.Length > 500)
+        if (request.SelfDescription is { Length: > 500 })
             return false;
 
         return true;
@@ -124,9 +112,6 @@ public static class UserProfileRequestsValidator
             throw new ArgumentNullException(nameof(request));
         
         if (request.UserId == Guid.Empty)
-            return false;
-        
-        if (request.Variant is < 1 or > 5)
             return false;
         
         return true;

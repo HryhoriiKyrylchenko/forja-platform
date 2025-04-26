@@ -20,13 +20,13 @@ var redis = builder.AddRedis("redis")
     .WithImage("redis")
     .WithImageTag("7.4")
     .WithContainerName("forja-redis")
-    .WithEndpoint(name: "redisendpoint",
-        scheme: "tcp",
-        port: 6379,
-        targetPort: 6379,
-        isProxied: false)
     .WithVolume("redis-data", "/data", isReadOnly: false)
     .WithLifetime(ContainerLifetime.Persistent);
+//.WithEndpoint(name: "redisendpoint",
+// scheme: "tcp",
+// port: 6379,
+// targetPort: 6379,
+// isProxied: false)
 
 //Keycloak Configuration
 var keycloakUsername = builder.AddParameter("keycloak-admin", secret: true);

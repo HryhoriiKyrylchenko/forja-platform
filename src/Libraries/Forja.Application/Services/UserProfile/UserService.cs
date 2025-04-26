@@ -190,21 +190,35 @@ public class UserService(
             throw new KeyNotFoundException("User not found.");
         }
         
-        user.KeycloakUserId = request.KeycloakUserId;
-        user.Username = request.Username;
-        user.Firstname = request.Firstname;
-        user.Lastname = request.Lastname;
-        user.Email = request.Email;
-        user.PhoneNumber = request.PhoneNumber;
-        user.BirthDate = request.BirthDate;
-        user.Gender = request.Gender;
-        user.Country = request.Country;
-        user.City = request.City;
-        user.SelfDescription = request.SelfDescription;
-        user.ShowPersonalInfo = request.ShowPersonalInfo;
-        user.ModifiedAt = request.ModifiedAt;
-        user.CustomUrl = request.CustomUrl;
-        user.ProfileHatVariant = request.ProfileHatVariant;
+        if (request.Username != null)
+            user.Username = request.Username;
+        if (request.Firstname != null)
+            user.Firstname = request.Firstname;
+        if (request.Lastname != null)
+            user.Lastname = request.Lastname;
+        if (request.Email != null)
+            user.Email = request.Email;
+        if (request.PhoneNumber != null)
+            user.PhoneNumber = request.PhoneNumber;
+        if (request.BirthDate.HasValue)
+            user.BirthDate = request.BirthDate;
+        if (request.Gender != null)
+            user.Gender = request.Gender;
+        if (request.Country != null)
+            user.Country = request.Country;
+        if (request.City != null)
+            user.City = request.City;
+        if (request.SelfDescription != null)
+            user.SelfDescription = request.SelfDescription;
+        if (request.CustomUrl != null)
+            user.CustomUrl = request.CustomUrl;
+        
+        if (request.ShowPersonalInfo != null)
+            user.ShowPersonalInfo = (bool)request.ShowPersonalInfo;
+        if (request.ProfileHatVariant != null)
+            user.ProfileHatVariant = (short)request.ProfileHatVariant;
+        
+        user.ModifiedAt = DateTime.UtcNow;
         
         await _userRepository.UpdateAsync(user);
         
@@ -352,15 +366,13 @@ public class UserService(
             user.Gender = null;
             user.Country = null;
             user.City = null;
-            
-            return user;
         }
         
         return user;
     }
 
     /// <inheritdoc />
-    public string? GetKeycloakUserIdById(Guid userId)
+    public string GetKeycloakUserIdById(Guid userId)
     {
         if (userId == Guid.Empty)
         {
