@@ -13,17 +13,26 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            // Initialize the dependency injection container
+            var services = new ServiceCollection();
+            services.AddSingleton<ApiService>();
+            services.AddSingleton<MainWindowViewModel>();
+        
+            // Set the ServiceProvider so it can be accessed by the MainWindow
+            ServiceProvider = services.BuildServiceProvider();
+            
             // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
             // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
             DisableAvaloniaDataAnnotationValidation();
-            var mainWindow = new MainWindow
-            {
-                DataContext = ServiceProvider?.GetRequiredService<MainWindowViewModel>()
-            };
+            var mainWindowViewModel = ServiceProvider.GetRequiredService<MainWindowViewModel>();
+
+            // Pass the MainWindowViewModel to the MainWindow constructor
+            var mainWindow = new MainWindow(mainWindowViewModel);
+            
             desktop.MainWindow = mainWindow;
-
         }
-
+        
+        RxApp.MainThreadScheduler = AvaloniaScheduler.Instance;
         base.OnFrameworkInitializationCompleted();
     }
 

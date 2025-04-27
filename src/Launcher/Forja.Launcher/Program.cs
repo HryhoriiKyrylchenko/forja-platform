@@ -11,6 +11,10 @@ sealed class Program
         var services = new ServiceCollection();
         
         services.AddSingleton<ApiService>();
+        services.AddSingleton<MainWindowViewModel>();
+        services.AddSingleton<LoginViewModel>();
+        services.AddSingleton<MainViewModel>();
+
         
         var serviceProvider = services.BuildServiceProvider();
 

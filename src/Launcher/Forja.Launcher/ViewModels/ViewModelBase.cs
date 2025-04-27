@@ -1,7 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿namespace Forja.Launcher.ViewModels;
 
-namespace Forja.Launcher.ViewModels;
-
-public class ViewModelBase : ObservableObject
+public class ViewModelBase : ReactiveObject
 {
 }

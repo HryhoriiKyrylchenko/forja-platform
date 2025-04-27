@@ -3,13 +3,25 @@
 public partial class MainWindowViewModel : ViewModelBase, IReactiveObject
 {
     private readonly ApiService _apiService;
-    public ViewModelBase CurrentViewModel { get; private set; }
+    private ViewModelBase? _currentViewModel;
+    
+    public ViewModelBase? CurrentViewModel
+    {
+        get => _currentViewModel;
+        set
+        {
+            if (_currentViewModel != value)
+            {
+                _currentViewModel = value;
+                RaisePropertyChanged(nameof(CurrentViewModel)); 
+            }
+        }
+    }
 
     public MainWindowViewModel(ApiService apiService)
     {
         _apiService = apiService;
-        
-        var isLoggedIn = false; 
+        var isLoggedIn = false;
 
         if (isLoggedIn)
         {
@@ -25,8 +37,10 @@ public partial class MainWindowViewModel : ViewModelBase, IReactiveObject
     
     private void OnLoginSucceeded()
     {
-        CurrentViewModel = new MainViewModel(_apiService);
-        this.RaisePropertyChanged(nameof(CurrentViewModel));
+        Dispatcher.UIThread.Post(() =>
+        {
+            CurrentViewModel = new MainViewModel(_apiService);
+        });
     }
     
     public new event PropertyChangingEventHandler? PropertyChanging;
@@ -37,8 +51,8 @@ public partial class MainWindowViewModel : ViewModelBase, IReactiveObject
         PropertyChanging?.Invoke(this, args);
     }
 
-    public void RaisePropertyChanged(PropertyChangedEventArgs args)
+    private void RaisePropertyChanged(string propertyName)  
     {
-        PropertyChanged?.Invoke(this, args);
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); 
     }
 }
