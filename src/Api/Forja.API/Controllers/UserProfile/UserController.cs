@@ -476,7 +476,8 @@ public class UserController : ControllerBase
 
             if (user == null)
             {
-                return NotFound($"User with identifier '{identifier}' was not found.");
+                // return NotFound($"User with identifier '{identifier}' was not found.");
+                return Ok(null);
             }
 
             return Ok(user);

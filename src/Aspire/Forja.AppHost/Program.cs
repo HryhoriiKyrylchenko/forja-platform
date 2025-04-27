@@ -17,6 +17,7 @@ var postgres = builder.AddPostgres("postgres", password: postgresPassword)
 
 //Redis Configuration
 var redis = builder.AddRedis("redis")
+    .WithRedisCommander()
     .WithImage("redis")
     .WithImageTag("7.4")
     .WithContainerName("forja-redis")
