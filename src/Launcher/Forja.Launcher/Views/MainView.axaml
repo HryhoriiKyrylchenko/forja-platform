@@ -2,24 +2,47 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:Forja.Launcher.ViewModels"
              xmlns:models="clr-namespace:Forja.Launcher.Models"
+             xmlns:converters="clr-namespace:Forja.Launcher.Converters"
              x:Class="Forja.Launcher.Views.MainView"
              x:DataType="vm:MainViewModel">
 
+    <UserControl.Resources>
+        <converters:BooleanNegationConverter x:Key="BooleanNegationConverter" />
+        <converters:ProgressToBooleanConverter x:Key="ProgressToBooleanConverter" />
+        <converters:LogoUrlToImageSourceConverter x:Key="LogoUrlToImageSourceConverter" />
+    </UserControl.Resources>
+    
     <StackPanel Margin="10">
         <ItemsControl ItemsSource="{Binding Games}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="models:Game">
                     <StackPanel Orientation="Horizontal" Margin="0 5">
                         <TextBlock Text="{Binding Name}" Width="150"/>
-                        <Button Content="Play"
-                                Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).PlayCommand}"
-                                CommandParameter="{Binding}" />
+                        <Image Source="{Binding LogoUrl}" Width="50" Height="50"/>
+                        <Button Content="Install"
+                                Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).InstallCommand}"
+                                CommandParameter="{Binding}" 
+                                IsVisible="{Binding IsInstalled, Converter={StaticResource BooleanNegationConverter}}"/>
                         <Button Content="Update"
                                 Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).UpdateCommand}"
-                                CommandParameter="{Binding}" Margin="10 0 0 0"/>
+                                CommandParameter="{Binding}" 
+                                IsVisible="{Binding IsUpdated, Converter={StaticResource BooleanNegationConverter}}"/>
+                        <Button Content="Play"
+                                Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).PlayCommand}"
+                                CommandParameter="{Binding}" 
+                                IsVisible="{Binding IsRunning, Converter={StaticResource BooleanNegationConverter}}"/>
+                        <Button Content="Stop"
+                                Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).PlayCommand}"
+                                CommandParameter="{Binding}" 
+                                IsVisible="{Binding IsRunning}"/>
+                        <ProgressBar Value="{Binding Progress}" Maximum="100" IsVisible="{Binding Progress, Converter={StaticResource ProgressToBooleanConverter}}"/>
                     </StackPanel>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
+
+        <!-- Display selected game logo -->
+        <Image Source="{Binding SelectedGame, Converter={StaticResource LogoUrlToImageSourceConverter}}"
+               Width="200" Height="200"/>
     </StackPanel>
 </UserControl>

@@ -1,5 +1,3 @@
-using System.Net.Mime;
-
 namespace Forja.Application.Validators;
 
 public static class StorageRequestsValidator
@@ -193,6 +191,48 @@ public static class StorageRequestsValidator
             return false;
         }
         
+        return true;
+    }
+
+    public static bool ValidateUploadProductImageRequest(UploadProductImageRequest? request, out string? errorMessage)
+    {
+        errorMessage = null;
+        if (request == null)
+        {
+            errorMessage = "Request cannot be null.";
+            return false;
+        }
+
+        if (request.ProductId == Guid.Empty)
+        {
+            errorMessage = "Product ID cannot be null or empty.";
+            return false;
+        }
+        
+        if (request.ObjectSize < 1)
+        {
+            errorMessage = "Object size must be greater than 0.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.ContentType))
+        {
+            errorMessage = "Content type cannot be null or empty.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.FileName))
+        {
+            errorMessage = "File name cannot be null or empty.";
+            return false;
+        }
+
+        if (!new HashSet<string> { ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp" }.Contains(Path.GetExtension(request.FileName)))
+        {
+            errorMessage = "File extension must be one of the following: .png, .jpg, .jpeg, .gif, .bmp, .webp";
+            return false;
+        }
+
         return true;
     }
     

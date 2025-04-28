@@ -7,18 +7,24 @@ public class FilesController : ControllerBase
     private readonly IFileManagerService _fileManagerService;
     private readonly IUserService _userService;
     private readonly IUserLibraryService _userLibraryService;
+    private readonly IItemImageService _itemImageService;
+    private readonly IProductImagesService _productImagesService;
     private readonly IAuditLogService _auditLogService;
     private readonly IDistributedCache _cache;
 
     public FilesController(IFileManagerService fileManagerService, 
         IUserService userService,
         IUserLibraryService userLibraryService,
+        IItemImageService itemImageService,
+        IProductImagesService productImagesService,
         IAuditLogService auditLogService,
         IDistributedCache cache)
     {
         _fileManagerService = fileManagerService;
         _userService = userService;
         _userLibraryService = userLibraryService;
+        _itemImageService = itemImageService;
+        _productImagesService = productImagesService;
         _auditLogService = auditLogService;
         _cache = cache;
     }
@@ -733,13 +739,56 @@ public class FilesController : ControllerBase
     
     [Authorize(Policy = "ContentManagePolicy")]
     [HttpPost("product-image")]
-    public async Task<IActionResult> UploadProductImage([FromForm] UploadImageRequest request)
+    public async Task<IActionResult> UploadProductImage([FromForm] UploadProductImageRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         try
         {
-            var result = await _fileManagerService.UploadProductImageAsync(request);
-            return Ok(result);
+            var imageUrl = await _fileManagerService.UploadProductImageAsync(new UploadImageRequest
+            {
+                File = request.File,
+                ObjectSize = request.ObjectSize,
+                ContentType = request.ContentType,
+                FileName = request.FileName
+            });
+            
+            if (string.IsNullOrWhiteSpace(imageUrl))
+                return BadRequest(new { error = "Failed to upload product image." });
+
+            var itemImage = await _itemImageService.CreateAsync(new ItemImageCreateRequest
+            {
+                ImageUrl = imageUrl,
+                ImageAlt = request.ImageAlt
+            });
+
+            if (itemImage == null)
+            {
+                await _fileManagerService.DeleteProductImageAsync(new DeleteObjectRequest
+                {
+                    ObjectPath = imageUrl
+                });
+                
+                return BadRequest(new { error = "Failed to create product image." });
+            }
+
+            var productImage = await _productImagesService.CreateAsync(new ProductImagesCreateRequest
+            {
+                ProductId = request.ProductId,
+                ItemImageId = itemImage.Id
+            });
+
+            if (productImage == null)
+            {
+                await _itemImageService.DeleteAsync(itemImage.Id);
+                await _fileManagerService.DeleteProductImageAsync(new DeleteObjectRequest
+                {
+                    ObjectPath = imageUrl
+                });
+                
+                return BadRequest(new { error = "Failed to create product image." });
+            }
+            
+            return Ok(productImage);
         }
         catch (Exception ex)
         {

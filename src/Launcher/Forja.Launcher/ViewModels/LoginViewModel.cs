@@ -35,15 +35,37 @@ public class LoginViewModel : ViewModelBase, IReactiveObject
     public LoginViewModel(ApiService apiService)
     {
         _apiService = apiService;
-        LoginCommand = ReactiveCommand.CreateFromTask(LoginAsync);
+
+        LoginCommand = ReactiveCommand.CreateFromTask(
+            async () => await LoginAsync(),
+            outputScheduler: AvaloniaScheduler.Instance 
+        );
     }
 
     private async Task LoginAsync()
     {
-        var result = await _apiService.LoginAsync(Email, Password);
-        if (result)
+        try
         {
-            LoginSucceeded?.Invoke();
+            var result = await _apiService.LoginAsync(Email, Password);
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (result)
+                {
+                    LoginSucceeded?.Invoke();  
+                }
+                else
+                {
+                    ErrorMessage = "Login failed!";
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                ErrorMessage = $"Error: {ex.Message}";
+            });
         }
     }
 
