@@ -9,14 +9,17 @@ public class ImagesController : ControllerBase
 {
     private readonly IItemImageService _itemImageService;
     private readonly IProductImagesService _productImagesService;
+    private readonly IFileManagerService _fileManagerService;
     private readonly IAuditLogService _auditLogService;
 
     public ImagesController(IItemImageService itemImageService, 
         IProductImagesService productImagesService,
+        IFileManagerService fileManagerService,
         IAuditLogService auditLogService)
     {
         _itemImageService = itemImageService;
         _productImagesService = productImagesService;
+        _fileManagerService = fileManagerService;
         _auditLogService = auditLogService;
     }
 
@@ -535,8 +538,18 @@ public class ImagesController : ControllerBase
             var productImage = await _productImagesService.GetByIdAsync(id);
             if (productImage == null)
                 return NotFound(new { error = $"ProductImage with ID {id} does not exist." });
+            
+            var itemImage = await _itemImageService.GetByIdAsync(productImage.ItemImageId);
+            if (itemImage == null)
+                return NotFound(new { error = $"ItemImage with ID {productImage.ItemImageId} does not exist." });
 
-            await _productImagesService.DeleteAsync(id);
+            await _productImagesService.DeleteAsync(productImage.Id);
+            await _fileManagerService.DeleteProductImageAsync(new DeleteObjectRequest
+            {
+                ObjectPath = itemImage.ImageUrl
+            });
+            await _itemImageService.DeleteAsync(itemImage.Id);
+            
             return NoContent();
         }
         catch (Exception ex)
