@@ -661,5 +661,36 @@ public class UserLibraryService : IUserLibraryService
         return userLibraryProductIds;
     }
 
+    /// <inheritdoc />
+    public async Task<List<UserLibraryGameForLauncherDto>> GetAllUserLibraryGamesForLauncherByUserIdAsync(Guid userId)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User ID cannot be an empty.", nameof(userId));
+        }
+
+        var gamesForLauncher = await _userLibraryGameRepository.GetAllForLauncher(userId);
+        if (gamesForLauncher == null)
+        {
+            throw new KeyNotFoundException("No user library games were found.");
+        }
+        var userLibraryGamesList = gamesForLauncher.ToList();
+        
+        var userLibraryGameDtos = new List<UserLibraryGameForLauncherDto>();
+        
+        foreach (var userLibraryGame in userLibraryGamesList)
+        {
+            string gameLogoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(userLibraryGame.GameId);
+        
+            var dto = UserProfileEntityToDtoMapper.MapToUserLibraryGameForLauncherDto(
+                userLibraryGame,
+                gameLogoUrl);
+        
+            userLibraryGameDtos.Add(dto);
+        }
+        
+        return userLibraryGameDtos;
+    }
+
     #endregion
 }

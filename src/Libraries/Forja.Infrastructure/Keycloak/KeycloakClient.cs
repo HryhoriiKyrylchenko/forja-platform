@@ -109,7 +109,7 @@ public class KeycloakClient : IKeycloakClient
             throw new HttpRequestException("Failed to obtain admin token.", ex);
         }
 
-        var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/admin/realms/{_realm}/roles");
+        var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/admin/realms/{_realm}/clients/{_clientUuid}/roles");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         request.Content = new StringContent(
             JsonSerializer.Serialize(new
@@ -132,7 +132,6 @@ public class KeycloakClient : IKeycloakClient
             throw new Exception($"Failed to create realm role. Status: {response.StatusCode}, Response: {responseContent}");
         }
     }
-
 
     /// <inheritdoc />
     public async Task<List<RoleRepresentation>> GetClientRolesAsync()

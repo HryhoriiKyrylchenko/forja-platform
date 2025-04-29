@@ -40,17 +40,17 @@ public class ApiService
     
     public async Task<IEnumerable<Game>> GetAllGamesAsync()
     {
-        var response = await HttpClient.GetFromJsonAsync<IEnumerable<Game>>($"{_apiUrl}/api/Library/games");
+        var response = await HttpClient.GetFromJsonAsync<IEnumerable<Game>>($"{_apiUrl}/api/Library/launcher");
         return response ?? Enumerable.Empty<Game>();
     }
 
-    public async Task<string> GetLatestVersionAsync(string gameId)
+    public async Task<string> GetLatestVersionAsync(Guid gameId)
     {
         var response = await HttpClient.GetStringAsync($"{_apiUrl}/games/{gameId}/version");
         return response; 
     }
 
-    public async Task<string> GetDownloadUrlAsync(string gameId, string version)
+    public async Task<string> GetDownloadUrlAsync(Guid gameId, string version)
     {
         return await HttpClient.GetStringAsync($"{_apiUrl}/games/{gameId}/download?version={version}");
     }

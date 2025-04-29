@@ -122,4 +122,14 @@ public interface IUserLibraryGameRepository
     /// <param name="userId">The unique identifier for the user whose game count is being retrieved.</param>
     /// <returns>An asynchronous task that returns the count of games as an integer.</returns>
     Task<int> GetAllGamesCountByUserIdAsync(Guid userId);
+
+    /// <summary>
+    /// Retrieves all user library games associated with a specific launcher for a given user.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user whose library games associated with the launcher are to be retrieved.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation. The task result contains an enumerable collection
+    /// of <see cref="UserLibraryGame"/> objects.
+    /// </returns>
+    Task<IEnumerable<UserLibraryGame>> GetAllForLauncher(Guid userId);
 }

@@ -5,7 +5,7 @@ var postgresPassword = builder.AddParameter("postgresql-password", secret: true)
 
 var postgres = builder.AddPostgres("postgres", password: postgresPassword)
     .WithImage("postgres")
-    .WithImageTag("17.2")
+    .WithImageTag("17.4")
     .WithContainerName("forja-postgres")
     .WithVolume("postgres-data", "/var/lib/postgresql/data", isReadOnly: false)
     .WithEndpoint(name: "postgresendpoint",
@@ -22,11 +22,6 @@ var redis = builder.AddRedis("redis")
     .WithContainerName("forja-redis")
     .WithVolume("redis-data", "/data", isReadOnly: false)
     .WithLifetime(ContainerLifetime.Persistent);
-//.WithEndpoint(name: "redisendpoint",
-// scheme: "tcp",
-// port: 6379,
-// targetPort: 6379,
-// isProxied: false)
 
 //Keycloak Configuration
 var keycloakUsername = builder.AddParameter("keycloak-admin", secret: true);

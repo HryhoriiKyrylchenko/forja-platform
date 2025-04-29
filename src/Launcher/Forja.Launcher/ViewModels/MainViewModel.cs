@@ -77,7 +77,7 @@ public class MainViewModel : ViewModelBase
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     game.LocalVersion = game.LatestVersion;
-                    game.Progress = 0; // Reset progress after update
+                    game.Progress = 0; 
                 });
 
                 await GameStorage.SaveAsync(Games);

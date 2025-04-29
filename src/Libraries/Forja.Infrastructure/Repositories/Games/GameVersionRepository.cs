@@ -22,6 +22,7 @@ public class GameVersionRepository : IGameVersionRepository
     public async Task<IEnumerable<GameVersion>> GetAllAsync()
     {
         return await _gameVersions
+            .Include(gv => gv.Files)
             .ToListAsync();
     }
 
@@ -34,6 +35,7 @@ public class GameVersionRepository : IGameVersionRepository
         }
 
         return await _gameVersions
+            .Include(gv => gv.Files)
             .FirstOrDefaultAsync(gv => gv.Id == id);
     }
 
@@ -50,6 +52,7 @@ public class GameVersionRepository : IGameVersionRepository
         }
         
         return await _gameVersions
+            .Include(gv => gv.Files)
             .FirstOrDefaultAsync(gv => gv.GameId == gameId && gv.Version == version);
     }
 
@@ -63,6 +66,7 @@ public class GameVersionRepository : IGameVersionRepository
 
         return await _gameVersions
             .Where(gv => gv.GameId == gameId)
+            .Include(gv => gv.Files)
             .ToListAsync();
     }
 
@@ -76,7 +80,9 @@ public class GameVersionRepository : IGameVersionRepository
 
         await _gameVersions.AddAsync(gameVersion);
         await _context.SaveChangesAsync();
-        return gameVersion;
+        return await _gameVersions
+            .Include(gv => gv.Files)
+            .FirstOrDefaultAsync(gv => gv.GameId == gameVersion.GameId);
     }
 
     /// <inheritdoc />
@@ -89,7 +95,9 @@ public class GameVersionRepository : IGameVersionRepository
 
         _gameVersions.Update(gameVersion);
         await _context.SaveChangesAsync();
-        return gameVersion;
+        return await _gameVersions
+            .Include(gv => gv.Files)
+            .FirstOrDefaultAsync(gv => gv.GameId == gameVersion.GameId);
     }
 
     /// <inheritdoc />

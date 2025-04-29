@@ -203,4 +203,11 @@ public interface IUserLibraryService
     /// <param name="userId">The unique identifier of the user whose library products are to be retrieved.</param>
     /// <returns>A Task representing the asynchronous operation. The task result contains a list of products from the user's library.</returns>
     Task<List<Guid>> GetUserLibraryProductIdsByUserIdAsync(Guid userId);
+
+    /// <summary>
+    /// Retrieves all games in the user's library formatted for use by the launcher.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user whose library games are to be retrieved.</param>
+    /// <returns>A Task resulting in a list of UserLibraryGameForLauncherDto objects.</returns>
+    Task<List<UserLibraryGameForLauncherDto>> GetAllUserLibraryGamesForLauncherByUserIdAsync(Guid userId);
 }
