@@ -351,6 +351,62 @@ public class StorageService : IStorageService, IDisposable
     }
     
     /// <inheritdoc />
+    public async Task<Stream> DownloadChunkViaHttpAsync(string objectPath, long offset, long length)
+    {
+        if (string.IsNullOrWhiteSpace(objectPath))
+            throw new ArgumentException("Object path cannot be null or empty", nameof(objectPath));
+
+        if (offset < 0)
+            throw new ArgumentOutOfRangeException(nameof(offset), "Offset must be >= 0.");
+
+        if (length < 1)
+            throw new ArgumentOutOfRangeException(nameof(length), "Length must be > 0.");
+
+        var presignedUrl = await GetPresignedUrlAsync(objectPath);
+
+        using var httpClient = new HttpClient();
+
+        var request = new HttpRequestMessage(HttpMethod.Get, presignedUrl);
+        request.Headers.Range = new RangeHeaderValue(offset, offset + length - 1);
+
+        var response = await httpClient.SendAsync(request);
+        if (!response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.PartialContent)
+        {
+            throw new Exception($"Failed to download chunk from {objectPath}. Status code: {response.StatusCode}");
+        }
+
+        var stream = await response.Content.ReadAsStreamAsync();
+        var memoryStream = new MemoryStream();
+        await stream.CopyToAsync(memoryStream);
+        memoryStream.Position = 0;
+
+        return memoryStream;
+    }
+    
+    /// <inheritdoc />
+    public async Task<FileMetadata?> GetFileMetadataAsync(string objectPath)
+    {
+        try
+        {
+            var stat = await _minioClient.StatObjectAsync(new StatObjectArgs()
+                .WithBucket(_bucketName)
+                .WithObject(objectPath));
+
+            return new FileMetadata
+            {
+                ObjectPath = objectPath,
+                Size = stat.Size,
+                ContentType = stat.ContentType,
+                LastModified = stat.LastModified
+            };
+        }
+        catch (MinioException ex) when (ex is ObjectNotFoundException)
+        {
+            return null;
+        }
+    }
+    
+    /// <inheritdoc />
     public void Dispose()
     {
         _minioClient.Dispose();

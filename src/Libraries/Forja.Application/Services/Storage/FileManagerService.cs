@@ -655,7 +655,43 @@ public class FileManagerService : IFileManagerService
         
         return result;
     }
-    
+
+    ///<inheritdoc/>
+    public async Task<Stream> DownloadFileChunkAsync(string objectPath, long offset, long length)
+    {
+        if (string.IsNullOrWhiteSpace(objectPath))
+            throw new ArgumentException("Object path cannot be empty.", nameof(objectPath));
+
+        if (offset < 0)
+            throw new ArgumentOutOfRangeException(nameof(offset));
+
+        if (length <= 0)
+            throw new ArgumentOutOfRangeException(nameof(length));
+
+        return await _storageService.DownloadChunkViaHttpAsync(objectPath, offset, length);
+    }
+
+    ///<inheritdoc/>
+    public async Task<FileMetadataDto?> GetFileMetadataAsync(string objectPath)
+    {
+        if (string.IsNullOrWhiteSpace(objectPath))
+            throw new ArgumentException("Object path cannot be empty.", nameof(objectPath));
+        
+        var fileMetadata = await _storageService.GetFileMetadataAsync(objectPath);
+        if (fileMetadata == null)
+        {
+            throw new InvalidOperationException($"File with path {objectPath} not found.");
+        }
+        
+        return new FileMetadataDto
+        {
+            ObjectPath = fileMetadata.ObjectPath,
+            Size = fileMetadata.Size,
+            ContentType = fileMetadata.ContentType,
+            LastModified = fileMetadata.LastModified
+        };
+    }
+
     private async Task<string?> FindProfileHatVariantPathAsync(short profileHatVariantId)
     {
         string[] possibleExtensions = [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"];

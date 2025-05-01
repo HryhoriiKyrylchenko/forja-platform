@@ -257,4 +257,21 @@ public interface IFileManagerService
     /// <param name="expiresInSeconds">The expiration time for the presigned URL in seconds. Defaults to 3600 seconds.</param>
     /// <returns>A presigned URL for the news article's image, valid for the specified duration.</returns>
     Task<string> GetPresignedNewsArticleImageUrlAsync(Guid newsArticleId, int expiresInSeconds = 3600);
+
+    /// <summary>
+    /// Downloads a specific chunk of a file from storage based on the provided object path, offset, and length.
+    /// Useful for retrieving large files in smaller manageable pieces.
+    /// </summary>
+    /// <param name="objectPath">The path of the file in the storage system to download.</param>
+    /// <param name="offset">The starting byte position in the file for the chunk to download.</param>
+    /// <param name="length">The length of the chunk in bytes to retrieve.</param>
+    /// <returns>A task that represents the asynchronous operation and returns a stream containing the requested file chunk.</returns>
+    Task<Stream> DownloadFileChunkAsync(string objectPath, long offset, long length);
+
+    /// <summary>
+    /// Retrieves metadata information for a specific file located at the given object path.
+    /// </summary>
+    /// <param name="objectPath">The path of the file for which metadata is to be retrieved.</param>
+    /// <returns>A task that represents the asynchronous operation and returns a FileMetadataDto object containing the file's metadata, or null if the file does not exist.</returns>
+    Task<FileMetadataDto?> GetFileMetadataAsync(string objectPath);
 }

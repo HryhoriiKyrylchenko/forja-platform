@@ -59,29 +59,29 @@ public class MainViewModel : ViewModelBase
     {
         try
         {
-            var latestVersion = await _apiService.GetLatestVersionAsync(game.Id);
+            if (game.LocalVersion == game.LatestVersion)
+                return; 
+
+            var objectPath = game.DownloadUrl;
+            var destinationPath = Path.Combine("/games", game.Id.ToString(), $"version_{game.LatestVersion}.zip");
+
+            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
+
+            var progressReporter = new Progress<double>(p =>
+            {
+                game.Progress = p;
+                Debug.WriteLine($"Update progress: {p:P0}");
+            });
+
+            await _apiService.DownloadFileInChunksAsync(objectPath, destinationPath, progress: progressReporter);
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                game.LatestVersion = latestVersion;
+                game.LocalVersion = game.LatestVersion;
+                game.Progress = 0; 
             });
 
-            if (game.LocalVersion != game.LatestVersion)
-            {
-                var url = await _apiService.GetDownloadUrlAsync(game.Id, game.LatestVersion);
-                var filePath = $"/games/{game.Id}/version_{game.LatestVersion}.zip";
-
-                var progressReporter = new Progress<double>(p => game.Progress = p);
-                await _apiService.DownloadFileAsync(url, filePath, progressReporter);
-
-                await Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    game.LocalVersion = game.LatestVersion;
-                    game.Progress = 0; 
-                });
-
-                await GameStorage.SaveAsync(Games);
-            }
+            await GameStorage.SaveAsync(Games);
         }
         catch (Exception ex)
         {
@@ -104,12 +104,19 @@ public class MainViewModel : ViewModelBase
                     {
                         existingGame.Name = game.Name;
                         existingGame.LogoUrl = game.LogoUrl;
-                        existingGame.LatestVersion = game.LatestVersion;
-                        existingGame.DownloadUrl = game.DownloadUrl;
+                        existingGame.LatestVersion = game.Versions.Select(v => v.Version).OrderByDescending(v => v).FirstOrDefault() ?? throw new InvalidOperationException();
+                        existingGame.DownloadUrl = game.Versions.First(v => v.Version == existingGame.LatestVersion).StorageUrl;
                     }
                     else
                     {
-                        Games.Add(game);
+                        var newGame = new Game
+                        {
+                            Id = game.Id,
+                            Name = game.Name,
+                            DownloadUrl = game.Versions.First(v => v.Version == game.Versions.Select(version => version.Version).OrderByDescending(currentVersion => currentVersion).FirstOrDefault()).StorageUrl,
+                            LogoUrl = game.LogoUrl
+                        };
+                        Games.Add(newGame);
                     }
                 }
             });
@@ -127,15 +134,21 @@ public class MainViewModel : ViewModelBase
     {
         try
         {
-            var url = await _apiService.GetDownloadUrlAsync(game.Id, game.LatestVersion);
-            var filePath = $"/games/{game.Id}/version_{game.LatestVersion}.zip";
+            var objectPath = game.DownloadUrl;
+            var destinationPath = Path.Combine("/games", game.Id.ToString(), $"version_{game.LatestVersion}.zip");
 
-            // Simulate download with progress
-            var progressReporter = new Progress<double>(p => game.Progress = p);
-            await _apiService.DownloadFileAsync(url, filePath, progressReporter);
+            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
+
+            var progressReporter = new Progress<double>(p =>
+            {
+                game.Progress = p;
+                Debug.WriteLine($"Download progress: {p:P0}");
+            });
+
+            await _apiService.DownloadFileInChunksAsync(objectPath, destinationPath, progress: progressReporter);
 
             game.LocalVersion = game.LatestVersion;
-            game.ExecutablePath = filePath; // Simulate installation
+            game.ExecutablePath = destinationPath;
 
             await GameStorage.SaveAsync(Games);
         }
@@ -166,6 +179,4 @@ public class MainViewModel : ViewModelBase
             }
         });
     }
-    
-    
 }

@@ -1090,4 +1090,49 @@ public class FilesController : ControllerBase
             return StatusCode(500, new { error = "An unexpected error occurred.", details = ex.Message });
         }
     }
+    
+    /// <summary>
+    /// Downloads a chunk of a file.
+    /// </summary>
+    /// <param name="objectPath">Path of the object in storage (e.g., bucket/folder/file.bin).</param>
+    /// <param name="offset">Starting byte offset.</param>
+    /// <param name="length">Length of the chunk in bytes.</param>
+    /// <returns>The chunk of the file as a stream.</returns>
+    [HttpGet("chunk")]
+    public async Task<IActionResult> DownloadChunk([FromQuery] string objectPath, [FromQuery] long offset, [FromQuery] long length)
+    {
+        if (string.IsNullOrWhiteSpace(objectPath))
+            return BadRequest("Object path is required.");
+
+        if (offset < 0)
+            return BadRequest("Offset must be >= 0.");
+
+        if (length <= 0)
+            return BadRequest("Length must be > 0.");
+
+        try
+        {
+            var stream = await _fileManagerService.DownloadFileChunkAsync(objectPath, offset, length);
+
+            return File(stream, "application/octet-stream", enableRangeProcessing: false);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Error downloading file chunk: {ex.Message}");
+        }
+    }
+    
+    [HttpGet("metadata")]
+    public async Task<IActionResult> GetMetadata([FromQuery] string objectPath)
+    {
+        if (string.IsNullOrWhiteSpace(objectPath))
+            return BadRequest("Object path is required.");
+
+        var metadata = await _fileManagerService.GetFileMetadataAsync(objectPath);
+
+        if (metadata == null)
+            return NotFound();
+
+        return Ok(metadata);
+    }
 }
