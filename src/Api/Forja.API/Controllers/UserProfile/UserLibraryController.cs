@@ -32,21 +32,21 @@ public class UserLibraryController : ControllerBase
         [FromQuery] List<string>? matureContents = null,
         [FromQuery] string? search = null)
     {
-        var keycloakUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (string.IsNullOrEmpty(keycloakUserId))
-        {
-            return Unauthorized(new { error = "User ID not found in token claims." });
-        }
-
-        var user = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
-        if (user == null)
-        {
-            return NotFound(new { error = $"User with Keycloak ID {keycloakUserId} not found." });
-        }
-
         try
         {
+            var keycloakUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(keycloakUserId))
+            {
+                return Unauthorized(new { error = "User ID not found in token claims." });
+            }
+
+            var user = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
+            if (user == null)
+            {
+                return NotFound(new { error = $"User with Keycloak ID {keycloakUserId} not found." });
+            }
+            
             var userLibrary = await _userLibraryService.GetAllUserLibraryGamesByUserIdAsync(user.Id);
             
             var filtered = userLibrary.AsQueryable();
@@ -98,7 +98,59 @@ public class UserLibraryController : ControllerBase
                     LogLevel = LogLevel.Error,
                     Details = new Dictionary<string, string>
                     {
-                        { "Message", $"Failed to get all user library games by user id: {user.Id}" }
+                        { "Message", $"Failed to get all user library games by user id" }
+                    }
+                };
+
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+    
+    [Authorize]
+    [HttpGet("launcher")]
+    public async Task<ActionResult<UserLibraryGameExtendedDto>> GetSelfUserGamesForLauncher()
+    {
+        try
+        {
+            var keycloakUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(keycloakUserId))
+            {
+                return Unauthorized(new { error = "User ID not found in token claims." });
+            }
+
+            var user = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
+            if (user == null)
+            {
+                return NotFound(new { error = $"User with Keycloak ID {keycloakUserId} not found." });
+            }
+            
+            var userLibraryForLauncher = await _userLibraryService.GetAllUserLibraryGamesForLauncherByUserIdAsync(user.Id);
+            
+            return Ok(userLibraryForLauncher);
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Product,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get all user library games by user id" }
                     }
                 };
 

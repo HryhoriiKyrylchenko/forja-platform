@@ -2,7 +2,7 @@ namespace Forja.Launcher.Models;
 
 public class Game : ReactiveObject
 {
-    public string Id { get; set; } = string.Empty;
+    public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string LocalVersion { get; set; } = "0.0.0";
     public string LatestVersion { get; set; } = "0.0.0";
@@ -23,4 +23,6 @@ public class Game : ReactiveObject
         get => _progress;
         set => this.RaiseAndSetIfChanged(ref _progress, value);
     }
+    
+    public List<Addon> InstalledAddons { get; set; } = [];
 }

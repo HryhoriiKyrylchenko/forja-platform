@@ -228,4 +228,28 @@ public static class UserProfileEntityToDtoMapper
             ProductName = userWishList.Product.Title
         };
     }
+
+    public static UserLibraryAddonForLauncherDto MapToUserLibraryAddonForLauncherDto(UserLibraryAddon userLibraryAddon)
+    {
+        return new UserLibraryAddonForLauncherDto
+        {
+            Id = userLibraryAddon.Id,
+            Name = userLibraryAddon.GameAddon.Title,
+            StorageUrl = userLibraryAddon.GameAddon.StorageUrl ?? string.Empty
+        };
+    }
+
+    public static UserLibraryGameForLauncherDto MapToUserLibraryGameForLauncherDto(UserLibraryGame userLibraryGame,
+        string gameLogoUrl)
+    {
+        return new UserLibraryGameForLauncherDto
+        {
+            Id = userLibraryGame.Id,
+            Title = userLibraryGame.Game.Title,
+            LogoUrl = gameLogoUrl,
+            Patches = userLibraryGame.Game.GamePatches.Select(GamesEntityToDtoMapper.MapToGamePatchDto).ToList(),
+            Addons = userLibraryGame.PurchasedAddons.Select(MapToUserLibraryAddonForLauncherDto).ToList(),
+            Versions = userLibraryGame.Game.GameVersions.Select(GamesEntityToDtoMapper.MapToGameVersionDto).ToList()
+        };
+    }
 }

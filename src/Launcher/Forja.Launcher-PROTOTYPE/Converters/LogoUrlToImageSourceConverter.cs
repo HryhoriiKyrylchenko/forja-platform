@@ -5,7 +5,7 @@ namespace Forja.Launcher.Converters;
 
 public class LogoUrlToImageSourceConverter : IValueConverter
 {
-    private static readonly string DefaultImageUri = "avares://Forja.Launcher/Assets/Forja-icon-logo.svg";
+    private static readonly string DefaultImageUri = "avares://Forja.Launcher-PROTOTYPE/Assets/Forja-icon-logo.svg";
 
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {

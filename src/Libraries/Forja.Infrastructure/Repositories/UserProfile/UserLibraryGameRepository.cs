@@ -226,4 +226,25 @@ public class UserLibraryGameRepository : IUserLibraryGameRepository
                    ulg.IsDeleted != true)
             .CountAsync();
     }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<UserLibraryGame>> GetAllForLauncher(Guid userId)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User id cannot be empty.", nameof(userId));
+        }
+        
+        return await _userLibraryGames
+            .Where(ulg => ulg.UserId == userId &&
+                   ulg.IsDeleted != true)
+            .Include(ulg => ulg.Game)
+                .ThenInclude(g => g.GameVersions)
+                    .ThenInclude(v => v.Files)
+            .Include(ulg => ulg.Game)
+                .ThenInclude(g => g.GamePatches)
+            .Include(ulg => ulg.PurchasedAddons)
+                .ThenInclude(a => a.GameAddon)
+            .ToListAsync();
+    }
 }

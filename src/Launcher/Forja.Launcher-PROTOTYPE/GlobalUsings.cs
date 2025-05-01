@@ -27,5 +27,5 @@ global using Avalonia.Threading;
 global using Avalonia.ReactiveUI;
 global using Avalonia.Data.Converters;
 global using System.Globalization;
-global using Avalonia.Controls;
 global using Avalonia.Media.Imaging;
+global using System.Threading;

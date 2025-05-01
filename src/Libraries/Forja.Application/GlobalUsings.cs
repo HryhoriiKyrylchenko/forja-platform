@@ -59,3 +59,4 @@ global using Forja.Application.Logging;
 global using System.Net;
 global using Forja.Infrastructure.Minio;
 global using Microsoft.AspNetCore.Http;
+global using Forja.Application.DTOs.Storage;

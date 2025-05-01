@@ -91,4 +91,26 @@ public interface IStorageService
     /// <param name="objectPath">The path of the file to be deleted in the storage system.</param>
     /// <returns>A task that represents the asynchronous delete operation.</returns>
     Task DeleteFileAsync(string objectPath);
+
+    /// <summary>
+    /// Downloads a specific chunk of data from an object stored in the storage service via HTTP.
+    /// </summary>
+    /// <param name="objectPath">The path of the object in the storage from which the chunk will be downloaded.</param>
+    /// <param name="offset">The starting byte position in the object from which to begin downloading.</param>
+    /// <param name="length">The number of bytes to download starting from the specified offset.</param>
+    /// <returns>A <see cref="Stream"/> containing the requested chunk of data.</returns>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="objectPath"/> is null, empty, or consists only of whitespace.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="offset"/> is less than 0 or if <paramref name="length"/> is less than or equal to 0.</exception>
+    /// <exception cref="HttpRequestException">Thrown if the HTTP request to the storage service fails.</exception>
+    /// <exception cref="Exception">Thrown for any other errors encountered during the retrieval process.</exception>
+    Task<Stream> DownloadChunkViaHttpAsync(string objectPath, long offset, long length);
+
+    /// <summary>
+    /// Retrieves metadata of the specified file from the storage service.
+    /// </summary>
+    /// <param name="objectPath">The path in the storage bucket of the file whose metadata is to be retrieved.</param>
+    /// <returns>A <see cref="FileMetadata"/> object containing the file's metadata, or null if the file does not exist.</returns>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="objectPath"/> is null, empty, or consists only of whitespace.</exception>
+    /// <exception cref="Exception">Thrown if an error occurs while retrieving the file metadata.</exception>
+    Task<FileMetadata?> GetFileMetadataAsync(string objectPath);
 }

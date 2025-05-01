@@ -46,10 +46,10 @@ public class UserAuthService : IUserAuthService
             {
                 throw new Exception("Failed to create user in Keycloak.");
             }
-        
-            await AssignRoleToUserAsync(keycloakId, UserRole.User);
             
             cleanupActions.Push(async () => await _keycloakClient.DeleteUserAsync(keycloakId));
+        
+            await AssignRoleToUserAsync(keycloakId, UserRole.User);
             
             var baseUsername = request.Email.Split('@')[0];
             var username = await GenerateUniqueUsernameAsync(baseUsername);

@@ -392,7 +392,8 @@ public static class GamesEntityToDtoMapper
             FileSize = gameVersion.FileSize,
             Hash = gameVersion.Hash,
             Changelog = gameVersion.Changelog,
-            ReleaseDate = gameVersion.ReleaseDate
+            ReleaseDate = gameVersion.ReleaseDate,
+            Files = gameVersion.Files.Select(MapToGameFileDto).ToList()
         };
     }
 

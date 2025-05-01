@@ -24,7 +24,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Forja.Infrastructure", "src
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Launcher", "Launcher", "{C14A2A3B-6757-48D9-8A6B-BF8957E7C6E9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Forja.Launcher", "src\Launcher\Forja.Launcher\Forja.Launcher.csproj", "{1E1DD825-CCCA-4F39-8693-88AB45162507}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Forja.Launcher-PROTOTYPE", "src\Launcher\Forja.Launcher-PROTOTYPE\Forja.Launcher-PROTOTYPE.csproj", "{1E1DD825-CCCA-4F39-8693-88AB45162507}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
