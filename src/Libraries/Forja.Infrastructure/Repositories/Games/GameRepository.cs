@@ -50,6 +50,10 @@ public class GameRepository : IGameRepository
                 .ThenInclude(gt => gt.Tag)
             .Include(g => g.ProductDiscounts)
                 .ThenInclude(dc => dc.Discount)
+            .Include(g => g.GameMechanics)
+                .ThenInclude(gm => gm.Mechanic)
+            .Include(g => g.ProductMatureContents)
+                .ThenInclude(pmc => pmc.MatureContent)
             .ToListAsync();
     }
 

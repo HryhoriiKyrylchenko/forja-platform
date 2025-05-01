@@ -42,9 +42,9 @@ public static class GamesModelValidator
             return false;
         }
 
-        if (bundle.Description.Length > 1000)
+        if (bundle.Description.Length > 3000)
         {
-            errorMessage = "Bundle Description must not exceed 1000 characters.";
+            errorMessage = "Bundle Description must not exceed 3000 characters.";
             return false;
         }
 
@@ -128,9 +128,9 @@ public static class GamesModelValidator
             return false;
         }
 
-        if (game.SystemRequirements?.Length > 2000)
+        if (game.SystemRequirements?.Length > 3000)
         {
-            errorMessage = "Game System Requirements must not exceed 2000 characters.";
+            errorMessage = "Game System Requirements must not exceed 3000 characters.";
             return false;
         }
 
@@ -300,9 +300,9 @@ public static class GamesModelValidator
             return false;
         }
 
-        if (gameAddon.StorageUrl?.Length > 500)
+        if (gameAddon.StorageUrl?.Length > 1000)
         {
-            errorMessage = "GameAddon Storage URL must not exceed 500 characters.";
+            errorMessage = "GameAddon Storage URL must not exceed 1000 characters.";
             return false;
         }
 
