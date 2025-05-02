@@ -7,9 +7,11 @@ public class CartItemDto
     public Guid ProductId { get; set; }
     public Guid? BundleId { get; set; }
     public string Title { get; set; } = string.Empty;
+    public string ShortDescription { get; set; } = string.Empty;
     public string LogoUrl { get; set; } = string.Empty;
     public decimal OriginalPrice { get; set; }
     public decimal? TotalDiscountValue { get; set; }
     public DateTime? DiscountExpirationDate { get; set; }
     public decimal TotalPrice { get; set; }
+    public bool IsAddon { get; set; }
 }

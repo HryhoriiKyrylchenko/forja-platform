@@ -25,11 +25,13 @@ public class StoreEntityToDtoMapper
             ProductId = cartItem.ProductId,
             BundleId = cartItem.BundleId,
             Title = cartItem.Product.Title,
+            ShortDescription = cartItem.Product.ShortDescription,
             LogoUrl = fullLogoUrl,
             OriginalPrice = cartItem.Product.Price,
             TotalDiscountValue = totalDiscountValue,
             DiscountExpirationDate = discountExpirationDate,
-            TotalPrice = cartItem.Price
+            TotalPrice = cartItem.Price,
+            IsAddon = cartItem.Product is GameAddon
         };
     }
 
