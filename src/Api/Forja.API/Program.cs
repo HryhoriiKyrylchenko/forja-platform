@@ -9,14 +9,6 @@ builder.AddServiceDefaults();
 
 builder.AddInfrastructureServices();
 
-// Add services to the container.
-
-// builder.Services.AddStackExchangeRedisCache(options =>
-// {
-//     options.Configuration = "localhost:6379";
-//     options.InstanceName = "RedisInstance";
-// });
-
 builder.AddRedisDistributedCache("redis");
 
 builder.Services.AddCors(options =>

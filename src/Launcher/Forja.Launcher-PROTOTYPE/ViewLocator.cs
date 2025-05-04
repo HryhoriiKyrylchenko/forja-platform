@@ -1,8 +1,3 @@
-using System;
-using Avalonia.Controls;
-using Avalonia.Controls.Templates;
-using Forja.Launcher.ViewModels;
-
 namespace Forja.Launcher;
 
 public class ViewLocator : IDataTemplate

@@ -109,4 +109,19 @@ public class GameFileRepository : IGameFileRepository
         _gameFiles.Remove(gameFile);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<GameFile?> FindByVersionAndNameAsync(string version, string fileName)
+    {
+        if (string.IsNullOrWhiteSpace(version))
+        {
+            throw new ArgumentException("Invalid version.", nameof(version));
+        }
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            throw new ArgumentException("Invalid file name.", nameof(fileName));
+        }
+        
+        return await _gameFiles
+            .FirstOrDefaultAsync(gf => gf.GameVersion.Version == version && gf.FileName == fileName);
+    }
 }

@@ -96,4 +96,26 @@ public class GamePatchRepository : IGamePatchRepository
         _gamePatches.Remove(gamePatch);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<GamePatch?> GetByGameIdAndVersionsAsync(Guid gameId, string fromVersion, string toVersion)
+    {
+        if (gameId == Guid.Empty)
+        {
+            throw new ArgumentException("Invalid game ID.", nameof(gameId));
+        }
+
+        if (string.IsNullOrWhiteSpace(fromVersion))
+        {
+            throw new ArgumentException("Invalid from version.", nameof(fromVersion));
+        }
+
+        if (string.IsNullOrWhiteSpace(toVersion))
+        {
+            throw new ArgumentException("Invalid to version.", nameof(toVersion));
+        }
+
+        return await _gamePatches.FirstOrDefaultAsync(gp => gp.GameId == gameId 
+                                                            && gp.FromVersion == fromVersion 
+                                                            && gp.ToVersion == toVersion);
+    }
 }

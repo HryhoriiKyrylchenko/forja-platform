@@ -41,7 +41,7 @@ public class ApiService
     public async Task<IEnumerable<LibraryGameInfo>> GetAllGamesAsync()
     {
         return await SendWithRefreshAsync<IEnumerable<LibraryGameInfo>>(() =>
-            HttpClient.GetAsync($"{_apiUrl}/api/Library/launcher")) ?? [];
+            HttpClient.GetAsync($"{_apiUrl}/api/UserLibrary/launcher")) ?? [];
     }
 
     public async Task<string> GetDownloadUrlAsync(Guid gameId, string version)
@@ -104,7 +104,7 @@ public class ApiService
     
     private async Task<T?> SendWithRefreshAsync<T>(Func<Task<HttpResponseMessage>> sendRequest)
     {
-        var response = await SendWithRefreshAsync(sendRequest);
+        var response = await SendWithRefreshResponseAsync(sendRequest);
 
         if (!response.IsSuccessStatusCode)
             return default;
@@ -115,8 +115,8 @@ public class ApiService
             PropertyNameCaseInsensitive = true
         });
     }
-    
-    private async Task<HttpResponseMessage> SendWithRefreshAsync(Func<Task<HttpResponseMessage>> sendRequest)
+
+    private async Task<HttpResponseMessage> SendWithRefreshResponseAsync(Func<Task<HttpResponseMessage>> sendRequest)
     {
         var response = await sendRequest();
 

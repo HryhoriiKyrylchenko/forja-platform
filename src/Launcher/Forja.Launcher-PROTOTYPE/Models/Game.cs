@@ -23,6 +23,48 @@ public class Game : ReactiveObject
         get => _progress;
         set => this.RaiseAndSetIfChanged(ref _progress, value);
     }
+    private bool _isSelected;
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set => this.RaiseAndSetIfChanged(ref _isSelected, value);
+    }
+    
+    private Bitmap? _logoBitmap;
+    public Bitmap? LogoBitmap
+    {
+        get => _logoBitmap;
+        private set => this.RaiseAndSetIfChanged(ref _logoBitmap, value);
+    }
+    
+    public async Task LoadLogoAsync()
+    {
+        if (!string.IsNullOrEmpty(LogoUrl))
+        {
+            try
+            {
+                using var httpClient = new HttpClient();
+                var response = await httpClient.GetAsync(LogoUrl);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    await using var stream = await response.Content.ReadAsStreamAsync();
+                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        LogoBitmap = new Bitmap(stream);
+                    });
+                }
+                else
+                {
+                    Debug.WriteLine($"Failed to load logo for {Name}: {response.StatusCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to load logo for {Name}: {ex.Message}");
+            }
+        }
+    }
     
     public List<Addon> InstalledAddons { get; set; } = [];
 }

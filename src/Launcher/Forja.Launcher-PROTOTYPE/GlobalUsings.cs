@@ -29,3 +29,7 @@ global using Avalonia.Data.Converters;
 global using System.Globalization;
 global using Avalonia.Media.Imaging;
 global using System.Threading;
+global using Avalonia.Controls.Templates;
+global using Forja.Launcher.Enums;
+global using System.Windows.Input;
+global using Avalonia.Platform;

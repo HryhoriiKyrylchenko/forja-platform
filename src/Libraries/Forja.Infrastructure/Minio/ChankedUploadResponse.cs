@@ -6,4 +6,5 @@ public class ChankedUploadResponse
     public string ResponseContent { get; set; } = string.Empty;
     public string ObjectPath { get; set; } = string.Empty;
     public string FileHash { get; set; } = string.Empty;
+    public long FileSize { get; set; }
 }
