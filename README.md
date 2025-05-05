@@ -68,6 +68,8 @@ Forja Platform is a modern web application built to serve as an analog to battle
     │   ├── Aspire/                   # .Net Aspire orchestration projects
     │   │   ├── Forja.AppHost/         # Projects orchestration
     │   │   └── Forja.ServiceDefaults/ # General dependencies
+    │   ├── Launcher/                # .NET layer libraries
+    │   │   └── Forja.Launcher/       # Cross-platform game launcher
     │   ├── Libraries/                # .NET layer libraries
     │   │   ├── Forja.Application/     # Business logic, services, and use case implementations
     │   │   ├── Forja.Domain/          # Domain models, entities, and interfaces

@@ -23,6 +23,7 @@ public class StorageService : IStorageService, IDisposable
         
         _cache = cache;
         
+        
         _ = EnsureBucketExistsAsync().ConfigureAwait(false);
     }
     
@@ -269,7 +270,8 @@ public class StorageService : IStorageService, IDisposable
             ResponseStatusCode = result.ResponseStatusCode,
             ResponseContent = result.ResponseContent,
             ObjectPath = objectPath,
-            FileHash = fileHash
+            FileHash = fileHash,
+            FileSize = result.Size
         };
     }
     

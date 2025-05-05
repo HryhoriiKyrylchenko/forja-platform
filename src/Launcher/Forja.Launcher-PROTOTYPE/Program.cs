@@ -14,7 +14,6 @@ sealed class Program
         services.AddSingleton<MainWindowViewModel>();
         services.AddSingleton<LoginViewModel>();
         services.AddSingleton<MainViewModel>();
-
         
         var serviceProvider = services.BuildServiceProvider();
 

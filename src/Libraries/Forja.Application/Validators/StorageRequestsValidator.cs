@@ -95,15 +95,29 @@ public static class StorageRequestsValidator
             return false;
         }
 
-        if (request.VersionId == Guid.Empty)
+        if (string.IsNullOrWhiteSpace(request.Version))
         {
-            errorMessage = "Version ID cannot be null or empty.";
+            errorMessage = "Version cannot be null or empty.";
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(request.FinalFileName))
         {
             errorMessage = "Final file name cannot be null or empty.";
+            return false;
+        }
+
+        if (request.FileType == FileType.GameAddon && (request.AddonId == null || request.AddonId == Guid.Empty))
+        {
+            errorMessage = "Addon ID cannot be null or empty.";
+            return false;
+        }
+
+        if (request.FileType == FileType.GamePatch 
+            && string.IsNullOrWhiteSpace(request.FromVersion) 
+            && string.IsNullOrWhiteSpace(request.ToVersion))
+        {
+            errorMessage = "From version and to version cannot be null or empty.";
             return false;
         }
 

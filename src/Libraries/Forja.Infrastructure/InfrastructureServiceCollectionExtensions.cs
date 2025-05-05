@@ -59,6 +59,7 @@ public static class InfrastructureServiceCollectionExtensions
         builder.Services.AddScoped<IProductImagesRepository, ProductImagesRepository>();
         builder.Services.AddScoped<IProductMatureContentRepository, ProductMatureContentRepository>();
         builder.Services.AddScoped<ITagRepository, TagRepository>();
+        builder.Services.AddScoped<IGamePatchRepository, GamePatchRepository>();
         
         builder.Services.AddScoped<ICartItemRepository, CartItemRepository>();
         builder.Services.AddScoped<ICartRepository, CartRepository>();

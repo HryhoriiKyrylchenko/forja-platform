@@ -61,4 +61,15 @@ public interface IGamePatchRepository
     /// <param name="id">The unique identifier of the game patch to delete.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task DeleteAsync(Guid id);
+
+    /// <summary>
+    /// Retrieves a game patch based on the specified game ID and version range.
+    /// </summary>
+    /// <param name="gameId">The unique identifier of the game.</param>
+    /// <param name="fromVersion">The starting version of the patch.</param>
+    /// <param name="toVersion">The target version of the patch.</param>
+    /// <return>
+    /// A task that represents the asynchronous operation. The task result contains a GamePatch object representing the specified patch, or null if not found.
+    /// </return>
+    Task<GamePatch?> GetByGameIdAndVersionsAsync(Guid gameId, string fromVersion, string toVersion);
 }

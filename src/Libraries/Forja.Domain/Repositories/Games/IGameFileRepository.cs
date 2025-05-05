@@ -52,4 +52,12 @@ public interface IGameFileRepository
     /// </summary>
     /// <param name="id">The ID of the game file to delete.</param>
     Task DeleteAsync(Guid id);
+
+    /// <summary>
+    /// Finds a game file by its version and file name.
+    /// </summary>
+    /// <param name="version">The version of the game to search for.</param>
+    /// <param name="fileName">The name of the file to search for.</param>
+    /// <returns>The game file matching the specified version and file name, or null if no match is found.</returns>
+    Task<GameFile?> FindByVersionAndNameAsync(string version, string fileName);
 }
