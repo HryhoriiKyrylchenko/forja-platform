@@ -12,6 +12,7 @@ public class MainViewModel : ViewModelBase
 
     private readonly GameLaunchService _launchService = new();
     private readonly ApiService _apiService;
+    private readonly string _gamesRootDir;
     
     private GameAction _currentGameAction;
     public GameAction CurrentGameAction
@@ -52,6 +53,9 @@ public class MainViewModel : ViewModelBase
     public MainViewModel(ApiService apiService)
     {
         _apiService = apiService;
+        
+        var homeDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        _gamesRootDir = Path.Combine(homeDirectory, "Forja", "games");
         
         var uri = new Uri("avares://Forja.Launcher-PROTOTYPE/Assets/logo_2.png");
         DefaultLogo = new Bitmap(AssetLoader.Open(uri));
@@ -120,13 +124,12 @@ public class MainViewModel : ViewModelBase
     {
         try
         {
-            if (game.LocalVersion == game.LatestVersion)
+            
+            if (game.LocalVersion == "0.0.0" || game.LocalVersion == game.LatestVersion)
                 return; 
 
             var objectPath = game.DownloadUrl;
-            var destinationPath = Path.Combine("/games", game.Name, $"version_{game.LatestVersion}.zip");
-
-            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
+            var destinationPath = Path.Combine(Path.GetDirectoryName(game.ExecutablePath)!, $"version_{game.LatestVersion}.zip");
 
             var progressReporter = new Progress<double>(p =>
             {
@@ -181,7 +184,7 @@ public class MainViewModel : ViewModelBase
                     var existingGame = Games.FirstOrDefault(g => g.Id == game.Id);
                     if (existingGame != null)
                     {
-                        existingGame.Name = game.Title;
+                        existingGame.Title = game.Title;
                         existingGame.LogoUrl = game.LogoUrl;
                         existingGame.LatestVersion = latestVersion;
                         existingGame.DownloadUrl = versionInfo.StorageUrl;
@@ -191,7 +194,7 @@ public class MainViewModel : ViewModelBase
                         var newGame = new Game
                         {
                             Id = game.Id,
-                            Name = game.Title,
+                            Title = game.Title,
                             LatestVersion = latestVersion,
                             DownloadUrl = versionInfo.StorageUrl,
                             LogoUrl = game.LogoUrl
@@ -243,9 +246,7 @@ public class MainViewModel : ViewModelBase
     {
         try
         {
-            var homeDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            var gameDirectory = Path.Combine(homeDirectory, "Forja", "games");
-            var gameFolder = Path.Combine(gameDirectory, game.Name);
+            var gameFolder = Path.Combine(_gamesRootDir, game.Title);
             var destinationPath = Path.Combine(gameFolder, $"version_{game.LatestVersion}.zip");
             
             Directory.CreateDirectory(gameFolder);
@@ -294,4 +295,24 @@ public class MainViewModel : ViewModelBase
             }
         });
     }
+    
+    // private async Task<bool> VerifyInstallationAsync(GameVersionInfo version, string gameInstallDir)
+    // {
+    //     foreach (var file in version.Files)
+    //     {
+    //         var fullPath = Path.Combine(gameInstallDir, file.FilePath);
+    //         if (!File.Exists(fullPath))
+    //         {
+    //             Debug.WriteLine($"Missing file: {file.FilePath}");
+    //             return false;
+    //         }
+    //
+    //         if (!await HashMatchesAsync(fullPath, file.Hash))
+    //         {
+    //             Debug.WriteLine($"Corrupted file: {file.FilePath}");
+    //             return false;
+    //         }
+    //     }
+    //     return true;
+    // }
 }

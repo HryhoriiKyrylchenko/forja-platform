@@ -3,7 +3,7 @@ namespace Forja.Launcher.Models;
 public class Game : ReactiveObject
 {
     public Guid Id { get; set; }
-    public string Name { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
     public string LocalVersion { get; set; } = "0.0.0";
     public string LatestVersion { get; set; } = "0.0.0";
     public string ExecutablePath { get; set; } = string.Empty;
@@ -56,12 +56,12 @@ public class Game : ReactiveObject
                 }
                 else
                 {
-                    Debug.WriteLine($"Failed to load logo for {Name}: {response.StatusCode}");
+                    Debug.WriteLine($"Failed to load logo for {Title}: {response.StatusCode}");
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Failed to load logo for {Name}: {ex.Message}");
+                Debug.WriteLine($"Failed to load logo for {Title}: {ex.Message}");
             }
         }
     }

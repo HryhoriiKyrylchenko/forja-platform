@@ -10,8 +10,9 @@
     <UserControl.Resources>
         <converters:ActionToVisibilityConverter x:Key="ActionToVisibilityConverter" />
         <converters:SelectedToColorConverter x:Key="SelectedToColorConverter" />
-        <converters:NullToOpacityConverter x:Key="NullToOpacityConverter" />
+        <converters:ProgressToBooleanConverter x:Key="ProgressToBooleanConverter" />
         <converters:GameOrDefaultLogoConverter x:Key="GameOrDefaultLogoConverter" />
+        <converters:ProgressToPercentConverter x:Key="ProgressToPercentConverter" />
     </UserControl.Resources>
     
     <UserControl.Styles>
@@ -53,6 +54,16 @@
 
         <!-- Bottom list with games and action button -->
         <DockPanel Grid.Row="1" LastChildFill="False" Margin="10">
+            <!-- Progress bar -->
+            <ProgressBar 
+                DockPanel.Dock="Top"
+                Minimum="0"
+                Maximum="100"
+                Height="10"
+                Margin="0,0,0,5"
+                Value="{Binding SelectedGame.Progress, Converter={StaticResource ProgressToPercentConverter}}"
+                IsVisible="{Binding SelectedGame.Progress, Converter={StaticResource ProgressToBooleanConverter}}" />
+
             <!-- Game list -->
             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" DockPanel.Dock="Left">
                 <ItemsControl ItemsSource="{Binding Games}">

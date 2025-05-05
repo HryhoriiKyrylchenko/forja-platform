@@ -4,9 +4,8 @@ public class ProgressToBooleanConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is double progress)
-            return progress > 0;
-
+        if (value is double d)
+            return d is > 0 and < 1;
         return false;
     }
 
