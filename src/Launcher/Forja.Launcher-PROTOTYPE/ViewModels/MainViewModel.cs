@@ -2,7 +2,7 @@ namespace Forja.Launcher.ViewModels;
 
 public class MainViewModel : ViewModelBase
 {
-    public ObservableCollection<Game> Games { get; } = new();
+    public ObservableCollection<Game> Games { get; } = new(); //public ObservableCollection<GameViewModel> Games { get; set; } = [];
     public ReactiveCommand<Game, Unit> UpdateCommand { get; }
     public ReactiveCommand<Game, Unit> PlayCommand { get; }
     public ReactiveCommand<Game, Unit> InstallCommand { get; }
@@ -161,6 +161,22 @@ public class MainViewModel : ViewModelBase
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
+                // foreach (var apiGame in apiGames)
+                // {
+                //     var existingVm = Games.FirstOrDefault(g => g.ApiData.Id == apiGame.Id);
+                //     var localData = await GameStorage.LoadInstallationAsync(apiGame.Id);  // твой метод загрузки локальных данных
+                //
+                //     if (existingVm != null)
+                //     {
+                //         existingVm.ApiData = apiGame;
+                //         existingVm.LocalData = localData ?? new GameInstallation { GameId = apiGame.Id };
+                //     }
+                //     else
+                //     {
+                //         var newVm = new GameViewModel(apiGame, localData ?? new GameInstallation { GameId = apiGame.Id }, _currentPlatform);
+                //         Games.Add(newVm);
+                //     }
+                // }
                 foreach (var game in apiGames)
                 {
                     var latestVersion = game.Versions

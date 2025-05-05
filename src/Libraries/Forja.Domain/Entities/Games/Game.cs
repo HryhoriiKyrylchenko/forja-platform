@@ -60,13 +60,7 @@ public class Game : Product
     /// such as Entity Framework.
     /// </remarks>
     public virtual ICollection<GameMechanic> GameMechanics { get; set; } = [];
-
-    /// <summary>
-    /// Represents the collection of all versions associated with the game.
-    /// Each version includes details such as version number, storage URL, release date, and other metadata.
-    /// </summary>
-    public virtual ICollection<GameVersion> GameVersions { get; set; } = [];
-
+    
     /// <summary>
     /// Represents the collection of patches associated with a game.
     /// </summary>

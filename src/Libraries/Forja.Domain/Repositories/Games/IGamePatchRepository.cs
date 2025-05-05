@@ -20,16 +20,15 @@ public interface IGamePatchRepository
     /// </returns>
     Task<GamePatch?> GetByIdAsync(Guid id);
 
-    /// <summary>
-    /// Retrieves a specific game patch by the provided game ID and patch name.
-    /// </summary>
-    /// <param name="gameId">The unique identifier of the game to which the patch belongs.</param>
-    /// <param name="patchName">The name of the patch to be retrieved.</param>
-    /// <returns>
-    /// A task representing the asynchronous operation. The task result contains the <see cref="GamePatch"/> entity
-    /// if it exists; otherwise, returns null.
-    /// </returns>
-    Task<GamePatch?> GetByGameIdAndPatchNameAsync(Guid gameId, string patchName);
+
+    /// Retrieves a specific game patch based on the game ID, platform, and the patch name.
+    /// <param name="gameId">The unique identifier of the game.</param>
+    /// <param name="platform">The platform type of the game patch (e.g., Windows, Mac, Linux).</param>
+    /// <param name="patchName">The name of the patch to retrieve.</param>
+    /// <return>
+    /// A task that represents the asynchronous operation. The task result contains the retrieved GamePatch object if found; otherwise, null.
+    /// </return>
+    Task<GamePatch?> GetByGameIdPlatformAndPatchNameAsync(Guid gameId, PlatformType platform, string patchName);
 
     /// <summary>
     /// Retrieves all game patches associated with a specific game based on the provided game ID.
@@ -62,14 +61,14 @@ public interface IGamePatchRepository
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task DeleteAsync(Guid id);
 
-    /// <summary>
-    /// Retrieves a game patch based on the specified game ID and version range.
-    /// </summary>
+
+    /// Retrieves a game patch based on the specified game ID, platform, and version range.
     /// <param name="gameId">The unique identifier of the game.</param>
-    /// <param name="fromVersion">The starting version of the patch.</param>
-    /// <param name="toVersion">The target version of the patch.</param>
+    /// <param name="platform">The platform type (e.g., Windows, Mac, Linux) for the game patch.</param>
+    /// <param name="fromVersion">The starting version of the patch range.</param>
+    /// <param name="toVersion">The ending version of the patch range.</param>
     /// <return>
-    /// A task that represents the asynchronous operation. The task result contains a GamePatch object representing the specified patch, or null if not found.
+    /// A task that represents the asynchronous operation. The task result contains a GamePatch object if a matching patch is found; otherwise, null.
     /// </return>
-    Task<GamePatch?> GetByGameIdAndVersionsAsync(Guid gameId, string fromVersion, string toVersion);
+    Task<GamePatch?> GetByGameIdPlatformAndVersionsAsync(Guid gameId, PlatformType platform, string fromVersion, string toVersion);
 }

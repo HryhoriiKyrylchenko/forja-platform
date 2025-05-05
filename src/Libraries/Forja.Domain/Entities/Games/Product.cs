@@ -42,7 +42,7 @@ public abstract class Product : SoftDeletableEntity
     /// <summary>
     /// Gets or sets the platform on which the product is available.
     /// </summary>
-    public string Platforms { get; set; } = string.Empty;
+    public List<PlatformType> Platforms { get; set; } = [];
     
     /// <summary>
     /// Gets or sets the price of the product.
@@ -129,4 +129,13 @@ public abstract class Product : SoftDeletableEntity
     /// Virtual property for Entity Framework to handle related data.
     /// </summary>
     public virtual ICollection<Review> Reviews { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the collection of product versions associated with the product.
+    /// </summary>
+    /// <remarks>
+    /// Each product version contains details such as version number, storage location, file size,
+    /// and release information. It is used to track different versions of a product over time.
+    /// </remarks>
+    public virtual ICollection<ProductVersion> ProductVersions { get; set; } = [];
 }

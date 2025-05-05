@@ -1,6 +1,6 @@
 namespace Forja.Application.Requests.Games;
 
-public class GameFileUpdateRequest
+public class AddonFileUpdateRequest
 {
     public Guid Id { get; set; }
     public long FileSize { get; set; } 

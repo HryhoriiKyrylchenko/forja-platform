@@ -17,7 +17,6 @@ public class GameAddonDto
     public string AudioLanguages { get; set; } = string.Empty;
     public string SubtitlesLanguages { get; set; } = string.Empty;
     public Guid GameId { get; set; }
-    public string? StorageUrl { get; set; }
     public List<DiscountDto> Discounts { get; set; } = [];
     public List<MatureContentDto> MatureContent { get; set; } = [];
     public (int positive, int negative) Rating { get; set; }

@@ -213,7 +213,7 @@ public class AuthController : ControllerBase
                 Console.WriteLine($"Error logging audit log entry: {e.Message}");
             }
 
-            return Ok(tokenResponse);
+            return Ok();
         }
         catch (Exception ex)
         {
@@ -362,8 +362,7 @@ public class AuthController : ControllerBase
         try
         {
             var httpContext = _httpContextAccessor.HttpContext ?? throw new InvalidOperationException("HTTP Context is unavailable.");
-
-            // ќтримуЇмо refresh_token з HttpOnly cookie
+            
             if (!httpContext.Request.Cookies.TryGetValue("refresh_token", out var refreshToken) || string.IsNullOrWhiteSpace(refreshToken))
             {
                 return BadRequest(new { error = "Refresh token is missing." });
@@ -393,7 +392,7 @@ public class AuthController : ControllerBase
             httpContext.Response.Cookies.Append("access_token", tokenResponse.AccessToken, accessTokenOptions);
             httpContext.Response.Cookies.Append("refresh_token", tokenResponse.RefreshToken, refreshTokenOptions);
 
-            return Ok(tokenResponse);
+            return Ok();
         }
         catch (Exception ex)
         {

@@ -49,7 +49,7 @@ public class GameAddonCreateRequest
     /// <summary>
     /// Represents the platforms where the game or addon is available or supported.
     /// </summary>
-    public string Platforms { get; set; } = string.Empty;
+    public List<PlatformType> Platforms { get; set; } = [];
 
     /// <summary>
     /// Represents the price of a game addon or product.

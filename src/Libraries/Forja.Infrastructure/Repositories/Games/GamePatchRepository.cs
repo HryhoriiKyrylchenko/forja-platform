@@ -33,7 +33,7 @@ public class GamePatchRepository : IGamePatchRepository
     }
 
     /// <inheritdoc />
-    public async Task<GamePatch?> GetByGameIdAndPatchNameAsync(Guid gameId, string patchName)
+    public async Task<GamePatch?> GetByGameIdPlatformAndPatchNameAsync(Guid gameId, PlatformType platform, string patchName)
     {
         if (gameId == Guid.Empty)
         {
@@ -45,7 +45,9 @@ public class GamePatchRepository : IGamePatchRepository
             throw new ArgumentException("Invalid patch name.", nameof(patchName));
         }
         
-        return await _gamePatches.FirstOrDefaultAsync(gp => gp.GameId == gameId && gp.Name == patchName);
+        return await _gamePatches.FirstOrDefaultAsync(gp => gp.GameId == gameId 
+                                                            && gp.Name == patchName
+                                                            && gp.Platform == platform);
     }
 
     /// <inheritdoc />
@@ -97,7 +99,8 @@ public class GamePatchRepository : IGamePatchRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<GamePatch?> GetByGameIdAndVersionsAsync(Guid gameId, string fromVersion, string toVersion)
+    /// <inheritdoc />
+    public async Task<GamePatch?> GetByGameIdPlatformAndVersionsAsync(Guid gameId, PlatformType platform, string fromVersion, string toVersion)
     {
         if (gameId == Guid.Empty)
         {
@@ -116,6 +119,7 @@ public class GamePatchRepository : IGamePatchRepository
 
         return await _gamePatches.FirstOrDefaultAsync(gp => gp.GameId == gameId 
                                                             && gp.FromVersion == fromVersion 
-                                                            && gp.ToVersion == toVersion);
+                                                            && gp.ToVersion == toVersion
+                                                            && gp.Platform == platform);
     }
 }

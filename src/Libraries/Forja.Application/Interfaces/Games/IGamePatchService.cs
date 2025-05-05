@@ -23,11 +23,16 @@ public interface IGamePatchService
     /// </returns>
     Task<GamePatchDto?> UpdateGamePatch(GamePatchUpdateRequest request);
 
+
     /// <summary>
-    /// Retrieves a game patch by the associated game ID and patch name.
+    /// Retrieves a game patch by the specified game ID, platform, and patch name.
     /// </summary>
     /// <param name="gameId">The unique identifier of the game.</param>
-    /// <param name="name">The name of the patch to retrieve.</param>
-    /// <returns>A <c>GamePatchDto</c> object representing the game patch if found, otherwise <c>null</c>.</returns>
-    Task<GamePatchDto?> GetGamePatchByGameIdAndName(Guid gameId, string name);
+    /// <param name="platform">The platform type for which the patch is designed.</param>
+    /// <param name="name">The name of the game patch to retrieve.</param>
+    /// <returns>
+    /// A <see cref="GamePatchDto"/> object representing the game patch that matches the provided
+    /// criteria, or null if no matching patch is found.
+    /// </returns>
+    Task<GamePatchDto?> GetGamePatchByGameIdPlatformAndName(Guid gameId, PlatformType platform, string name);
 }

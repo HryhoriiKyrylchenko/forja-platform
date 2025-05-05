@@ -235,7 +235,8 @@ public static class UserProfileEntityToDtoMapper
         {
             Id = userLibraryAddon.Id,
             Name = userLibraryAddon.GameAddon.Title,
-            StorageUrl = userLibraryAddon.GameAddon.StorageUrl ?? string.Empty
+            Platforms = userLibraryAddon.GameAddon.Platforms,
+            Versions = userLibraryAddon.GameAddon.ProductVersions.Select(GamesEntityToDtoMapper.MapToProductVersionDto).ToList()
         };
     }
 
@@ -247,9 +248,10 @@ public static class UserProfileEntityToDtoMapper
             Id = userLibraryGame.Id,
             Title = userLibraryGame.Game.Title,
             LogoUrl = gameLogoUrl,
+            Platforms = userLibraryGame.Game.Platforms,
             Patches = userLibraryGame.Game.GamePatches.Select(GamesEntityToDtoMapper.MapToGamePatchDto).ToList(),
             Addons = userLibraryGame.PurchasedAddons.Select(MapToUserLibraryAddonForLauncherDto).ToList(),
-            Versions = userLibraryGame.Game.GameVersions.Select(GamesEntityToDtoMapper.MapToGameVersionDto).ToList()
+            Versions = userLibraryGame.Game.ProductVersions.Select(GamesEntityToDtoMapper.MapToProductVersionDto).ToList()
         };
     }
 }

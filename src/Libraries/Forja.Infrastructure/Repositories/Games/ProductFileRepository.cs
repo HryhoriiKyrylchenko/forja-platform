@@ -3,30 +3,30 @@ namespace Forja.Infrastructure.Repositories.Games;
 /// <summary>
 /// Implementation of the IGameFileRepository interface using Entity Framework Core.
 /// </summary>
-public class GameFileRepository : IGameFileRepository
+public class ProductFileRepository : IProductFileRepository
 {
     private readonly ForjaDbContext _context;
-    private readonly DbSet<GameFile> _gameFiles;
+    private readonly DbSet<ProductFile> _gameFiles;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="GameFileRepository"/> class with the provided DbContext.
+    /// Initializes a new instance of the <see cref="ProductFileRepository"/> class with the provided DbContext.
     /// </summary>
     /// <param name="context">The database context to be used.</param>
-    public GameFileRepository(ForjaDbContext context)
+    public ProductFileRepository(ForjaDbContext context)
     {
         _context = context;
-        _gameFiles = context.Set<GameFile>();
+        _gameFiles = context.Set<ProductFile>();
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<GameFile>> GetAllAsync()
+    public async Task<IEnumerable<ProductFile>> GetAllAsync()
     {
         return await _gameFiles
             .ToListAsync();
     }
 
     /// <inheritdoc />
-    public async Task<GameFile?> GetByIdAsync(Guid id)
+    public async Task<ProductFile?> GetByIdAsync(Guid id)
     {
         if (id == Guid.Empty)
         {
@@ -37,11 +37,11 @@ public class GameFileRepository : IGameFileRepository
             .FirstOrDefaultAsync(gf => gf.Id == id);
     }
 
-    public async Task<GameFile?> GetGameFileByGameVersionIdAndFileName(Guid gameVersionId, string fileName)
+    public async Task<ProductFile?> GetGameFileByGameVersionIdAndFileName(Guid productVersionId, string fileName)
     {
-        if (gameVersionId == Guid.Empty)
+        if (productVersionId == Guid.Empty)
         {
-            throw new ArgumentException("Invalid game version ID.", nameof(gameVersionId));
+            throw new ArgumentException("Invalid game version ID.", nameof(productVersionId));
         }
         
         if (string.IsNullOrWhiteSpace(fileName))
@@ -50,11 +50,11 @@ public class GameFileRepository : IGameFileRepository
         }
         
         return await _gameFiles
-            .FirstOrDefaultAsync(gf => gf.GameVersionId == gameVersionId && gf.FileName == fileName);
+            .FirstOrDefaultAsync(gf => gf.ProductVersionId == productVersionId && gf.FileName == fileName);
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<GameFile>> GetByGameVersionIdAsync(Guid gameVersionId)
+    public async Task<IEnumerable<ProductFile>> GetByGameVersionIdAsync(Guid gameVersionId)
     {
         if (gameVersionId == Guid.Empty)
         {
@@ -62,34 +62,34 @@ public class GameFileRepository : IGameFileRepository
         }
 
         return await _gameFiles
-            .Where(gf => gf.GameVersionId == gameVersionId)
+            .Where(gf => gf.ProductVersionId == gameVersionId)
             .ToListAsync();
     }
 
     /// <inheritdoc />
-    public async Task<GameFile?> AddAsync(GameFile gameFile)
+    public async Task<ProductFile?> AddAsync(ProductFile productFile)
     {
-        if (!GamesModelValidator.ValidateGameFile(gameFile, out var errors))
+        if (!GamesModelValidator.ValidateProductFile(productFile, out var errors))
         {
-            throw new ArgumentException("Invalid game file.", nameof(gameFile));
+            throw new ArgumentException($"Invalid game file. Error: {errors}", nameof(productFile));
         }
 
-        await _gameFiles.AddAsync(gameFile);
+        await _gameFiles.AddAsync(productFile);
         await _context.SaveChangesAsync();
-        return gameFile;
+        return productFile;
     }
 
     /// <inheritdoc />
-    public async Task<GameFile?> UpdateAsync(GameFile gameFile)
+    public async Task<ProductFile?> UpdateAsync(ProductFile productFile)
     {
-        if (!GamesModelValidator.ValidateGameFile(gameFile, out var errors))
+        if (!GamesModelValidator.ValidateProductFile(productFile, out var errors))
         {
-            throw new ArgumentException("Invalid game file.", nameof(gameFile));
+            throw new ArgumentException($"Invalid game file. Error: {errors}", nameof(productFile));
         }
 
-        _gameFiles.Update(gameFile);
+        _gameFiles.Update(productFile);
         await _context.SaveChangesAsync();
-        return gameFile;
+        return productFile;
     }
 
     /// <inheritdoc />
@@ -110,7 +110,7 @@ public class GameFileRepository : IGameFileRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<GameFile?> FindByVersionAndNameAsync(string version, string fileName)
+    public async Task<ProductFile?> FindByPlatformVersionProductIdAndNameAsync(PlatformType platform, string version, Guid productId, string fileName)
     {
         if (string.IsNullOrWhiteSpace(version))
         {
@@ -122,6 +122,9 @@ public class GameFileRepository : IGameFileRepository
         }
         
         return await _gameFiles
-            .FirstOrDefaultAsync(gf => gf.GameVersion.Version == version && gf.FileName == fileName);
+            .FirstOrDefaultAsync(gf => gf.ProductVersion.Platform == platform 
+                                                && gf.ProductVersion.ProductId == productId
+                                                && gf.ProductVersion.Version == version 
+                                                && gf.FileName == fileName);
     }
 }

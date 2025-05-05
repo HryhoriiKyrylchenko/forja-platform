@@ -134,17 +134,23 @@ public static class GamesModelValidator
             return false;
         }
 
+        if (game.Platforms.Count == 0)
+        {
+            errorMessage = "Game Platforms must contain at least one item.";
+            return false;
+        }
+
         errorMessage = string.Empty;
         return true;
     }
 
     /// <summary>
-    /// Validates the properties of a <see cref="GameVersion"/> object to ensure its values meet the required business rules.
+    /// Validates the properties of a <see cref="ProductVersion"/> object to ensure its values meet the required business rules.
     /// </summary>
-    /// <param name="gameVersion">The <see cref="GameVersion"/> instance to validate.</param>
+    /// <param name="gameVersion">The <see cref="ProductVersion"/> instance to validate.</param>
     /// <param name="errorMessage">Contains the validation error message if the method returns false.</param>
     /// <returns>
-    /// True if the provided <see cref="GameVersion"/> is valid; otherwise, false.
+    /// True if the provided <see cref="ProductVersion"/> is valid; otherwise, false.
     /// </returns>
     /// <remarks>
     /// Validation rules include:
@@ -157,7 +163,7 @@ public static class GamesModelValidator
     /// - The FileSize property should be greater then zero.
     /// - The ReleaseDate property cannot specify a future date.
     /// </remarks>
-    public static bool ValidateGameVersion(GameVersion? gameVersion, out string? errorMessage)
+    public static bool ValidateProductVersion(ProductVersion? gameVersion, out string? errorMessage)
     {
         errorMessage = null;
         
@@ -173,7 +179,7 @@ public static class GamesModelValidator
             return false;
         }
         
-        if (gameVersion.GameId == Guid.Empty)
+        if (gameVersion.ProductId == Guid.Empty)
         {
             errorMessage = "GameVersion GameId is required.";
             return false;
@@ -213,12 +219,12 @@ public static class GamesModelValidator
     }
 
     /// <summary>
-    /// Validates the properties of a <see cref="GameFile"/> object to ensure its values meet the required requirements.
+    /// Validates the properties of a <see cref="ProductFile"/> object to ensure its values meet the required requirements.
     /// </summary>
-    /// <param name="gameFile">The <see cref="GameFile"/> instance to validate.</param>
+    /// <param name="productFile">The <see cref="ProductFile"/> instance to validate.</param>
     /// <param name="errorMessage">Contains the validation error message if the method returns false.</param>
     /// <returns>
-    /// True if the provided <see cref="GameFile"/> is valid; otherwise, false.
+    /// True if the provided <see cref="ProductFile"/> is valid; otherwise, false.
     /// </returns>
     /// <remarks>
     /// Validation rules include:
@@ -230,46 +236,46 @@ public static class GamesModelValidator
     /// - The FileSize property should be greater then zero.
     /// - The Hash property is required and cannot be null or whitespace.
     /// </remarks>
-    public static bool ValidateGameFile(GameFile? gameFile, out string? errorMessage)
+    public static bool ValidateProductFile(ProductFile? productFile, out string? errorMessage)
     {
         errorMessage = null;
         
-        if (gameFile == null)
+        if (productFile == null)
         {
             errorMessage = "GameFile cannot be null.";
             return false;
         }
 
-        if (gameFile.Id == Guid.Empty)
+        if (productFile.Id == Guid.Empty)
         {
             errorMessage = "GameFile Id is required.";
             return false;
         }
         
-        if (gameFile.GameVersionId == Guid.Empty)
+        if (productFile.ProductVersionId == Guid.Empty)
         {
             errorMessage = "GameFile GameVersionId is required.";
             return false;
         }
 
-        if (string.IsNullOrWhiteSpace(gameFile.FileName))
+        if (string.IsNullOrWhiteSpace(productFile.FileName))
         {
             errorMessage = "GameFile FileName is required.";
             return false;
         }
 
-        if (string.IsNullOrWhiteSpace(gameFile.FilePath))
+        if (string.IsNullOrWhiteSpace(productFile.FilePath))
         {
             errorMessage = "GameFile FilePath is required.";
             return false;
         }
 
-        if (gameFile.FileSize <= 0)
+        if (productFile.FileSize <= 0)
         {
             errorMessage = "GameFile FileSize must be greater than zero.";
         }
 
-        if (string.IsNullOrWhiteSpace(gameFile.Hash))
+        if (string.IsNullOrWhiteSpace(productFile.Hash))
         {
             errorMessage = "GameFile Hash is required.";
             return false;
@@ -297,12 +303,6 @@ public static class GamesModelValidator
         if (gameAddon.GameId == Guid.Empty)
         {
             errorMessage = "GameAddon GameId is required.";
-            return false;
-        }
-
-        if (gameAddon.StorageUrl?.Length > 1000)
-        {
-            errorMessage = "GameAddon Storage URL must not exceed 1000 characters.";
             return false;
         }
 

@@ -46,11 +46,12 @@ public class GameCreateRequest
     public int MinimalAge { get; set; }
 
     /// <summary>
-    /// Gets or sets the platforms on which the game is available.
-    /// This property represents a string that specifies the supported platforms
-    /// (e.g., PC, Xbox, PlayStation).
+    /// Represents the collection of platform types on which the game will be available.
     /// </summary>
-    public string Platforms { get; set; } = string.Empty;
+    /// <remarks>
+    /// This property defines the target platforms, such as Windows, Mac, or Linux, and must be provided as a list of valid platform types.
+    /// </remarks>
+    public List<PlatformType> Platforms { get; set; } = [];
 
     /// <summary>
     /// Represents the price of the game.

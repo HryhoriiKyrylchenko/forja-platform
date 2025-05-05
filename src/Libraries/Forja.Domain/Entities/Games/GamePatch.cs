@@ -24,6 +24,12 @@ public class GamePatch
     public Guid GameId { get; set; }
 
     /// <summary>
+    /// Indicates the platform type for which the game patch is intended.
+    /// This can include platforms such as Windows, Mac, and Linux.
+    /// </summary>
+    public PlatformType Platform { get; set; }
+
+    /// <summary>
     /// Gets or sets the name of the game patch.
     /// </summary>
     /// <remarks>

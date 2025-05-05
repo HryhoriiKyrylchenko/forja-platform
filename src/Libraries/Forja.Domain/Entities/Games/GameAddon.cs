@@ -13,11 +13,6 @@ public class GameAddon : Product
     public Guid GameId { get; set; }
     
     /// <summary>
-    /// Gets or sets the URL where the addon is stored.
-    /// </summary>
-    public string? StorageUrl { get; set; }
-    
-    /// <summary>
     /// Gets or sets the associated game.
     /// Virtual property for Entity Framework to handle related data.
     /// </summary>

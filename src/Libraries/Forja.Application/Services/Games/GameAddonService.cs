@@ -157,7 +157,6 @@ public class GameAddonService : IGameAddonService
             AudioLanguages = request.AudioLanguages,
             SubtitlesLanguages = request.SubtitlesLanguages,
             GameId = request.GameId,
-            StorageUrl = request.StorageUrl,
             CreatedAt = DateTime.UtcNow,
             ModifiedAt = DateTime.UtcNow,
             IsDeleted = false
@@ -218,7 +217,6 @@ public class GameAddonService : IGameAddonService
         existingAddon.AudioLanguages = request.AudioLanguages;
         existingAddon.SubtitlesLanguages = request.SubtitlesLanguages;
         existingAddon.GameId = request.GameId;
-        existingAddon.StorageUrl = request.StorageUrl;
         existingAddon.ModifiedAt = DateTime.UtcNow;
 
         var updatedAddon = await _gameAddonRepository.UpdateAsync(existingAddon);

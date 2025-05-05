@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Forja.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Forja.Infrastructure.Migrations
 {
     [DbContext(typeof(ForjaDbContext))]
-    partial class ForjaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250505211020_Manage_file_changes")]
+    partial class Manage_file_changes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

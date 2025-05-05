@@ -12,7 +12,7 @@ public class ForjaDbContext : DbContext
     public DbSet<AnalyticsSession> AnalyticsSessions { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
     
-    // Analytics entities (schema: analytics)
+    // Common entities (schema: common)
     public DbSet<NewsArticle> NewsArticles { get; set; }
     public DbSet<LegalDocument> LegalDocuments { get; set; }
     
@@ -21,16 +21,20 @@ public class ForjaDbContext : DbContext
     public DbSet<BundleProduct> BundleProducts { get; set; }
     public DbSet<Game> Games { get; set; }
     public DbSet<GameAddon> GameAddons { get; set; }
-    public DbSet<ProductGenres> ProductGenres { get; set; }
-    public DbSet<GameTag> GameTags { get; set; }
-    public DbSet<Genre> Genres { get; set; }
-    public DbSet<Tag> Tags { get; set; }
-    public DbSet<MatureContent> MatureContents { get; set; }
-    public DbSet<ProductMatureContent> ProductMatureContents { get; set; }
-    public DbSet<ItemImage> ItemImages { get; set; }
-    public DbSet<ProductImages> ProductImages { get; set; }
-    public DbSet<Mechanic> Mechanics { get; set; }
+    public DbSet<ProductFile> ProductFiles { get; set; }
     public DbSet<GameMechanic> GameMechanics { get; set; }
+    public DbSet<GamePatch> GamePatches { get; set; }
+    public DbSet<GameTag> GameTags { get; set; }
+    public DbSet<ProductVersion> ProductVersions { get; set; }
+    public DbSet<Genre> Genres { get; set; }
+    public DbSet<ItemImage> ItemImages { get; set; }
+    public DbSet<MatureContent> MatureContents { get; set; }
+    public DbSet<Mechanic> Mechanics { get; set; }
+    public DbSet<Product> Products { get; set; }
+    public DbSet<ProductGenres> ProductGenres { get; set; }
+    public DbSet<ProductImages> ProductImages { get; set; }
+    public DbSet<ProductMatureContent> ProductMatureContents { get; set; }
+    public DbSet<Tag> Tags { get; set; }
 
     // Orders and Payments (schema: store)
     public DbSet<Cart> Carts { get; set; }
@@ -38,7 +42,6 @@ public class ForjaDbContext : DbContext
     public DbSet<Discount> Discounts { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<Payment> Payments { get; set; }
-    public DbSet<Product> Products { get; set; }
     public DbSet<ProductDiscount> ProductDiscounts { get; set; }
     
     // Support entities (schema: support)

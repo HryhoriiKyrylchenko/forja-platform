@@ -20,6 +20,7 @@ public class GamePatchService : IGamePatchService
         {
             Id = Guid.NewGuid(),
             GameId = request.GameId,
+            Platform = request.Platform,
             Name = request.Name,
             FromVersion = request.FromVersion,
             ToVersion = request.ToVersion,
@@ -57,7 +58,7 @@ public class GamePatchService : IGamePatchService
         return result == null ? null : GamesEntityToDtoMapper.MapToGamePatchDto(result);
     }
 
-    public async Task<GamePatchDto?> GetGamePatchByGameIdAndName(Guid gameId, string name)
+    public async Task<GamePatchDto?> GetGamePatchByGameIdPlatformAndName(Guid gameId, PlatformType platform, string name)
     {
         if (gameId == Guid.Empty)
         {
@@ -69,7 +70,7 @@ public class GamePatchService : IGamePatchService
             throw new ArgumentException("Invalid name.", nameof(name));
         }
         
-        var result = await _gamePatchRepository.GetByGameIdAndPatchNameAsync(gameId, name);
+        var result = await _gamePatchRepository.GetByGameIdPlatformAndPatchNameAsync(gameId, platform, name);
         return result == null ? null : GamesEntityToDtoMapper.MapToGamePatchDto(result);
     }
 }

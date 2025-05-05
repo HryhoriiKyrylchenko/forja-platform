@@ -10,10 +10,9 @@ public class FileManagerService : IFileManagerService
     private readonly IMechanicRepository _mechanicRepository;
     private readonly IProductImagesRepository _productImagesRepository;
     private readonly INewsArticleRepository _newsArticleRepository;
-    private readonly IGameVersionRepository _gameVersionRepository;
-    private readonly IGameFileRepository _gameFileRepository;
+    private readonly IProductVersionRepository _productVersionRepository;
+    private readonly IProductFileRepository _productFileRepository;
     private readonly IGamePatchRepository _gamePatchRepository;
-    private readonly IGameAddonRepository _gameAddonRepository;
 
     public FileManagerService(IStorageService storageService,
         IUserRepository userRepository,
@@ -23,10 +22,9 @@ public class FileManagerService : IFileManagerService
         IMechanicRepository mechanicRepository,
         IProductImagesRepository productImagesRepository,
         INewsArticleRepository newsArticleRepository,
-        IGameVersionRepository gameVersionRepository,
-        IGameFileRepository gameFileRepository,
-        IGamePatchRepository gamePatchRepository,
-        IGameAddonRepository gameAddonRepository)
+        IProductVersionRepository productVersionRepository,
+        IProductFileRepository productFileRepository,
+        IGamePatchRepository gamePatchRepository)
     {
         _storageService = storageService;
         _userRepository = userRepository;
@@ -36,10 +34,9 @@ public class FileManagerService : IFileManagerService
         _mechanicRepository = mechanicRepository;
         _productImagesRepository = productImagesRepository;
         _newsArticleRepository = newsArticleRepository;
-        _gameVersionRepository = gameVersionRepository;
-        _gameFileRepository = gameFileRepository;
+        _productVersionRepository = productVersionRepository;
+        _productFileRepository = productFileRepository;
         _gamePatchRepository = gamePatchRepository;
-        _gameAddonRepository = gameAddonRepository;
     }
 
     /// <inheritdoc />
@@ -83,10 +80,11 @@ public class FileManagerService : IFileManagerService
 
         string destinationPath = request.FileType switch
         {
-            FileType.FullGame => $"games/{request.GameId}/versions/{request.Version}/{request.FinalFileName}",
-            FileType.GameFile => $"games/{request.GameId}/versions/{request.Version}/files/{request.FinalFileName}",
-            FileType.GamePatch => $"games/{request.GameId}/patches/{request.FinalFileName}",
-            FileType.GameAddon => $"games/{request.GameId}/addons/{request.AddonId}/{request.FinalFileName}",
+            FileType.FullGame => $"games/{request.GameId}/{request.Platform.ToString().ToLowerInvariant()}/versions/{request.Version}/{request.FinalFileName}",
+            FileType.GameFile => $"games/{request.GameId}/{request.Platform.ToString().ToLowerInvariant()}/versions/{request.Version}/files/{request.FinalFileName}",
+            FileType.GameAddon => $"games/{request.GameId}/{request.Platform.ToString().ToLowerInvariant()}/addons/{request.AddonId}/versions/{request.Version}/{request.FinalFileName}",
+            FileType.AddonFile => $"games/{request.GameId}/{request.Platform.ToString().ToLowerInvariant()}/addons/{request.AddonId}/versions/{request.Version}/files/{request.FinalFileName}",
+            FileType.GamePatch => $"games/{request.GameId}/{request.Platform.ToString().ToLowerInvariant()}/patches/{request.FromVersion}-{request.ToVersion}/{request.FinalFileName}",
             _ => throw new ArgumentOutOfRangeException(nameof(request.FileType), request.FileType, "Invalid file type")
         };
 
@@ -96,13 +94,13 @@ public class FileManagerService : IFileManagerService
             switch (request.FileType)
             {
                 case FileType.FullGame:
-                    var gameVersion = await _gameVersionRepository.GetByGameIdAndVersionAsync(request.GameId, request.Version);
+                    var gameVersion = await _productVersionRepository.GetByProductIdPlatformAndVersionAsync(request.GameId, request.Platform, request.Version);
                     if (gameVersion != null)
                     {
                         gameVersion.StorageUrl = result.ObjectPath;
                         gameVersion.FileSize = result.FileSize;
                         gameVersion.Hash = result.FileHash;
-                        var updatedVersion = await _gameVersionRepository.UpdateAsync(gameVersion);
+                        var updatedVersion = await _productVersionRepository.UpdateAsync(gameVersion);
                         if (updatedVersion == null)
                         {
                             throw new InvalidOperationException("Failed to update game version.");
@@ -110,10 +108,11 @@ public class FileManagerService : IFileManagerService
                     }
                     else
                     {
-                        var newGameVersion = new GameVersion
+                        var newGameVersion = new ProductVersion
                         {
                             Id = Guid.NewGuid(),
-                            GameId = request.GameId,
+                            ProductId = request.GameId,
+                            Platform = request.Platform,
                             Version = request.Version,
                             StorageUrl = result.ObjectPath,
                             FileSize = result.FileSize,
@@ -121,31 +120,39 @@ public class FileManagerService : IFileManagerService
                             Changelog = request.ChangeLog,
                             ReleaseDate = request.ReleaseDate ?? DateTime.UtcNow
                         };
-                        var versionResult = await _gameVersionRepository.AddAsync(newGameVersion);
+                        var versionResult = await _productVersionRepository.AddAsync(newGameVersion);
                         if (versionResult == null)
                         {
+                            await _storageService.DeleteFileAsync(result.ObjectPath);
                             throw new InvalidOperationException("Failed to add game version.");
                         }
                     }
                     break;
                 case FileType.GameFile:
-                    var gameFile = await _gameFileRepository.FindByVersionAndNameAsync(request.Version, request.FinalFileName);
+                    if (request.FilePath == null)
+                    {
+                        throw new ArgumentException("FilePath cannot be null.", nameof(request.FilePath));
+                    }
+                    var gameFile = await _productFileRepository.FindByPlatformVersionProductIdAndNameAsync(request.Platform, request.Version, request.GameId, request.FinalFileName);
                     if (gameFile != null)
                     {
-                        gameFile.FilePath = result.ObjectPath;
+                        gameFile.FileName = request.FinalFileName;
+                        gameFile.FilePath = request.FilePath;
+                        gameFile.StorageUrl = result.ObjectPath;
                         gameFile.FileSize = result.FileSize;
                         gameFile.Hash = result.FileHash;
-                        await _gameFileRepository.UpdateAsync(gameFile);
+                        await _productFileRepository.UpdateAsync(gameFile);
                     }
                     else
                     {
-                        var gameVersionForFile = await _gameVersionRepository.GetByGameIdAndVersionAsync(request.GameId, request.Version);
+                        var gameVersionForFile = await _productVersionRepository.GetByProductIdPlatformAndVersionAsync(request.GameId, request.Platform, request.Version);
                         if (gameVersionForFile == null)
                         {
-                            var newGameVersionForFile = new GameVersion
+                            var newGameVersionForFile = new ProductVersion
                             {
                                 Id = Guid.NewGuid(),
-                                GameId = request.GameId,
+                                ProductId = request.GameId,
+                                Platform = request.Platform,
                                 Version = request.Version,
                                 StorageUrl = result.ObjectPath,
                                 FileSize = result.FileSize,
@@ -153,27 +160,130 @@ public class FileManagerService : IFileManagerService
                                 Changelog = request.ChangeLog,
                                 ReleaseDate = request.ReleaseDate ?? DateTime.UtcNow
                             };
-                            gameVersionForFile = await _gameVersionRepository.AddAsync(newGameVersionForFile);
+                            gameVersionForFile = await _productVersionRepository.AddAsync(newGameVersionForFile);
                             if (gameVersionForFile == null)
                             {
                                 throw new InvalidOperationException("Failed to add game version.");
                             }
                         }
-                        var newGameFile = new GameFile
+                        
+                        var isArchive = request.FinalFileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase);
+                        var newGameFile = new ProductFile
                         {
                             Id = Guid.NewGuid(),
-                            GameVersionId = gameVersionForFile.Id,
+                            ProductVersionId = gameVersionForFile.Id,
                             FileName = request.FinalFileName,
-                            FilePath = result.ObjectPath,
+                            FilePath = request.FilePath,
                             FileSize = result.FileSize,
                             Hash = result.FileHash,
-                            IsArchive = false
+                            StorageUrl = result.ObjectPath,
+                            IsArchive = isArchive
                         };
                         
-                        var fileResult = await _gameFileRepository.AddAsync(newGameFile);
+                        var fileResult = await _productFileRepository.AddAsync(newGameFile);
                         if (fileResult == null)
                         {
+                            await _storageService.DeleteFileAsync(result.ObjectPath);
                             throw new InvalidOperationException("Failed to add game file.");
+                        }
+                    }
+                    break;
+                case FileType.GameAddon:
+                    if (request.AddonId == null || request.AddonId == Guid.Empty)
+                    {
+                        throw new ArgumentException("AddonId cannot be null or empty.", nameof(request.AddonId));
+                    }
+                    var addonVersion = await _productVersionRepository.GetByProductIdPlatformAndVersionAsync((Guid)request.AddonId, request.Platform, request.Version);
+                    if (addonVersion != null)
+                    {
+                        addonVersion.StorageUrl = result.ObjectPath;
+                        addonVersion.FileSize = result.FileSize;
+                        addonVersion.Hash = result.FileHash;
+                        var updatedVersion = await _productVersionRepository.UpdateAsync(addonVersion);
+                        if (updatedVersion == null)
+                        {
+                            throw new InvalidOperationException("Failed to update game version.");
+                        }
+                    }
+                    else
+                    {
+                        var newAddonVersion = new ProductVersion
+                        {
+                            Id = Guid.NewGuid(),
+                            ProductId = (Guid)request.AddonId,
+                            Platform = request.Platform,
+                            Version = request.Version,
+                            StorageUrl = result.ObjectPath,
+                            FileSize = result.FileSize,
+                            Hash = result.FileHash,
+                            Changelog = request.ChangeLog,
+                            ReleaseDate = request.ReleaseDate ?? DateTime.UtcNow
+                        };
+                        var versionResult = await _productVersionRepository.AddAsync(newAddonVersion);
+                        if (versionResult == null)
+                        {
+                            await _storageService.DeleteFileAsync(result.ObjectPath);
+                            throw new InvalidOperationException("Failed to add game version.");
+                        }
+                    }
+                    break;
+                case FileType.AddonFile:
+                    if (request.AddonId == null || request.FilePath == null)
+                    {
+                        throw new ArgumentException("AddonId and FilePath cannot be null or empty.", nameof(request.AddonId));
+                    }
+                    var addonFile = await _productFileRepository.FindByPlatformVersionProductIdAndNameAsync(request.Platform, request.Version, (Guid)request.AddonId, request.FinalFileName);
+                    if (addonFile != null)
+                    {
+                        addonFile.FileName = request.FinalFileName;
+                        addonFile.FilePath = request.FilePath;
+                        addonFile.StorageUrl = result.ObjectPath;
+                        addonFile.FileSize = result.FileSize;
+                        addonFile.Hash = result.FileHash;
+                        await _productFileRepository.UpdateAsync(addonFile);
+                    }
+                    else
+                    {
+                        var addonVersionForFile = await _productVersionRepository.GetByProductIdPlatformAndVersionAsync((Guid)request.AddonId, request.Platform, request.Version);
+                        if (addonVersionForFile == null)
+                        {
+                            var newAddonVersionForFile = new ProductVersion
+                            {
+                                Id = Guid.NewGuid(),
+                                ProductId = (Guid)request.AddonId,
+                                Platform = request.Platform,
+                                Version = request.Version,
+                                StorageUrl = result.ObjectPath,
+                                FileSize = result.FileSize,
+                                Hash = result.FileHash,
+                                Changelog = request.ChangeLog,
+                                ReleaseDate = request.ReleaseDate ?? DateTime.UtcNow
+                            };
+                            addonVersionForFile = await _productVersionRepository.AddAsync(newAddonVersionForFile);
+                            if (addonVersionForFile == null)
+                            {
+                                throw new InvalidOperationException("Failed to add addon version.");
+                            }
+                        }
+                        
+                        var isArchive = request.FinalFileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase);
+                        var newAddonFile = new ProductFile
+                        {
+                            Id = Guid.NewGuid(),
+                            ProductVersionId = addonVersionForFile.Id,
+                            FileName = request.FinalFileName,
+                            FilePath = request.FilePath,
+                            FileSize = result.FileSize,
+                            Hash = result.FileHash,
+                            StorageUrl = result.ObjectPath,
+                            IsArchive = isArchive
+                        };
+                        
+                        var fileResult = await _productFileRepository.AddAsync(newAddonFile);
+                        if (fileResult == null)
+                        {
+                            await _storageService.DeleteFileAsync(result.ObjectPath);
+                            throw new InvalidOperationException("Failed to add addon file.");
                         }
                     }
                     break;
@@ -182,16 +292,17 @@ public class FileManagerService : IFileManagerService
                     {
                         throw new ArgumentException("FromVersion and ToVersion data should not be null when creating patch");
                     }
-                    var gamePatch = await _gamePatchRepository.GetByGameIdAndVersionsAsync(request.GameId, request.FromVersion, request.ToVersion);
+                    var gamePatch = await _gamePatchRepository.GetByGameIdPlatformAndVersionsAsync(request.GameId, request.Platform, request.FromVersion, request.ToVersion);
                     if (gamePatch != null)
                     {
                         gamePatch.PatchUrl = result.ObjectPath;
                         gamePatch.FileSize = result.FileSize;
                         gamePatch.Hash = result.FileHash;
-                        gamePatch.ReleaseDate = DateTime.UtcNow;
+                        gamePatch.ReleaseDate = request.ReleaseDate ?? DateTime.UtcNow;
                         var updatedPatch = await _gamePatchRepository.UpdateAsync(gamePatch);
                         if (updatedPatch == null)
                         {
+                            await _storageService.DeleteFileAsync(result.ObjectPath);
                             throw new InvalidOperationException("Failed to update game patch.");
                         }
                     }
@@ -201,7 +312,8 @@ public class FileManagerService : IFileManagerService
                         {
                             Id = Guid.NewGuid(),
                             GameId = request.GameId,
-                            Name = $"From {request.FromVersion} to {request.ToVersion}",
+                            Platform = request.Platform,
+                            Name = $"{request.FromVersion}-{request.ToVersion}",
                             FromVersion = request.FromVersion,
                             ToVersion = request.ToVersion,
                             PatchUrl = result.ObjectPath,
@@ -214,26 +326,6 @@ public class FileManagerService : IFileManagerService
                         {
                             throw new InvalidOperationException("Failed to add game patch.");
                         }
-                    }
-                    break;
-                case FileType.GameAddon:
-                    if (request.AddonId == null || request.AddonId == Guid.Empty)
-                    {
-                        throw new ArgumentException("AddonId cannot be null or empty.", nameof(request.AddonId));
-                    }
-                    var gameAddon = await _gameAddonRepository.GetByIdAsync((Guid)request.AddonId);
-                    if (gameAddon != null)
-                    {
-                        gameAddon.StorageUrl = result.ObjectPath;
-                        var updatedAddon = await _gameAddonRepository.UpdateAsync(gameAddon);
-                        if (updatedAddon == null)
-                        {
-                            throw new InvalidOperationException("Failed to update game addon.");
-                        }
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException("Game addon not found. First create Game Addon");
                     }
                     break;
                 default:

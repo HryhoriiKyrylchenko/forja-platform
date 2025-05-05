@@ -3,23 +3,23 @@ namespace Forja.Infrastructure.Repositories.Games;
 /// <summary>
 /// Implementation of the IGameVersionRepository interface using Entity Framework Core.
 /// </summary>
-public class GameVersionRepository : IGameVersionRepository
+public class ProductVersionRepository : IProductVersionRepository
 {
     private readonly ForjaDbContext _context;
-    private readonly DbSet<GameVersion> _gameVersions;
+    private readonly DbSet<ProductVersion> _gameVersions;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="GameVersionRepository"/> class with the provided DbContext.
+    /// Initializes a new instance of the <see cref="ProductVersionRepository"/> class with the provided DbContext.
     /// </summary>
     /// <param name="context">The database context to be used.</param>
-    public GameVersionRepository(ForjaDbContext context)
+    public ProductVersionRepository(ForjaDbContext context)
     {
         _context = context;
-        _gameVersions = context.Set<GameVersion>();
+        _gameVersions = context.Set<ProductVersion>();
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<GameVersion>> GetAllAsync()
+    public async Task<IEnumerable<ProductVersion>> GetAllAsync()
     {
         return await _gameVersions
             .Include(gv => gv.Files)
@@ -27,7 +27,7 @@ public class GameVersionRepository : IGameVersionRepository
     }
 
     /// <inheritdoc />
-    public async Task<GameVersion?> GetByIdAsync(Guid id)
+    public async Task<ProductVersion?> GetByIdAsync(Guid id)
     {
         if (id == Guid.Empty)
         {
@@ -39,11 +39,11 @@ public class GameVersionRepository : IGameVersionRepository
             .FirstOrDefaultAsync(gv => gv.Id == id);
     }
 
-    public async Task<GameVersion?> GetByGameIdAndVersionAsync(Guid gameId, string version)
+    public async Task<ProductVersion?> GetByProductIdPlatformAndVersionAsync(Guid productId, PlatformType platform, string version)
     {
-        if (gameId == Guid.Empty)
+        if (productId == Guid.Empty)
         {
-            throw new ArgumentException("Invalid game ID.", nameof(gameId));
+            throw new ArgumentException("Invalid game ID.", nameof(productId));
         }
 
         if (string.IsNullOrWhiteSpace(version))
@@ -53,51 +53,53 @@ public class GameVersionRepository : IGameVersionRepository
         
         return await _gameVersions
             .Include(gv => gv.Files)
-            .FirstOrDefaultAsync(gv => gv.GameId == gameId && gv.Version == version);
+            .FirstOrDefaultAsync(gv => gv.ProductId == productId 
+                                       && gv.Version == version
+                                       && gv.Platform == platform);
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<GameVersion>> GetByGameIdAsync(Guid gameId)
+    public async Task<IEnumerable<ProductVersion>> GetByProductIdAsync(Guid productId)
     {
-        if (gameId == Guid.Empty)
+        if (productId == Guid.Empty)
         {
-            throw new ArgumentException("Invalid game ID.", nameof(gameId));
+            throw new ArgumentException("Invalid game ID.", nameof(productId));
         }
 
         return await _gameVersions
-            .Where(gv => gv.GameId == gameId)
+            .Where(gv => gv.ProductId == productId)
             .Include(gv => gv.Files)
             .ToListAsync();
     }
 
     /// <inheritdoc />
-    public async Task<GameVersion?> AddAsync(GameVersion gameVersion)
+    public async Task<ProductVersion?> AddAsync(ProductVersion productVersion)
     {
-        if (!GamesModelValidator.ValidateGameVersion(gameVersion, out var errors))
+        if (!GamesModelValidator.ValidateProductVersion(productVersion, out var errors))
         {
-            throw new ArgumentException("Invalid game version.", nameof(gameVersion));
+            throw new ArgumentException($"Invalid game version. Error: {errors}", nameof(productVersion));
         }
 
-        await _gameVersions.AddAsync(gameVersion);
+        await _gameVersions.AddAsync(productVersion);
         await _context.SaveChangesAsync();
         return await _gameVersions
             .Include(gv => gv.Files)
-            .FirstOrDefaultAsync(gv => gv.GameId == gameVersion.GameId);
+            .FirstOrDefaultAsync(gv => gv.ProductId == productVersion.ProductId);
     }
 
     /// <inheritdoc />
-    public async Task<GameVersion?> UpdateAsync(GameVersion gameVersion)
+    public async Task<ProductVersion?> UpdateAsync(ProductVersion productVersion)
     {
-        if (!GamesModelValidator.ValidateGameVersion(gameVersion, out var errors))
+        if (!GamesModelValidator.ValidateProductVersion(productVersion, out var errors))
         {
-            throw new ArgumentException("Invalid game version.", nameof(gameVersion));
+            throw new ArgumentException($"Invalid game version. Error: {errors}", nameof(productVersion));
         }
 
-        _gameVersions.Update(gameVersion);
+        _gameVersions.Update(productVersion);
         await _context.SaveChangesAsync();
         return await _gameVersions
             .Include(gv => gv.Files)
-            .FirstOrDefaultAsync(gv => gv.GameId == gameVersion.GameId);
+            .FirstOrDefaultAsync(gv => gv.ProductId == productVersion.ProductId);
     }
 
     /// <inheritdoc />
