@@ -889,7 +889,9 @@ public class GamesController : ControllerBase
     }
     
     [HttpGet("game-addons/games/{id}")]
-    public async Task<IActionResult> GetGameAddonsByGameIdAsync([FromRoute] Guid id)
+    public async Task<IActionResult> GetGameAddonsByGameIdAsync([FromRoute] Guid id,
+                                                                [FromQuery] int pageNumber = 1,
+                                                                [FromQuery] int pageSize = 10)
     {
         if (id == Guid.Empty)
             return BadRequest(new { error = "Game ID cannot be empty." });
@@ -936,7 +938,12 @@ public class GamesController : ControllerBase
             }
 
             if (!addons.Any()) return NoContent();
-            return Ok(addons);
+            
+            var pagedAddons = addons
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+            return Ok(pagedAddons);
         }
         catch (Exception ex)
         {

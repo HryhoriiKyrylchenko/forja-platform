@@ -206,8 +206,10 @@ public static class GamesEntityToDtoMapper
             Id = gameAddon.Id,
             Title = gameAddon.Title,
             ShortDescription = gameAddon.ShortDescription,
+            Description = gameAddon.Description,
             LogoUrl = fullLogoUrl,
             Price = gameAddon.Price,
+            ReleaseDate = gameAddon.ReleaseDate,
             Discounts = gameAddon.ProductDiscounts.Select(pd => StoreEntityToDtoMapper.MapToDiscountDto(pd.Discount))
                 .Where(dto => 
                     (!dto.StartDate.HasValue || dto.StartDate <= DateTime.UtcNow) && 
