@@ -7,18 +7,21 @@ public class HomeService : IHomeService
     private readonly INewsArticleRepository _newsArticleRepository;
     private readonly IReviewRepository _reviewRepository;
     private readonly IFileManagerService _fileManagerService;
-    
+    private readonly IGameAddonRepository _gameAddonRepository;
+
     public HomeService(IGameRepository gameRepository,
         IBundleRepository bundleRepository,
         INewsArticleRepository newsArticleRepository,
         IReviewRepository reviewRepository,
-        IFileManagerService fileManagerService)
+        IFileManagerService fileManagerService,
+        IGameAddonRepository gameAddonRepository)
     {
         _gameRepository = gameRepository;
         _bundleRepository = bundleRepository;
         _newsArticleRepository = newsArticleRepository;
         _reviewRepository = reviewRepository;
         _fileManagerService = fileManagerService;
+        _gameAddonRepository = gameAddonRepository;
     }
     
     ///<inheritdoc/>
@@ -100,12 +103,84 @@ public class HomeService : IHomeService
             newsArticles.Add(CommonEntityToDtoMapper.MapToNewsArticleDto(article, imageUrl));
         }
 
+        // ��������� � ��������
+        var allAddons = await _gameAddonRepository.GetAllAsync();
+
+        var discountedProducts = new List<ProdShortDto>();
+        var now = DateTime.UtcNow;
+
+        foreach (var game in allGames)  // ����
+        {
+            var activeDiscount = game.ProductDiscounts
+                .Where(d => d.Discount.StartDate <= now && (d.Discount.EndDate == null || 
+                                                            d.Discount.EndDate > now))
+                .Select(d => d.Discount)
+                .FirstOrDefault();
+
+            if (activeDiscount != null)
+            {
+                discountedProducts.Add(await CreateProdShortDto(game, activeDiscount));
+            }
+        }
+
+        foreach (var addon in allAddons)    // ������
+        {
+            var activeDiscount = addon.ProductDiscounts
+                .Where(d => d.Discount.StartDate <= now && (d.Discount.EndDate == null || 
+                                                            d.Discount.EndDate > now))
+                .Select(d => d.Discount)
+                .FirstOrDefault();
+
+            if (activeDiscount != null)
+            {
+                discountedProducts.Add(await CreateProdShortDto(addon, activeDiscount));
+            }
+        }
+
+        // �� ���� �������
+        var allGamesShort = new List<ProdShortDto>();
+        foreach (var game in allGames)
+        {
+            var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(game.Id);
+            allGamesShort.Add(new ProdShortDto
+            {
+                Id = game.Id,
+                Title = game.Title,
+                LogoUrl = logoUrl
+            });
+        }
+
+        //vvvv
         return new HomepageDto
         {
             Games = topGames,
             PopularInGenre = bestGamesByGenre,
             Bundles = bundles,
-            News = newsArticles
+            News = newsArticles,
+            DiscountedProducts = discountedProducts,
+            AllGamesShort = allGamesShort
+        };
+    }
+
+    private async Task<ProdShortDto> CreateProdShortDto(Product product, Discount? discount = null)
+    {
+        var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(product.Id);
+        return new ProdShortDto
+        {
+            Id = product.Id,
+            Title = product.Title,
+            LogoUrl = logoUrl,
+            ActiveDiscount = discount == null
+                ? null
+                : new DiscountDto
+                {
+                    Id = discount.Id,
+                    Name = discount.Name,
+                    DiscountType = discount.DiscountType.ToString(),
+                    DiscountValue = discount.DiscountValue,
+                    StartDate = discount.StartDate,
+                    EndDate = discount.EndDate
+                }
         };
     }
 }

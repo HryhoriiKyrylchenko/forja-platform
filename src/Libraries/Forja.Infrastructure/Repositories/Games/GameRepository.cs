@@ -29,6 +29,8 @@ public class GameRepository : IGameRepository
                 .ThenInclude(gt => gt.Tag)
             .Include(g => g.ProductImages)
                 .ThenInclude(pi => pi.ItemImage)
+            .Include(g => g.ProductDiscounts)
+                .ThenInclude(pd => pd.Discount)
             .ToListAsync();
     }
     
