@@ -213,7 +213,7 @@ public class AuthController : ControllerBase
                 Console.WriteLine($"Error logging audit log entry: {e.Message}");
             }
 
-            return Ok();
+            return Ok(tokenResponse); // TODO: Delete Token from response in prod
         }
         catch (Exception ex)
         {
