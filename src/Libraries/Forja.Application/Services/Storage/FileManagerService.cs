@@ -942,6 +942,7 @@ public class FileManagerService : IFileManagerService
         {
             ObjectPath = fileMetadata.ObjectPath,
             Size = fileMetadata.Size,
+            Hash = fileMetadata.GetHashCode(),
             ContentType = fileMetadata.ContentType,
             LastModified = fileMetadata.LastModified
         };

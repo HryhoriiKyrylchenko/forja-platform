@@ -607,22 +607,26 @@ public class CartService : ICartService
     ///<inheritdoc/>
     public async Task RecalculateCartTotalAsync(Guid cartId)
     {
+        var cart = await _cartRepository.GetCartByIdAsync(cartId);
+        if (cart == null || cart.Status != CartStatus.Active)
+        {
+            throw new InvalidOperationException("Cannot recalculate a non-active cart.");
+        }
+        
         var cartItems = await _cartItemRepository.GetCartItemsByCartIdAsync(cartId);
         var cartItemsList = cartItems.ToList();
-        if (!cartItemsList.Any())
+        if (cartItemsList.Count == 0)
         {
+            cart.TotalAmount = 0;
+            await _cartRepository.UpdateCartAsync(cart);
             return;
         }
 
         decimal totalPrice = await _priceCalculator.CalculateTotalAsync(cartItemsList, _productDiscountRepository);
-
-        var cart = await _cartRepository.GetCartByIdAsync(cartId);
-        if (cart != null)
-        {
-            cart.TotalAmount = totalPrice;
-            cart.LastModifiedAt = DateTime.UtcNow;
-            await _cartRepository.UpdateCartAsync(cart);
-        }
+        
+        cart.TotalAmount = totalPrice;
+        cart.LastModifiedAt = DateTime.UtcNow;
+        await _cartRepository.UpdateCartAsync(cart);
     }
 
     ///<inheritdoc/>

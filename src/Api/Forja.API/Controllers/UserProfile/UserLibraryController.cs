@@ -224,7 +224,7 @@ public class UserLibraryController : ControllerBase
     /// Returns a 200 OK response with the updated resource if successful, a 404 NotFound response if the game is not found,
     /// or a 400 BadRequest response if the operation fails or the model-state is invalid.
     /// </returns>
-    [Authorize(Policy = "UserManagePolicy")]
+    [Authorize]
     [HttpPut("game")]
     public async Task<ActionResult<UserLibraryGameExtendedDto>> UpdateUserLibraryGame([FromBody] UserLibraryGameUpdateRequest request)
     {

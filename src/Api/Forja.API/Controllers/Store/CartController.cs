@@ -183,6 +183,82 @@ public class CartController : ControllerBase
             return BadRequest(new { error = ex.Message });
         }
     }
+    
+    // [Authorize]
+    [HttpGet("indicator")]
+    public async Task<IActionResult> GetCartIndicator()
+    {
+        try
+        {
+            var keycloakUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    
+            if (string.IsNullOrEmpty(keycloakUserId))
+            {
+                return Unauthorized(new { error = "User ID not found in token claims." });
+            }
+    
+            var user = await _userService.GetUserByKeycloakIdAsync(keycloakUserId);
+            if (user == null)
+            {
+                return NotFound(new { error = $"User with Keycloak ID {keycloakUserId} not found." });
+            }
+    
+            var allCarts = await _cartService.GetCartsByUserIdAsync(user.Id);
+
+            var activeCart = allCarts
+                .FirstOrDefault(c => string.Equals(c.Status, "Active", StringComparison.OrdinalIgnoreCase));
+            
+            int totalItems = 0; 
+            decimal totalPrice = 0;
+            
+            if (activeCart != null)
+            {
+                totalItems = activeCart.CartItems.Count();
+                totalPrice = activeCart.TotalAmount;
+                
+                return Ok(new
+                {
+                    hasItems = totalItems > 0,
+                    totalItems,
+                    totalPrice
+                });
+            }
+
+            return Ok(new
+            {
+                hasItems = false,
+                totalItems = 0,
+                totalPrice = 0
+            });
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                var logEntry = new LogEntry<string>
+                {
+                    State = "Error",
+                    UserId = null,
+                    Exception = ex,
+                    ActionType = AuditActionType.View,
+                    EntityType = AuditEntityType.Other,
+                    LogLevel = LogLevel.Error,
+                    Details = new Dictionary<string, string>
+                    {
+                        { "Message", $"Failed to get cart indicator" }
+                    }
+                };
+    
+                await _auditLogService.LogWithLogEntryAsync(logEntry);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error logging audit log entry: {e.Message}");
+            }
+    
+            return BadRequest(new { error = ex.Message });
+        }
+    }
 
     [Authorize(Policy = "StoreManagePolicy")]
     [HttpPost("handle-abandoned")]

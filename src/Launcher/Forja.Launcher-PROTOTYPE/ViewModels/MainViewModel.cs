@@ -2,17 +2,11 @@ namespace Forja.Launcher.ViewModels;
 
 public class MainViewModel : ViewModelBase
 {
-    public ObservableCollection<Game> Games { get; } = new(); //public ObservableCollection<GameViewModel> Games { get; set; } = [];
-    public ReactiveCommand<Game, Unit> UpdateCommand { get; }
-    public ReactiveCommand<Game, Unit> PlayCommand { get; }
-    public ReactiveCommand<Game, Unit> InstallCommand { get; }
-    public ReactiveCommand<Game, Unit> StopCommand { get; }
+    public ObservableCollection<GameViewModel> Games { get; } = [];
     
-    public ReactiveCommand<Game, Unit> SelectGameCommand { get; }
+    public ReactiveCommand<GameViewModel, Unit> SelectGameCommand { get; }
 
-    private readonly GameLaunchService _launchService = new();
     private readonly ApiService _apiService;
-    private readonly string _gamesRootDir;
     
     private GameAction _currentGameAction;
     public GameAction CurrentGameAction
@@ -21,8 +15,8 @@ public class MainViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _currentGameAction, value);
     }
     
-    private Game? _selectedGame;
-    public Game? SelectedGame
+    private GameViewModel? _selectedGame;
+    public GameViewModel? SelectedGame
     {
         get => _selectedGame;
         set => this.RaiseAndSetIfChanged(ref _selectedGame, value);
@@ -37,16 +31,19 @@ public class MainViewModel : ViewModelBase
             GameAction.Stop => "STOP",
             _ => string.Empty
         };
-
+    
     public ICommand? CurrentActionCommand =>
         CurrentGameAction switch
         {
-            GameAction.Install => InstallCommand,
-            GameAction.Update => UpdateCommand,
-            GameAction.Start => PlayCommand,
-            GameAction.Stop => StopCommand,
+            GameAction.Install => SelectedGame?.InstallOrUpdateCommand,
+            GameAction.Update => SelectedGame?.InstallOrUpdateCommand,
+            GameAction.Start => SelectedGame?.PlayCommand,
+            GameAction.Stop => SelectedGame?.StopCommand,
             _ => null
         };
+    
+    public ICommand? RepairCommand => SelectedGame?.RepairGameCommand;
+    public ICommand? DeleteCommand => SelectedGame?.DeleteGameCommand;
     
     public Bitmap DefaultLogo { get; }
     
@@ -54,32 +51,17 @@ public class MainViewModel : ViewModelBase
     {
         _apiService = apiService;
         
-        var homeDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        _gamesRootDir = Path.Combine(homeDirectory, "Forja", "games");
-        
         var uri = new Uri("avares://Forja.Launcher-PROTOTYPE/Assets/logo_2.png");
         DefaultLogo = new Bitmap(AssetLoader.Open(uri));
-
-        UpdateCommand = ReactiveCommand.CreateFromTask<Game>(
-            async (game) => await UpdateGameAsync(game));
-
-        PlayCommand = ReactiveCommand.CreateFromTask<Game>(
-            async (game) => await PlayGameAsync(game));
-
-        InstallCommand = ReactiveCommand.CreateFromTask<Game>(
-            async (game) => await InstallGameAsync(game));
         
-        StopCommand = ReactiveCommand.CreateFromTask<Game>(
-            async (game) => await StopGame());
-        
-        SelectGameCommand = ReactiveCommand.Create<Game>(game =>
+        SelectGameCommand = ReactiveCommand.Create<GameViewModel>(gameVm =>
         {
             foreach (var g in Games)
             {
                 g.IsSelected = false;
             }
-            game.IsSelected = true;
-            SelectedGame = game;
+            gameVm.IsSelected = true;
+            SelectedGame = gameVm;
         });
         
         this.WhenAnyValue(x => x.CurrentGameAction)
@@ -88,9 +70,9 @@ public class MainViewModel : ViewModelBase
                 this.RaisePropertyChanged(nameof(CurrentActionText));
                 this.RaisePropertyChanged(nameof(CurrentActionCommand));
             });
-
+        
         this.WhenAnyValue(x => x.SelectedGame)
-            .Subscribe(game =>
+            .Subscribe(_ =>
             {
                 UpdateCurrentGameAction();
             });
@@ -102,138 +84,83 @@ public class MainViewModel : ViewModelBase
     {
         try
         {
-            var localGames = await Task.Run(GameStorage.LoadAsync);
-
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                foreach (var game in localGames)
-                {
-                    Games.Add(game);
-                }
-            });
-
-            await FetchAndUpdateGamesFromApi();
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Error loading games: {ex}");
-        }
-    }
-    
-    private async Task UpdateGameAsync(Game game)
-    {
-        try
-        {
+            var currentPlatform = GetCurrentPlatformType();
             
-            if (game.LocalVersion == "0.0.0" || game.LocalVersion == game.LatestVersion)
-                return; 
+            var localGames = await Task.Run(ProductStorage.LoadInstalledGamesAsync);
+            List<LibraryGameModel>? apiGames = null;
 
-            var objectPath = game.DownloadUrl;
-            var destinationPath = Path.Combine(Path.GetDirectoryName(game.ExecutablePath)!, $"version_{game.LatestVersion}.zip");
-
-            var progressReporter = new Progress<double>(p =>
+            try
             {
-                game.Progress = p;
-                Debug.WriteLine($"Update progress: {p:P0}");
-            });
-
-            await _apiService.DownloadFileInChunksAsync(objectPath, destinationPath, progress: progressReporter);
-
-            await Dispatcher.UIThread.InvokeAsync(() =>
+                apiGames = await _apiService.GetAllGamesAsync();
+            }
+            catch (Exception ex)
             {
-                game.LocalVersion = game.LatestVersion;
-                game.Progress = 0; 
-            });
+                Debug.WriteLine($"API fetch failed: {ex}");
+            }
 
-            await GameStorage.SaveAsync(Games);
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Error updating game: {ex}");
-        }
-    }
-    
-    private async Task FetchAndUpdateGamesFromApi()
-    {
-        try
-        {
-            var apiGames = await _apiService.GetAllGamesAsync();
-
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            await Dispatcher.UIThread.InvokeAsync(async () =>
             {
-                // foreach (var apiGame in apiGames)
-                // {
-                //     var existingVm = Games.FirstOrDefault(g => g.ApiData.Id == apiGame.Id);
-                //     var localData = await GameStorage.LoadInstallationAsync(apiGame.Id);  // твой метод загрузки локальных данных
-                //
-                //     if (existingVm != null)
-                //     {
-                //         existingVm.ApiData = apiGame;
-                //         existingVm.LocalData = localData ?? new GameInstallation { GameId = apiGame.Id };
-                //     }
-                //     else
-                //     {
-                //         var newVm = new GameViewModel(apiGame, localData ?? new GameInstallation { GameId = apiGame.Id }, _currentPlatform);
-                //         Games.Add(newVm);
-                //     }
-                // }
-                foreach (var game in apiGames)
+                Games.Clear();
+                
+                if (apiGames == null || apiGames.Count == 0)
                 {
-                    var latestVersion = game.Versions
-                        .Select(v => v.Version)
-                        .OrderByDescending(v => v)
-                        .FirstOrDefault();
+                    Debug.WriteLine("API returned no games or failed. Using local data only.");
 
-                    if (latestVersion is null)
+                    foreach (var localGame in localGames)
                     {
-                        Debug.WriteLine($"Game '{game.Title}' has no versions available.");
-                        continue;
-                    }
-
-                    var versionInfo = game.Versions.FirstOrDefault(v => v.Version == latestVersion);
-                    if (versionInfo is null)
-                    {
-                        Debug.WriteLine($"Latest version '{latestVersion}' for game '{game.Title}' was not found in the version list.");
-                        continue;
-                    }
-
-                    var existingGame = Games.FirstOrDefault(g => g.Id == game.Id);
-                    if (existingGame != null)
-                    {
-                        existingGame.Title = game.Title;
-                        existingGame.LogoUrl = game.LogoUrl;
-                        existingGame.LatestVersion = latestVersion;
-                        existingGame.DownloadUrl = versionInfo.StorageUrl;
-                    }
-                    else
-                    {
-                        var newGame = new Game
+                        var gameVm = new GameViewModel(null, _apiService, localGame)
                         {
-                            Id = game.Id,
-                            Title = game.Title,
-                            LatestVersion = latestVersion,
-                            DownloadUrl = versionInfo.StorageUrl,
-                            LogoUrl = game.LogoUrl
+                            IsUnavailable = true
                         };
-                        Games.Add(newGame);
+                        Games.Add(gameVm);
                     }
+                }
+                else
+                {
+                    var apiGameDict = apiGames.ToDictionary(g => g.Id);
+
+                    foreach (var apiGame in apiGames)
+                    {
+                        var localData = localGames.FirstOrDefault(lg => lg.Id == apiGame.Id);
+                        localData ??= ModelMapper.MapToInstalledGame(apiGame, string.Empty);
+                        var gameVm = new GameViewModel(apiGame, _apiService, localData)
+                        {
+                            IsUnavailable = !apiGame.Platforms.Contains(currentPlatform)
+                        };
+
+                        Games.Add(gameVm);
+                    }
+
+                    var missingGames = localGames.Where(local => !apiGameDict.ContainsKey(local.Id));
+                    foreach (var missingLocal in missingGames)
+                    {
+                        var unavailableVm = new GameViewModel(null, _apiService, missingLocal)
+                        {
+                            IsUnavailable = true
+                        };
+                        Games.Add(unavailableVm);
+                    }
+
+                    var installedGamesToSave = Games
+                        .Where(g => g is { IsInstalled: true, LocalData: not null })
+                        .Select(g => g.LocalData!)
+                        .ToList();
+
+                    await ProductStorage.SaveInstalledGamesAsync(installedGamesToSave);
                 }
             });
 
-            await GameStorage.SaveAsync(Games);
-            
-            foreach (var game in Games)
+            foreach (var gameVm in Games)
             {
-                await game.LoadLogoAsync();
+                await gameVm.LoadLogoAsync();
             }
         }
         catch (Exception ex)
         {
-            // Add proper error handling
-            Debug.WriteLine($"Error fetching games: {ex}");
+            Debug.WriteLine($"Error initializing games: {ex}");
         }
     }
-
+    
     private void UpdateCurrentGameAction()
     {
         if (SelectedGame == null)
@@ -257,78 +184,15 @@ public class MainViewModel : ViewModelBase
             CurrentGameAction = GameAction.Stop;
         }
     }
-    
-    private async Task InstallGameAsync(Game game)
+
+    private PlatformType GetCurrentPlatformType()
     {
-        try
+        return Environment.OSVersion.Platform switch
         {
-            var gameFolder = Path.Combine(_gamesRootDir, game.Title);
-            var destinationPath = Path.Combine(gameFolder, $"version_{game.LatestVersion}.zip");
-            
-            Directory.CreateDirectory(gameFolder);
-
-            var progressReporter = new Progress<double>(p =>
-            {
-                game.Progress = p;
-                Debug.WriteLine($"Download progress: {p:P0}");
-            });
-
-            await _apiService.DownloadFileInChunksAsync(game.DownloadUrl, destinationPath, progress: progressReporter);
-            
-            System.IO.Compression.ZipFile.ExtractToDirectory(destinationPath, gameFolder, overwriteFiles: true);
-
-            File.Delete(destinationPath);
-
-            game.LocalVersion = game.LatestVersion;
-            game.ExecutablePath = destinationPath;
-
-            await GameStorage.SaveAsync(Games);
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Error installing game: {ex}");
-        }
+            PlatformID.Win32NT => PlatformType.Windows,
+            PlatformID.Unix => PlatformType.Linux,
+            PlatformID.MacOSX => PlatformType.Mac,
+            _ => PlatformType.Windows
+        };
     }
-
-    private async Task PlayGameAsync(Game game)
-    {
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            _launchService.LaunchGame(game);
-            game.IsRunning = true; 
-        });
-    }
-
-    private async Task StopGame()
-    {
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            _launchService.StopGame();
-            var currentGame = Games.FirstOrDefault(g => g.IsRunning);
-            if (currentGame != null)
-            {
-                currentGame.IsRunning = false;
-            }
-        });
-    }
-    
-    // private async Task<bool> VerifyInstallationAsync(GameVersionInfo version, string gameInstallDir)
-    // {
-    //     foreach (var file in version.Files)
-    //     {
-    //         var fullPath = Path.Combine(gameInstallDir, file.FilePath);
-    //         if (!File.Exists(fullPath))
-    //         {
-    //             Debug.WriteLine($"Missing file: {file.FilePath}");
-    //             return false;
-    //         }
-    //
-    //         if (!await HashMatchesAsync(fullPath, file.Hash))
-    //         {
-    //             Debug.WriteLine($"Corrupted file: {file.FilePath}");
-    //             return false;
-    //         }
-    //     }
-    //     return true;
-    // }
 }

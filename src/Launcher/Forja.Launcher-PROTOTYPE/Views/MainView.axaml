@@ -1,7 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:Forja.Launcher.ViewModels"
-             xmlns:models="clr-namespace:Forja.Launcher.Models"
              xmlns:converters="clr-namespace:Forja.Launcher.Converters"
              x:Class="Forja.Launcher.Views.MainView"
              x:DataType="vm:MainViewModel"
@@ -13,6 +12,9 @@
         <converters:ProgressToBooleanConverter x:Key="ProgressToBooleanConverter" />
         <converters:GameOrDefaultLogoConverter x:Key="GameOrDefaultLogoConverter" />
         <converters:ProgressToPercentConverter x:Key="ProgressToPercentConverter" />
+        <converters:NullToOpacityConverter x:Key="NullToOpacityConverter" />
+        <converters:RepairButtonStateConverter x:Key="RepairButtonStateConverter" />
+        <converters:DeleteButtonStateConverter x:Key="DeleteButtonStateConverter" />
     </UserControl.Resources>
     
     <UserControl.Styles>
@@ -34,7 +36,7 @@
     </UserControl.Styles>
 
     <Grid Background="#363636">
-        <!-- Define rows: main area + bottom list area -->
+        <!-- Define rows: main area plus bottom list area -->
         <Grid.RowDefinitions>
             <RowDefinition Height="*" /> <!-- Main area (75-80%) -->
             <RowDefinition Height="0.25*" /> <!-- Bottom bar (20-25%) -->
@@ -54,15 +56,25 @@
 
         <!-- Bottom list with games and action button -->
         <DockPanel Grid.Row="1" LastChildFill="False" Margin="10">
-            <!-- Progress bar -->
-            <ProgressBar 
-                DockPanel.Dock="Top"
-                Minimum="0"
-                Maximum="100"
-                Height="10"
-                Margin="0,0,0,5"
-                Value="{Binding SelectedGame.Progress, Converter={StaticResource ProgressToPercentConverter}}"
-                IsVisible="{Binding SelectedGame.Progress, Converter={StaticResource ProgressToBooleanConverter}}" />
+            <!-- Progress bar + Status -->
+            <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="5">
+                <!-- Status Message -->
+                <TextBlock Text="{Binding SelectedGame.StatusMessage}"
+                           Foreground="White"
+                           FontSize="14"
+                           TextWrapping="Wrap"
+                           HorizontalAlignment="Center"
+                           IsVisible="{Binding SelectedGame, Converter={StaticResource NullToOpacityConverter}}" />
+
+                <!-- Progress bar -->
+                <ProgressBar 
+                    Minimum="0"
+                    Maximum="100"
+                    Height="10"
+                    Margin="0,0,0,5"
+                    Value="{Binding SelectedGame.Progress, Converter={StaticResource ProgressToPercentConverter}}"
+                    IsVisible="{Binding SelectedGame.Progress, Converter={StaticResource ProgressToBooleanConverter}}" />
+            </StackPanel>
 
             <!-- Game list -->
             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" DockPanel.Dock="Left">
@@ -73,7 +85,7 @@
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="models:Game">
+                        <DataTemplate x:DataType="vm:GameViewModel">
                             <Button Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).SelectGameCommand}"
                                     CommandParameter="{Binding}" 
                                     BorderThickness="0"
@@ -91,10 +103,37 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </ScrollViewer>
+            
+            <!-- Dropdown + Main Action -->
+            <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="10" DockPanel.Dock="Right" Spacing="10">
+                
+                <StackPanel Orientation="Vertical" Spacing="5">
+                    <!-- Repair Button -->
+                    <Button Content="Repair"
+                            Command="{Binding RepairCommand}"
+                            CommandParameter="{Binding SelectedGame}"
+                            CornerRadius="0,0,5,0"
+                            Width="100"
+                            Height="25"
+                            Background="#7147C5"
+                            Foreground="#E2E2E2"
+                            BorderBrush="#1C1231"
+                            IsEnabled="{Binding SelectedGame, Converter={StaticResource RepairButtonStateConverter}}" />
 
+                    <!-- Delete Button -->
+                    <Button Content="Delete"
+                            Command="{Binding DeleteCommand}"
+                            CommandParameter="{Binding SelectedGame}"
+                            CornerRadius="0,0,5,0"
+                            Width="100"
+                            Height="25"
+                            Background="#7147C5"
+                            Foreground="#E2E2E2"
+                            BorderBrush="#1C1231"
+                            IsEnabled="{Binding SelectedGame, Converter={StaticResource DeleteButtonStateConverter}}" />
+                </StackPanel>
 
-            <!-- Action button for the selected game -->
-            <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="10" DockPanel.Dock="Right">
+                <!-- Main Action Button -->
                 <Button Classes="custom-action-button"
                         Content="{Binding CurrentActionText}"
                         Command="{Binding CurrentActionCommand}"

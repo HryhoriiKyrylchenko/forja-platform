@@ -50,7 +50,7 @@ public static class GamesEntityToDtoMapper
             MinimalAge = game.MinimalAge,
             Platforms = string.Join(", ", game.Platforms.Select(p => p.ToString())),
             Price = game.Price,
-            LogoUrl = game.LogoUrl,
+            LogoUrl = fullLogoUrl,
             ReleaseDate = game.ReleaseDate,
             InterfaceLanguages = game.InterfaceLanguages,
             AudioLanguages = game.AudioLanguages,

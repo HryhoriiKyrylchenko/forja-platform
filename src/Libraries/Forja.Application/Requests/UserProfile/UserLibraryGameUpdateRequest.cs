@@ -13,5 +13,5 @@ public class UserLibraryGameUpdateRequest
     /// <summary>
     /// Gets or sets the total time played for the game.
     /// </summary>
-    public TimeSpan? TimePlayed { get; set; }
+    public TimeSpan TimePlayed { get; set; }
 }
