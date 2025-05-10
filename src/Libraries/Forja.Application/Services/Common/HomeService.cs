@@ -110,6 +110,7 @@ public class HomeService : IHomeService
         var discountedProducts = new List<ProdShortDto>();
         var now = DateTime.UtcNow;
 
+
         foreach (var game in enumerable)  
         {
             var activeDiscount = game.ProductDiscounts
