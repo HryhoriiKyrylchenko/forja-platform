@@ -7,7 +7,6 @@ public class HomepageDto
     public List<BundleDto> Bundles { get; set; } = [];
     public List<NewsArticleDto> News { get; set; } = [];
 
-    public List<ProdShortDto> DiscountedProducts { get; set; } = new();
-    public List<ProdShortDto> AllGamesShort { get; set; } = new();
-
+    public List<ProdShortDto> DiscountedProducts { get; set; } = [];
+    public List<ProdShortDto> AllGamesShort { get; set; } = [];
 }

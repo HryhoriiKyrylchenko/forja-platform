@@ -4,12 +4,12 @@ namespace Forja.Domain.Entities.Games;
 /// Represents a version of a game.
 /// </summary>
 /// <remarks>
-/// The <see cref="GameVersion"/> class contains information about a specific version of a game,
+/// The <see cref="ProductVersion"/> class contains information about a specific version of a game,
 /// including its version number, storage location, file size, and release details.
-/// It is associated with a <see cref="Game"/> entity and can have a collection of related <see cref="GameFile"/> entities.
+/// It is associated with a <see cref="Game"/> entity and can have a collection of related <see cref="ProductFile"/> entities.
 /// </remarks>
-[Table("GameVersions", Schema = "games")]
-public class GameVersion
+[Table("ProductVersions", Schema = "games")]
+public class ProductVersion
 {
     /// <summary>
     /// Gets or sets the unique identifier for an entity or object.
@@ -24,8 +24,14 @@ public class GameVersion
     /// This property is a foreign key linking the game version to its corresponding game.
     /// It ensures referential integrity by associating the version-specific data to a game entity.
     /// </remarks>
-    [ForeignKey("Game")]
-    public Guid GameId { get; set; }
+    [ForeignKey("Product")]
+    public Guid ProductId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the platform type associated with the product version,
+    /// indicating the operating system or environment where the game is supported.
+    /// </summary>
+    public PlatformType Platform { get; set; }
 
     /// <summary>
     /// Represents the version identifier of a specific game release.
@@ -82,20 +88,20 @@ public class GameVersion
     /// Represents a game entity within the system. Inherits from the <see cref="Product"/> class.
     /// </summary>
     /// <remarks>
-    /// The <see cref="Game"/> class is designed to encapsulate information about individual games,
+    /// The <see cref="Product"/> class is designed to encapsulate information about individual products,
     /// including but not limited to system requirements, playtime tracking, and associated collections
     /// of addons, tags, mechanics, versions, patches, and achievements. It provides a comprehensive
     /// structure for managing game-related data in a domain-driven context.
     /// </remarks>
-    public virtual Game Game { get; set; } = null!;
+    public virtual Product Product { get; set; } = null!;
 
     /// <summary>
     /// Represents the collection of files associated with a specific game version.
     /// </summary>
     /// <remarks>
-    /// The <see cref="Files"/> property contains a collection of <see cref="GameFile"/> instances,
+    /// The <see cref="Files"/> property contains a collection of <see cref="ProductFile"/> instances,
     /// which represent individual files tied to the game version. Each file contains information
     /// such as file name, file path, size, hash, and whether it is an archive.
     /// </remarks>
-    public virtual ICollection<GameFile> Files { get; set; } = [];
+    public virtual ICollection<ProductFile> Files { get; set; } = [];
 }

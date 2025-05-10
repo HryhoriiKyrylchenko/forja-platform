@@ -45,11 +45,11 @@ public static class InfrastructureServiceCollectionExtensions
         builder.Services.AddScoped<IBundleRepository, BundleRepository>();
         builder.Services.AddScoped<IBundleProductRepository, BundleProductRepository>();
         builder.Services.AddScoped<IGameAddonRepository, GameAddonRepository>();
-        builder.Services.AddScoped<IGameFileRepository, GameFileRepository>();
+        builder.Services.AddScoped<IProductFileRepository, ProductFileRepository>();
         builder.Services.AddScoped<IGameRepository, GameRepository>();
         builder.Services.AddScoped<IGameMechanicRepository, GameMechanicRepository>();
         builder.Services.AddScoped<IGameTagRepository, GameTagRepository>();
-        builder.Services.AddScoped<IGameVersionRepository, GameVersionRepository>();
+        builder.Services.AddScoped<IProductVersionRepository, ProductVersionRepository>();
         builder.Services.AddScoped<IGenreRepository, GenreRepository>();
         builder.Services.AddScoped<IItemImageRepository, ItemImageRepository>();
         builder.Services.AddScoped<IMatureContentRepository, MatureContentRepository>();

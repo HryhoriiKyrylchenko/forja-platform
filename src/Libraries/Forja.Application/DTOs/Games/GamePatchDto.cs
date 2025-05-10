@@ -4,6 +4,7 @@ public class GamePatchDto
 {
     public Guid Id { get; set; }
     public Guid GameId { get; set; } 
+    public PlatformType Platform { get; set; }
     public string Name { get; set; } = string.Empty;
     public string FromVersion { get; set; } = string.Empty;
     public string ToVersion { get; set; } = string.Empty;

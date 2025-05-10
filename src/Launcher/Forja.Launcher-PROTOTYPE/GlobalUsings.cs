@@ -33,3 +33,6 @@ global using Avalonia.Controls.Templates;
 global using Forja.Launcher.Enums;
 global using System.Windows.Input;
 global using Avalonia.Platform;
+global using System.IO.Compression;
+global using System.Security.Cryptography;
+global using Forja.Launcher.Maping;

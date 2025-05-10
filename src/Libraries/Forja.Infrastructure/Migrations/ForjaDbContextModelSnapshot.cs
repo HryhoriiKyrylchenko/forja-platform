@@ -256,40 +256,6 @@ namespace Forja.Infrastructure.Migrations
                     b.ToTable("BundleProducts", "games");
                 });
 
-            modelBuilder.Entity("Forja.Domain.Entities.Games.GameFile", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("FilePath")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<long>("FileSize")
-                        .HasColumnType("bigint");
-
-                    b.Property<Guid>("GameVersionId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Hash")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsArchive")
-                        .HasColumnType("boolean");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GameVersionId");
-
-                    b.ToTable("GameFiles", "games");
-                });
-
             modelBuilder.Entity("Forja.Domain.Entities.Games.GameMechanic", b =>
                 {
                     b.Property<Guid>("Id")
@@ -339,6 +305,9 @@ namespace Forja.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("Platform")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("ReleaseDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -372,45 +341,6 @@ namespace Forja.Infrastructure.Migrations
                     b.HasIndex("TagId");
 
                     b.ToTable("GameTags", "games");
-                });
-
-            modelBuilder.Entity("Forja.Domain.Entities.Games.GameVersion", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Changelog")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<long>("FileSize")
-                        .HasColumnType("bigint");
-
-                    b.Property<Guid>("GameId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Hash")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("ReleaseDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("StorageUrl")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Version")
-                        .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("character varying(15)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GameId");
-
-                    b.ToTable("GameVersions", "games");
                 });
 
             modelBuilder.Entity("Forja.Domain.Entities.Games.Genre", b =>
@@ -541,9 +471,9 @@ namespace Forja.Infrastructure.Migrations
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Platforms")
+                    b.PrimitiveCollection<int[]>("Platforms")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("integer[]");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("numeric");
@@ -568,6 +498,44 @@ namespace Forja.Infrastructure.Migrations
                     b.ToTable("Products", "games");
 
                     b.UseTptMappingStrategy();
+                });
+
+            modelBuilder.Entity("Forja.Domain.Entities.Games.ProductFile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Hash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsArchive")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("ProductVersionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("StorageUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductVersionId");
+
+                    b.ToTable("ProductFiles", "games");
                 });
 
             modelBuilder.Entity("Forja.Domain.Entities.Games.ProductGenres", b =>
@@ -631,6 +599,48 @@ namespace Forja.Infrastructure.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("ProductMatureContents", "games");
+                });
+
+            modelBuilder.Entity("Forja.Domain.Entities.Games.ProductVersion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Changelog")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Hash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Platform")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ReleaseDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("StorageUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Version")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("character varying(15)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProductVersions", "games");
                 });
 
             modelBuilder.Entity("Forja.Domain.Entities.Games.Tag", b =>
@@ -1273,9 +1283,6 @@ namespace Forja.Infrastructure.Migrations
                     b.Property<Guid>("GameId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("StorageUrl")
-                        .HasColumnType("text");
-
                     b.HasIndex("GameId");
 
                     b.ToTable("GameAddons", "games");
@@ -1342,17 +1349,6 @@ namespace Forja.Infrastructure.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("Forja.Domain.Entities.Games.GameFile", b =>
-                {
-                    b.HasOne("Forja.Domain.Entities.Games.GameVersion", "GameVersion")
-                        .WithMany("Files")
-                        .HasForeignKey("GameVersionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("GameVersion");
-                });
-
             modelBuilder.Entity("Forja.Domain.Entities.Games.GameMechanic", b =>
                 {
                     b.HasOne("Forja.Domain.Entities.Games.Game", "Game")
@@ -1402,15 +1398,15 @@ namespace Forja.Infrastructure.Migrations
                     b.Navigation("Tag");
                 });
 
-            modelBuilder.Entity("Forja.Domain.Entities.Games.GameVersion", b =>
+            modelBuilder.Entity("Forja.Domain.Entities.Games.ProductFile", b =>
                 {
-                    b.HasOne("Forja.Domain.Entities.Games.Game", "Game")
-                        .WithMany("GameVersions")
-                        .HasForeignKey("GameId")
+                    b.HasOne("Forja.Domain.Entities.Games.ProductVersion", "ProductVersion")
+                        .WithMany("Files")
+                        .HasForeignKey("ProductVersionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Game");
+                    b.Navigation("ProductVersion");
                 });
 
             modelBuilder.Entity("Forja.Domain.Entities.Games.ProductGenres", b =>
@@ -1466,6 +1462,17 @@ namespace Forja.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("MatureContent");
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("Forja.Domain.Entities.Games.ProductVersion", b =>
+                {
+                    b.HasOne("Forja.Domain.Entities.Games.Product", "Product")
+                        .WithMany("ProductVersions")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Product");
                 });
@@ -1762,11 +1769,6 @@ namespace Forja.Infrastructure.Migrations
                     b.Navigation("CartItems");
                 });
 
-            modelBuilder.Entity("Forja.Domain.Entities.Games.GameVersion", b =>
-                {
-                    b.Navigation("Files");
-                });
-
             modelBuilder.Entity("Forja.Domain.Entities.Games.Genre", b =>
                 {
                     b.Navigation("ProductGenres");
@@ -1799,9 +1801,16 @@ namespace Forja.Infrastructure.Migrations
 
                     b.Navigation("ProductMatureContents");
 
+                    b.Navigation("ProductVersions");
+
                     b.Navigation("Reviews");
 
                     b.Navigation("UserWishLists");
+                });
+
+            modelBuilder.Entity("Forja.Domain.Entities.Games.ProductVersion", b =>
+                {
+                    b.Navigation("Files");
                 });
 
             modelBuilder.Entity("Forja.Domain.Entities.Games.Tag", b =>
@@ -1881,8 +1890,6 @@ namespace Forja.Infrastructure.Migrations
                     b.Navigation("GamePatches");
 
                     b.Navigation("GameTags");
-
-                    b.Navigation("GameVersions");
 
                     b.Navigation("UserLibraryGames");
                 });

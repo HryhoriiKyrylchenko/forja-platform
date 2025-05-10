@@ -5,5 +5,6 @@ public enum FileType
     FullGame,
     GameFile,
     GameAddon,
+    AddonFile,
     GamePatch
 }

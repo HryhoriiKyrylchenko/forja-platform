@@ -20,7 +20,7 @@ public static class GamesEntityToDtoMapper
             Description = game.Description,
             Developer = game.Developer,
             MinimalAge = game.MinimalAge.ToString(),
-            Platforms = game.Platforms,
+            Platforms = string.Join(", ", game.Platforms.Select(p => p.ToString())),
             Price = game.Price,
             LogoUrl = game.LogoUrl,
             ReleaseDate = game.ReleaseDate,
@@ -33,12 +33,12 @@ public static class GamesEntityToDtoMapper
     }
     
     public static GameExtendedDto MapToGameExtendedDto(Game game, 
-                                                        string fullLogoUrl, 
-                                                        List<MatureContentDto> matureContents, 
-                                                        List<string> images, 
-                                                        List<GameAddonShortDto> gameAddons, 
-                                                        List<MechanicDto> mechanics,
-                                                        (int positiveReviews, int negativeReviews) rating)
+        string fullLogoUrl, 
+        List<MatureContentDto> matureContents, 
+        List<string> images, 
+        List<GameAddonShortDto> gameAddons, 
+        List<MechanicDto> mechanics,
+        (int positiveReviews, int negativeReviews) rating)
     {
         return new GameExtendedDto
         {
@@ -48,9 +48,9 @@ public static class GamesEntityToDtoMapper
             Description = game.Description,
             Developer = game.Developer,
             MinimalAge = game.MinimalAge,
-            Platforms = game.Platforms,
+            Platforms = string.Join(", ", game.Platforms.Select(p => p.ToString())),
             Price = game.Price,
-            LogoUrl = game.LogoUrl,
+            LogoUrl = fullLogoUrl,
             ReleaseDate = game.ReleaseDate,
             InterfaceLanguages = game.InterfaceLanguages,
             AudioLanguages = game.AudioLanguages,
@@ -85,9 +85,9 @@ public static class GamesEntityToDtoMapper
     }
     
     public static GameLibraryDto MapToGameLibraryDto(Game game, 
-                                                    string logoUrl,
-                                                    List<MatureContentDto> matureContents,
-                                                    List<MechanicDto> mechanics)
+        string logoUrl,
+        List<MatureContentDto> matureContents,
+        List<MechanicDto> mechanics)
     {
         return new GameLibraryDto
         {
@@ -140,8 +140,8 @@ public static class GamesEntityToDtoMapper
     }
 
     public static GameCatalogDto MapToGameCatalogDto(Game game, 
-                                                    string fullLogoUrl, 
-                                                    (int positiveReviews, int negativeReviews) rating)
+        string fullLogoUrl, 
+        (int positiveReviews, int negativeReviews) rating)
     {
         return new GameCatalogDto
         {
@@ -166,9 +166,9 @@ public static class GamesEntityToDtoMapper
     }
 
     public static GameAddonDto MapToGameAddonDto(GameAddon gameAddon, 
-                                                string fullLogoUrl, 
-                                                List<MatureContentDto> matureContent, 
-                                                (int positiveReviews, int negativeReviews) rating)
+        string fullLogoUrl, 
+        List<MatureContentDto> matureContent, 
+        (int positiveReviews, int negativeReviews) rating)
     {
         return new GameAddonDto
         {
@@ -178,7 +178,7 @@ public static class GamesEntityToDtoMapper
             Description = gameAddon.Description,
             Developer = gameAddon.Developer,
             MinimalAge = gameAddon.MinimalAge,
-            Platforms = gameAddon.Platforms,
+            Platforms = string.Join(", ", gameAddon.Platforms.Select(p => p.ToString())),
             Price = gameAddon.Price,
             LogoUrl = fullLogoUrl,
             ReleaseDate = gameAddon.ReleaseDate,
@@ -187,7 +187,6 @@ public static class GamesEntityToDtoMapper
             AudioLanguages = gameAddon.AudioLanguages,
             SubtitlesLanguages = gameAddon.SubtitlesLanguages,
             GameId = gameAddon.GameId,
-            StorageUrl = gameAddon.StorageUrl,
             Discounts = gameAddon.ProductDiscounts.Select(pd => StoreEntityToDtoMapper.MapToDiscountDto(pd.Discount))
                 .Where(dto => 
                     (!dto.StartDate.HasValue || dto.StartDate <= DateTime.UtcNow) && 
@@ -242,7 +241,7 @@ public static class GamesEntityToDtoMapper
             ProductId = bundleProduct.ProductId,
             DistributedPrice = bundleProduct.DistributedPrice,
             OriginalProductPrice = bundleProduct.Product.Price,
-            Title = bundleProduct.Product.Title ?? string.Empty,
+            Title = bundleProduct.Product.Title,
             LogoUrl = fullLogoUrl
         };
     }
@@ -383,33 +382,35 @@ public static class GamesEntityToDtoMapper
         };
     }
 
-    public static GameVersionDto MapToGameVersionDto(GameVersion gameVersion)
+    public static ProductVersionDto MapToProductVersionDto(ProductVersion productVersion)
     {
-        return new GameVersionDto
+        return new ProductVersionDto
         {
-            Id = gameVersion.Id,
-            GameId = gameVersion.GameId,
-            Version = gameVersion.Version,
-            StorageUrl = gameVersion.StorageUrl,
-            FileSize = gameVersion.FileSize,
-            Hash = gameVersion.Hash,
-            Changelog = gameVersion.Changelog,
-            ReleaseDate = gameVersion.ReleaseDate,
-            Files = gameVersion.Files.Select(MapToGameFileDto).ToList()
+            Id = productVersion.Id,
+            ProductId = productVersion.ProductId,
+            Platform = productVersion.Platform,
+            Version = productVersion.Version,
+            StorageUrl = productVersion.StorageUrl,
+            FileSize = productVersion.FileSize,
+            Hash = productVersion.Hash,
+            Changelog = productVersion.Changelog,
+            ReleaseDate = productVersion.ReleaseDate,
+            Files = productVersion.Files.Select(MapToProductFileDto).ToList()
         };
     }
 
-    public static GameFileDto MapToGameFileDto(GameFile gameFile)
+    public static ProductFileDto MapToProductFileDto(ProductFile productFile)
     {
-        return new GameFileDto
+        return new ProductFileDto
         {
-            Id = gameFile.Id,
-            GameVersionId = gameFile.GameVersionId,
-            FileName = gameFile.FileName,
-            FilePath = gameFile.FilePath,
-            FileSize = gameFile.FileSize,
-            Hash = gameFile.Hash,
-            IsArchive = gameFile.IsArchive
+            Id = productFile.Id,
+            ProductVersionId = productFile.ProductVersionId,
+            FileName = productFile.FileName,
+            FilePath = productFile.FilePath,
+            FileSize = productFile.FileSize,
+            Hash = productFile.Hash,
+            IsArchive = productFile.IsArchive,
+            StorageUrl = productFile.StorageUrl
         };
     }
 
@@ -419,6 +420,7 @@ public static class GamesEntityToDtoMapper
         {
             Id = gamePatch.Id,
             GameId = gamePatch.GameId,
+            Platform = gamePatch.Platform,
             Name = gamePatch.Name,
             FromVersion = gamePatch.FromVersion,
             ToVersion = gamePatch.ToVersion,

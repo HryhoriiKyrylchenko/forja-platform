@@ -31,7 +31,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<IGameMechanicService, GameMechanicService>();
         services.AddScoped<IGameService, GameService>();
         services.AddScoped<IGameTagService, GameTagService>();
-        services.AddScoped<IGameVersionService, GameVersionService>();
+        services.AddScoped<IProductVersionService, ProductVersionService>();
         services.AddScoped<IGenreService, GenreService>();
         services.AddScoped<IItemImageService, ItemImageService>();
         services.AddScoped<IMatureContentService, MatureContentService>();

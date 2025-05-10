@@ -1,12 +1,11 @@
-namespace Forja.Application.DTOs.Games;
+namespace Forja.Application.Requests.Games;
 
-public class GameFileDto
+public class AddonFileCreateRequest
 {
-    public Guid Id { get; set; }
-    public Guid GameVersionId { get; set; }
+    public Guid GameAddonId { get; set; }
     public string FileName { get; set; } = string.Empty;
     public string FilePath { get; set; } = string.Empty;
     public long FileSize { get; set; } 
     public string Hash { get; set; } = string.Empty;
-    public bool IsArchive { get; set; }
+    public string StorageUrl { get; set; } = string.Empty;
 }

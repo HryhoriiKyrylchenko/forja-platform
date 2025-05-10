@@ -237,14 +237,16 @@ public class UserLibraryGameRepository : IUserLibraryGameRepository
         
         return await _userLibraryGames
             .Where(ulg => ulg.UserId == userId &&
-                   ulg.IsDeleted != true)
+                   !ulg.IsDeleted)
             .Include(ulg => ulg.Game)
-                .ThenInclude(g => g.GameVersions)
+                .ThenInclude(g => g.ProductVersions)
                     .ThenInclude(v => v.Files)
             .Include(ulg => ulg.Game)
                 .ThenInclude(g => g.GamePatches)
             .Include(ulg => ulg.PurchasedAddons)
                 .ThenInclude(a => a.GameAddon)
+                    .ThenInclude(g => g.ProductVersions)
+                        .ThenInclude(a => a.Files)
             .ToListAsync();
     }
 }

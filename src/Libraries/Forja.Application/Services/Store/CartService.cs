@@ -586,7 +586,7 @@ public class CartService : ICartService
     }
 
     ///<inheritdoc/>
-    public async Task RemoveCartItemAsync(Guid cartItemId)
+    public async Task<CartDto?> RemoveCartItemAsync(Guid cartItemId)
     {
         if (cartItemId == Guid.Empty)
         {
@@ -602,27 +602,41 @@ public class CartService : ICartService
         await _cartItemRepository.DeleteCartItemAsync(cartItemId);
 
         await RecalculateCartTotalAsync(cartItem.CartId);
+        
+        var cart = await _cartRepository.GetCartByIdAsync(cartItem.CartId);
+        if (cart == null)
+        {
+            throw new InvalidOperationException("Cart not found.");
+        }
+
+        var cartItems = await GetCartItemsByCartIdAsync(cartItem.CartId);
+        
+        return StoreEntityToDtoMapper.MapToCartDto(cart, cartItems);
     }
     
     ///<inheritdoc/>
     public async Task RecalculateCartTotalAsync(Guid cartId)
     {
+        var cart = await _cartRepository.GetCartByIdAsync(cartId);
+        if (cart == null || cart.Status != CartStatus.Active)
+        {
+            throw new InvalidOperationException("Cannot recalculate a non-active cart.");
+        }
+        
         var cartItems = await _cartItemRepository.GetCartItemsByCartIdAsync(cartId);
         var cartItemsList = cartItems.ToList();
-        if (!cartItemsList.Any())
+        if (cartItemsList.Count == 0)
         {
+            cart.TotalAmount = 0;
+            await _cartRepository.UpdateCartAsync(cart);
             return;
         }
 
         decimal totalPrice = await _priceCalculator.CalculateTotalAsync(cartItemsList, _productDiscountRepository);
-
-        var cart = await _cartRepository.GetCartByIdAsync(cartId);
-        if (cart != null)
-        {
-            cart.TotalAmount = totalPrice;
-            cart.LastModifiedAt = DateTime.UtcNow;
-            await _cartRepository.UpdateCartAsync(cart);
-        }
+        
+        cart.TotalAmount = totalPrice;
+        cart.LastModifiedAt = DateTime.UtcNow;
+        await _cartRepository.UpdateCartAsync(cart);
     }
 
     ///<inheritdoc/>

@@ -3,8 +3,8 @@ namespace Forja.Domain.Entities.Games;
 /// <summary>
 /// Represents a game file associated with a specific game version.
 /// </summary>
-[Table("GameFiles", Schema = "games")]
-public class GameFile
+[Table("ProductFiles", Schema = "games")]
+public class ProductFile
 {
     /// <summary>
     /// Gets or sets the unique identifier for the object.
@@ -17,8 +17,8 @@ public class GameFile
     /// <summary>
     /// Represents the unique identifier of the associated game version.
     /// </summary>
-    [ForeignKey("GameVersion")]
-    public Guid GameVersionId { get; set; }
+    [ForeignKey("ProductVersion")]
+    public Guid ProductVersionId { get; set; }
 
     /// <summary>
     /// Gets or sets the name of the file associated with the game version.
@@ -55,12 +55,19 @@ public class GameFile
     public bool IsArchive { get; set; }
 
     /// <summary>
+    /// Gets or sets the URL pointing to the storage location of the game file.
+    /// This property specifies the online or physical storage URL where the game file is hosted,
+    /// enabling retrieval or reference to the file's stored location.
+    /// </summary>
+    public string StorageUrl { get; set; } = string.Empty;
+
+    /// <summary>
     /// Represents the version of the game associated with the current entity.
     /// </summary>
     /// <remarks>
-    /// The <see cref="GameVersion"/> property establishes a relationship between the current entity and the
+    /// The <see cref="ProductVersion"/> property establishes a relationship between the current entity and the
     /// corresponding game version in the system. It provides access to details such as version number, storage URL,
     /// file size, hash, changelog, release date, and associated game entity.
     /// </remarks>
-    public virtual GameVersion GameVersion { get; set; } = null!;
+    public virtual ProductVersion ProductVersion { get; set; } = null!;
 }

@@ -27,42 +27,21 @@ public class ApiService
         };
 
         var response = await HttpClient.PostAsJsonAsync($"{_apiUrl}/api/Auth/login", loginRequest);
-
         return response.IsSuccessStatusCode;
     }
 
-    public async Task<bool> RefreshTokenAsync()
+    private async Task<bool> RefreshTokenAsync()
     {
         var response = await HttpClient.PostAsync($"{_apiUrl}/api/Auth/refresh", null);
-
         return response.IsSuccessStatusCode;
     }
     
-    public async Task<IEnumerable<LibraryGameInfo>> GetAllGamesAsync()
+    public async Task<List<LibraryGameModel>> GetAllGamesAsync()
     {
-        return await SendWithRefreshAsync<IEnumerable<LibraryGameInfo>>(() =>
+        var result = await SendWithRefreshAsync<IEnumerable<LibraryGameModel>>(() =>
             HttpClient.GetAsync($"{_apiUrl}/api/UserLibrary/launcher")) ?? [];
-    }
-
-    public async Task<string> GetDownloadUrlAsync(Guid gameId, string version)
-    {
-        return await HttpClient.GetStringAsync($"{_apiUrl}/games/{gameId}/download?version={version}");
-    }
-    
-    public async Task ReportPlayedTimeAsync(string libraryGameId, TimeSpan duration)
-    {
-        var payload = new PlayedTimeReport
-        {
-            LibraryGameId = libraryGameId,
-            SecondsPlayed = (int)duration.TotalSeconds
-        };
-
-        var response = await HttpClient.PostAsJsonAsync($"{_apiUrl}/UserLibrary/game", payload);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            // Handle error (log, retry, etc.)
-        }
+        
+        return result.ToList();
     }
     
     public async Task DownloadFileInChunksAsync(
@@ -72,20 +51,24 @@ public class ApiService
         IProgress<double>? progress = null,
         CancellationToken cancellationToken = default)
     {
-        var fileSize = await GetFileSizeAsync(objectPath, cancellationToken); 
-
-        if (fileSize <= 0)
+        var fileMetadata = await GetFileMetadataAsync(objectPath, cancellationToken);
+        if (fileMetadata is null)
+        {
+            throw new InvalidOperationException("Unable to determine file metadata.");
+        }
+        
+        if (fileMetadata.Size <= 0)
             throw new InvalidOperationException("Unable to determine file size.");
 
-        var totalChunks = (long)Math.Ceiling((double)fileSize / chunkSize);
+        var totalChunks = (long)Math.Ceiling((double)fileMetadata.Size / chunkSize);
         long totalBytesDownloaded = 0;
 
-        using var fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None);
+        await using var fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None);
 
         for (long chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++)
         {
             var offset = chunkIndex * chunkSize;
-            var length = Math.Min(chunkSize, fileSize - offset);
+            var length = Math.Min(chunkSize, fileMetadata.Size - offset);
 
             var url = $"{_apiUrl}/api/Files/chunk?objectPath={Uri.EscapeDataString(objectPath)}&offset={offset}&length={length}";
 
@@ -98,8 +81,19 @@ public class ApiService
             totalBytesDownloaded += length;
 
             if (progress != null)
-                progress.Report((double)totalBytesDownloaded / fileSize);
+                progress.Report((double)totalBytesDownloaded / fileMetadata.Size);
         }
+    }
+    
+    private async Task<StorageMetadata?> GetFileMetadataAsync(string objectPath, CancellationToken cancellationToken = default)
+    {
+        var url = $"{_apiUrl}/api/Files/metadata?objectPath={Uri.EscapeDataString(objectPath)}";
+
+        var response = await HttpClient.GetAsync(url, cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        var metadata = await response.Content.ReadFromJsonAsync<StorageMetadata>(cancellationToken);
+        return metadata;
     }
     
     private async Task<T?> SendWithRefreshAsync<T>(Func<Task<HttpResponseMessage>> sendRequest)
@@ -133,14 +127,23 @@ public class ApiService
         return response;
     }
     
-    private async Task<long> GetFileSizeAsync(string objectPath, CancellationToken cancellationToken = default)
+    public async Task<bool> ReportPlayedTimeAsync(Guid libraryGameId, TimeSpan duration)
     {
-        var url = $"{_apiUrl}/api/Files/metadata?objectPath={Uri.EscapeDataString(objectPath)}";
+        var payload = new PlayedTimeReport
+        {
+            LibraryGameId = libraryGameId,
+            TimePlayed = duration
+        };
 
-        var response = await HttpClient.GetAsync(url, cancellationToken);
-        response.EnsureSuccessStatusCode();
+        var response = await SendWithRefreshResponseAsync(() =>
+            HttpClient.PostAsJsonAsync($"{_apiUrl}/api/UserLibrary/game", payload));
 
-        var metadata = await response.Content.ReadFromJsonAsync<StorageMetadata>(cancellationToken);
-        return metadata?.Size ?? -1;
+        if (!response.IsSuccessStatusCode)
+        {
+            Debug.WriteLine("Failed to send played time report.");
+            return false;
+        }
+
+        return true;
     }
 }

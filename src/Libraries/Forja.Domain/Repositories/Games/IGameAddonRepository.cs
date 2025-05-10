@@ -29,13 +29,6 @@ public interface IGameAddonRepository
     /// <param name="id">The unique identifier of the game addon.</param>
     /// <returns>The game addon with the specified ID, or null if not found.</returns>
     Task<GameAddon?> GetByIdAsync(Guid id);
-    
-    /// <summary>
-    /// Retrieves a game addon by its storage URL.
-    /// </summary>
-    /// <param name="storageUrl">The storage URL of the game addon.</param>
-    /// <returns>The game addon associated with the specified storage URL, or null if not found.</returns>
-    Task<GameAddon?> GetByStorageUrlAsync(string storageUrl);
 
     /// <summary>
     /// Gets all addons associated with a specific game.

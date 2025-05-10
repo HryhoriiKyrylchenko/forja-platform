@@ -56,9 +56,9 @@ public class GameAddonUpdateRequest
 
     /// <summary>
     /// Represents the platforms on which the game addon is available.
-    /// This property is used to specify the supported platforms, such as PC, Xbox, PlayStation, or others.
+    /// This property is used to specify the supported platforms, such as Windows, Mac, Linux, or others.
     /// </summary>
-    public string Platforms { get; set; } = string.Empty;
+    public List<PlatformType> Platforms { get; set; } = [];
 
     /// <summary>
     /// Represents the price of the game addon.

@@ -23,7 +23,7 @@ public class HomeService : IHomeService
         _fileManagerService = fileManagerService;
         _gameAddonRepository = gameAddonRepository;
     }
-    
+
     ///<inheritdoc/>
     public async Task<HomepageDto> GetHomepageDataAsync()
     {
@@ -32,7 +32,8 @@ public class HomeService : IHomeService
         var allNewsArticles = await _newsArticleRepository.GetActiveNewsArticlesAsync();
 
         var gameWithReviews = new List<(Game Game, int PositiveReviews, int NegativeReviews)>();
-        foreach (var game in allGames)
+        var enumerable = allGames.ToList();
+        foreach (var game in enumerable)
         {
             var (positive, negative) = await _reviewRepository.GetProductApprovedReviewsCountAsync(game.Id);
             gameWithReviews.Add((game, positive, negative));
@@ -50,9 +51,9 @@ public class HomeService : IHomeService
             .SelectMany(g => g.Game.ProductGenres.Select(pg => new
             {
                 GenreName = pg.Genre.Name,
-                Game = g.Game,
-                PositiveReviews = g.PositiveReviews,
-                NegativeReviews = g.NegativeReviews
+                g.Game,
+                g.PositiveReviews,
+                g.NegativeReviews
             }))
             .GroupBy(x => x.GenreName);
 
@@ -90,9 +91,10 @@ public class HomeService : IHomeService
                 var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(bp.ProductId);
                 bundleProductDtos.Add(GamesEntityToDtoMapper.MapToBundleProductDto(bp, logoUrl));
             }
+
             bundles.Add(GamesEntityToDtoMapper.MapToBundleDto(bundle, bundleProductDtos));
         }
-
+        
         var newsArticles = new List<NewsArticleDto>();
         foreach (var article in allNewsArticles)
         {
@@ -103,17 +105,17 @@ public class HomeService : IHomeService
             newsArticles.Add(CommonEntityToDtoMapper.MapToNewsArticleDto(article, imageUrl));
         }
 
-        // ��������� � ��������
         var allAddons = await _gameAddonRepository.GetAllAsync();
 
         var discountedProducts = new List<ProdShortDto>();
         var now = DateTime.UtcNow;
 
-        foreach (var game in allGames)  // ����
+
+        foreach (var game in enumerable)  
         {
             var activeDiscount = game.ProductDiscounts
-                .Where(d => d.Discount.StartDate <= now && (d.Discount.EndDate == null || 
-                                                            d.Discount.EndDate > now))
+                .Where(d => d.Discount.StartDate <= now 
+                            && (d.Discount.EndDate == null || d.Discount.EndDate > now))
                 .Select(d => d.Discount)
                 .FirstOrDefault();
 
@@ -123,11 +125,11 @@ public class HomeService : IHomeService
             }
         }
 
-        foreach (var addon in allAddons)    // ������
+        foreach (var addon in allAddons)    
         {
             var activeDiscount = addon.ProductDiscounts
-                .Where(d => d.Discount.StartDate <= now && (d.Discount.EndDate == null || 
-                                                            d.Discount.EndDate > now))
+                .Where(d => d.Discount.StartDate <= now 
+                            && (d.Discount.EndDate == null || d.Discount.EndDate > now))
                 .Select(d => d.Discount)
                 .FirstOrDefault();
 
@@ -137,9 +139,8 @@ public class HomeService : IHomeService
             }
         }
 
-        // �� ���� �������
         var allGamesShort = new List<ProdShortDto>();
-        foreach (var game in allGames)
+        foreach (var game in enumerable)
         {
             var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(game.Id);
             allGamesShort.Add(new ProdShortDto
@@ -150,7 +151,6 @@ public class HomeService : IHomeService
             });
         }
 
-        //vvvv
         return new HomepageDto
         {
             Games = topGames,

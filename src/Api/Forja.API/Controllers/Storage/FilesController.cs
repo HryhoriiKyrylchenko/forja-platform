@@ -1122,6 +1122,7 @@ public class FilesController : ControllerBase
         }
     }
     
+    [Authorize]
     [HttpGet("metadata")]
     public async Task<IActionResult> GetMetadata([FromQuery] string objectPath)
     {

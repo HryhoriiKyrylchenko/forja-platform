@@ -112,18 +112,25 @@ public static class StorageRequestsValidator
             errorMessage = "Addon ID cannot be null or empty.";
             return false;
         }
+        
+        if (request.FileType == FileType.AddonFile && (request.AddonId == null || request.AddonId == Guid.Empty))
+        {
+            errorMessage = "Addon ID cannot be null or empty.";
+            return false;
+        }
+
+        if ((request.FileType == FileType.GameFile || request.FileType == FileType.AddonFile) &&
+            request.FilePath == null)
+        {
+            errorMessage = "File path cannot be null or empty.";
+            return false;
+        }
 
         if (request.FileType == FileType.GamePatch 
             && string.IsNullOrWhiteSpace(request.FromVersion) 
             && string.IsNullOrWhiteSpace(request.ToVersion))
         {
             errorMessage = "From version and to version cannot be null or empty.";
-            return false;
-        }
-
-        if (request.FileType == FileType.GameAddon && (request.AddonId == null || request.AddonId == Guid.Empty))
-        {
-            errorMessage = "Addon ID cannot be null or empty.";
             return false;
         }
         

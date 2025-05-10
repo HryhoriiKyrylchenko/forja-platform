@@ -42,11 +42,10 @@ public class GameUpdateRequest
     public int MinimalAge { get; set; }
 
     /// <summary>
-    /// Gets or sets the platforms supported by the game.
-    /// This property holds a string that represents the platforms
-    /// (e.g., PC, PlayStation, Xbox) for which the game is available.
+    /// Specifies the platforms on which the game is available.
+    /// This property allows multiple values and must be selected from the predefined options in the <see cref="PlatformType"/> enum.
     /// </summary>
-    public string Platforms { get; set; } = string.Empty;
+    public List<PlatformType> Platforms { get; set; } = [];
 
     /// <summary>
     /// Represents the price of the game.

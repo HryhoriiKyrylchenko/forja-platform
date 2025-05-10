@@ -26,6 +26,7 @@
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1"/>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.3" />
+        <PackageReference Include="Mono.Posix.NETStandard" Version="5.20.1-preview" />
         <PackageReference Include="ReactiveUI" Version="20.2.45" />
     </ItemGroup>
 

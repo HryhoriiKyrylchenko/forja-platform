@@ -431,7 +431,7 @@ public class UserController : ControllerBase
             return Ok( new
             {
                 UserProfile = result,
-                UserRoles = roles
+                UserRoles = userRolesList
             });
         }
         catch (Exception ex)

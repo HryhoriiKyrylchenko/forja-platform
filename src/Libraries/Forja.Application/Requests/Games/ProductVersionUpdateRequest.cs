@@ -1,6 +1,6 @@
 namespace Forja.Application.Requests.Games;
 
-public class GameVersionUpdateRequest
+public class ProductVersionUpdateRequest
 {
     [Required]
     public Guid Id { get; set; }

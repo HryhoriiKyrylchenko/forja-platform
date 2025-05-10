@@ -10,10 +10,10 @@ public interface IGameFileService
     /// </summary>
     /// <param name="request">The request object containing the details of the game file to be added.</param>
     /// <returns>
-    /// A <see cref="GameFileDto"/> object containing the details of the added game file,
+    /// A <see cref="ProductFileDto"/> object containing the details of the added game file,
     /// or null if the operation fails.
     /// </returns>
-    Task<GameFileDto?> AddGameFile(GameFileCreateRequest request);
+    Task<ProductFileDto?> AddGameFile(GameFileCreateRequest request);
 
     /// <summary>
     /// Updates an existing game file with new data provided in the update request.
@@ -21,7 +21,7 @@ public interface IGameFileService
     /// <param name="request">The request object containing updated information for the game file.</param>
     /// <returns>
     /// A task that represents the asynchronous operation.
-    /// If the operation is successful, returns a <see cref="GameFileDto"/> containing updated file details; otherwise, returns null.
+    /// If the operation is successful, returns a <see cref="ProductFileDto"/> containing updated file details; otherwise, returns null.
     /// </returns>
     /// <exception cref="ArgumentException">
     /// Thrown when the request violates business validation rules.
@@ -29,13 +29,13 @@ public interface IGameFileService
     /// <exception cref="KeyNotFoundException">
     /// Thrown when the game file specified by the ID does not exist.
     /// </exception>
-    Task<GameFileDto?> UpdateGameFile(GameFileUpdateRequest request);
+    Task<ProductFileDto?> UpdateGameFile(GameFileUpdateRequest request);
 
     /// <summary>
     /// Retrieves a game file by its associated game version ID and file name.
     /// </summary>
     /// <param name="gameVersionId">The ID of the game version associated with the game file.</param>
     /// <param name="fileName">The name of the game file to retrieve.</param>
-    /// <returns>A <see cref="GameFileDto"/> object if the game file is found; otherwise, null.</returns>
-    Task<GameFileDto?> GetGameFileByGameVersionIdAndFileName(Guid gameVersionId, string fileName);
+    /// <returns>A <see cref="ProductFileDto"/> object if the game file is found; otherwise, null.</returns>
+    Task<ProductFileDto?> GetGameFileByGameVersionIdAndFileName(Guid gameVersionId, string fileName);
 }
