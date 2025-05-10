@@ -506,8 +506,8 @@ public class CartController : ControllerBase
         if (itemId == Guid.Empty) return BadRequest(new { error = "Cart item ID is required." });
         try
         {
-            await _cartService.RemoveCartItemAsync(itemId);
-            return NoContent();
+            var cart = await _cartService.RemoveCartItemAsync(itemId);
+            return Ok(cart);
         }
         catch (Exception ex)
         {

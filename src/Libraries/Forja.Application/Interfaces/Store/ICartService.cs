@@ -100,7 +100,7 @@ public interface ICartService
     /// </summary>
     /// <param name="cartItemId">The unique identifier of the cart item to remove.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    Task RemoveCartItemAsync(Guid cartItemId);
+    Task<CartDto?> RemoveCartItemAsync(Guid cartItemId);
 
     /// <summary>
     /// Recalculates the total price of a shopping cart based on its current items and applicable discounts.

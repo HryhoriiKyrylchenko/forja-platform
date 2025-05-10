@@ -586,7 +586,7 @@ public class CartService : ICartService
     }
 
     ///<inheritdoc/>
-    public async Task RemoveCartItemAsync(Guid cartItemId)
+    public async Task<CartDto?> RemoveCartItemAsync(Guid cartItemId)
     {
         if (cartItemId == Guid.Empty)
         {
@@ -602,6 +602,16 @@ public class CartService : ICartService
         await _cartItemRepository.DeleteCartItemAsync(cartItemId);
 
         await RecalculateCartTotalAsync(cartItem.CartId);
+        
+        var cart = await _cartRepository.GetCartByIdAsync(cartItem.CartId);
+        if (cart == null)
+        {
+            throw new InvalidOperationException("Cart not found.");
+        }
+
+        var cartItems = await GetCartItemsByCartIdAsync(cartItem.CartId);
+        
+        return StoreEntityToDtoMapper.MapToCartDto(cart, cartItems);
     }
     
     ///<inheritdoc/>
