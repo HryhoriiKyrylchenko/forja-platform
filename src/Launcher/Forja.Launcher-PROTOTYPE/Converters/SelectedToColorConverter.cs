@@ -6,7 +6,7 @@ public class SelectedToColorConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is bool isSelected && isSelected)
+        if (value is true)
         {
             return Color.Parse("#FF9050"); 
         }

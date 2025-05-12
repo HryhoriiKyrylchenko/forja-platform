@@ -72,7 +72,9 @@ public class ApiService
 
             var url = $"{_apiUrl}/api/Files/chunk?objectPath={Uri.EscapeDataString(objectPath)}&offset={offset}&length={length}";
 
-            using var response = await HttpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            using var response = await SendWithRefreshResponseAsync(() => 
+                HttpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken));
+            
             response.EnsureSuccessStatusCode();
 
             await using var chunkStream = await response.Content.ReadAsStreamAsync(cancellationToken);
@@ -80,8 +82,7 @@ public class ApiService
 
             totalBytesDownloaded += length;
 
-            if (progress != null)
-                progress.Report((double)totalBytesDownloaded / fileMetadata.Size);
+            progress?.Report((double)totalBytesDownloaded / fileMetadata.Size);
         }
     }
     
@@ -131,12 +132,12 @@ public class ApiService
     {
         var payload = new PlayedTimeReport
         {
-            LibraryGameId = libraryGameId,
+            Id = libraryGameId,
             TimePlayed = duration
         };
 
         var response = await SendWithRefreshResponseAsync(() =>
-            HttpClient.PostAsJsonAsync($"{_apiUrl}/api/UserLibrary/game", payload));
+            HttpClient.PutAsJsonAsync($"{_apiUrl}/api/UserLibrary/game", payload));
 
         if (!response.IsSuccessStatusCode)
         {

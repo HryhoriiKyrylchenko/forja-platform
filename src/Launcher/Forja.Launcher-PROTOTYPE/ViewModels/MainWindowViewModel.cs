@@ -3,6 +3,8 @@
 public partial class MainWindowViewModel : ViewModelBase, IReactiveObject
 {
     private readonly ApiService _apiService;
+    private readonly GameInstallationService _gameInstallationService;
+    private readonly GameLaunchService _gameLaunchService;
     private ViewModelBase? _currentViewModel;
     
     public ViewModelBase? CurrentViewModel
@@ -18,14 +20,19 @@ public partial class MainWindowViewModel : ViewModelBase, IReactiveObject
         }
     }
 
-    public MainWindowViewModel(ApiService apiService)
+    public MainWindowViewModel(ApiService apiService, 
+        GameInstallationService gameInstallationService,
+        GameLaunchService gameLaunchService)
     {
         _apiService = apiService;
+        _gameInstallationService = gameInstallationService;
+        _gameLaunchService = gameLaunchService;
+        
         var isLoggedIn = false;
 
         if (isLoggedIn)
         {
-            CurrentViewModel = new MainViewModel(apiService);
+            CurrentViewModel = new MainViewModel(apiService, gameInstallationService, gameLaunchService);
         }
         else
         {
@@ -39,7 +46,7 @@ public partial class MainWindowViewModel : ViewModelBase, IReactiveObject
     {
         Dispatcher.UIThread.Post(() =>
         {
-            CurrentViewModel = new MainViewModel(_apiService);
+            CurrentViewModel = new MainViewModel(_apiService, _gameInstallationService, _gameLaunchService);
         });
     }
     
