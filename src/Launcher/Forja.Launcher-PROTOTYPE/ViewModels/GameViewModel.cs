@@ -4,11 +4,10 @@ public class GameViewModel : ReactiveObject
 {
     public LibraryGameModel? Game { get; }
     public InstalledGameModel? LocalData { get; set; }
-
+    
     private readonly GameInstallationService _installationService;
     private readonly GameLaunchService _gameLaunchService;
-
-    public ReactiveCommand<Unit, Unit> CheckForUpdateCommand { get; }
+    
     public ReactiveCommand<Unit, Unit> RepairGameCommand { get; }
     public ReactiveCommand<Unit, Unit> InstallOrUpdateCommand { get; }
     public ReactiveCommand<Unit, Unit> DeleteGameCommand { get; }
@@ -31,21 +30,35 @@ public class GameViewModel : ReactiveObject
     public bool IsInstalled
     {
         get => _isInstalled;
-        set => this.RaiseAndSetIfChanged(ref _isInstalled, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _isInstalled, value);
+            RaiseMainStatsChanged();
+        }
     }
+
     private bool _isUpdated;
     public bool IsUpdated
     {
         get => _isUpdated;
-        set => this.RaiseAndSetIfChanged(ref _isUpdated, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _isUpdated, value);
+            RaiseMainStatsChanged();
+        }
     }
+
     private bool _isRunning;
     public bool IsRunning
     {
         get => _isRunning;
-        set => this.RaiseAndSetIfChanged(ref _isRunning, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _isRunning, value);
+            RaiseMainStatsChanged();
+        }
     }
-    
+
     private Bitmap? _logoBitmap;
     public Bitmap? LogoBitmap
     {
@@ -56,24 +69,37 @@ public class GameViewModel : ReactiveObject
             this.RaiseAndSetIfChanged(ref _logoBitmap, value);
         }
     }
-    
-    public bool IsUnavailable { get; set; }
 
-    private string _statusMessage = "Idle";
+    private bool _isUnavailable;
+    public bool IsUnavailable
+    {
+        get => _isUnavailable;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _isUnavailable, value);
+            this.RaisePropertyChanged(nameof(IsSelectionEnabled));
+        }
+    }
+
+    public bool IsSelectionEnabled => !IsUnavailable && CanSelectGame;
+
+    private string _statusMessage = "";
     public string StatusMessage
     {
         get => _statusMessage;
         set => this.RaiseAndSetIfChanged(ref _statusMessage, value);
     }
 
-    public GameViewModel(LibraryGameModel? game, ApiService apiService, InstalledGameModel? localData = null)
+    //public bool CanPlay => _gameLaunchService.CurrentGame?.Id == LocalData?.Id && !_gameLaunchService.IsRunning;
+    public bool CanSelectGame => !_gameLaunchService.IsRunning;
+    
+    public GameViewModel(LibraryGameModel? game, InstalledGameModel localData, GameLaunchService gameLaunchService, GameInstallationService gameInstallationService)
     {
         Game = game;
         LocalData = localData;
-        _installationService = new GameInstallationService(apiService);
-        _gameLaunchService = new GameLaunchService(apiService);
+        _installationService = gameInstallationService;
+        _gameLaunchService = gameLaunchService;
 
-        CheckForUpdateCommand = ReactiveCommand.CreateFromTask(CheckForUpdateAsync);
         RepairGameCommand = ReactiveCommand.CreateFromTask(RepairGameAsync);
         InstallOrUpdateCommand = ReactiveCommand.CreateFromTask(UpdateOrInstallGameAndAddonsAsync);
         DeleteGameCommand = ReactiveCommand.CreateFromTask(DeleteGameAsync);
@@ -82,10 +108,41 @@ public class GameViewModel : ReactiveObject
         
         _gameLaunchService.GameRunningChanged += (_, isRunning) =>
         {
-            IsRunning = isRunning;
+            IsRunning = _gameLaunchService.CurrentGame?.Id == LocalData.Id && isRunning;
+            
+            //this.RaisePropertyChanged(nameof(CanPlay));
+            this.RaisePropertyChanged(nameof(CanSelectGame));
+            this.RaisePropertyChanged(nameof(IsSelectionEnabled));
         };
         
         InitializeState();
+        
+        Debug.WriteLine($"GameViewModel created for {LocalData?.Id}. HashCode: {GetHashCode()}");
+    }
+    
+    public event EventHandler<bool>? LocalDataChanged;
+
+    private void RaiseLocalDataChanged()
+    {
+        LocalDataChanged?.Invoke(this, true);
+    }
+    
+    public event EventHandler<bool>? MainStatsChanged;
+
+    private void RaiseMainStatsChanged()
+    {
+        MainStatsChanged?.Invoke(this, true);
+
+        if (Application.Current is { } app)
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (app.DataContext is MainViewModel mainVm)
+                {
+                    mainVm.RaiseSelectedGameChanged();
+                }
+            });
+        }
     }
     
     private void InitializeState()
@@ -112,9 +169,15 @@ public class GameViewModel : ReactiveObject
 
     private Task PlayGameAsync()
     {
-        if (LocalData == null || _gameLaunchService.IsRunning)
+        if (LocalData == null)
         {
-            StatusMessage = "Impossible to play. Game is not installed or already running.";
+            StatusMessage = "Impossible to play. Game is not installed.";
+            return Task.CompletedTask;
+        }
+
+        if (_gameLaunchService.IsRunning)
+        {
+            StatusMessage = "Impossible to start. Game is already running.";
             return Task.CompletedTask;
         }
 
@@ -130,28 +193,34 @@ public class GameViewModel : ReactiveObject
         return Task.CompletedTask;
     }
 
-    private Task StopGameAsync()
+    private async Task StopGameAsync()
     {
-        if (!_gameLaunchService.IsRunning)
+        if (LocalData == null || !_gameLaunchService.IsRunning)
         {
             StatusMessage = "Impossible to stop. Game is not running.";
-            return Task.CompletedTask;
+            return;
         }
+
+        if (_gameLaunchService.CurrentGame?.Id != LocalData.Id)
+        {
+            StatusMessage = "Impossible to stop. Game is not running.";
+            return;
+        }
+
         try
         {
-            _gameLaunchService.StopGame();
+            await _gameLaunchService.StopGameAsync();
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"Error stopping a game: {ex.Message}");
             StatusMessage = "Error stopping a game.";
         }
-        return Task.CompletedTask;
     }
 
     private async Task CheckForUpdateAsync()
     {
-        if (LocalData == null)
+        if (LocalData == null || LocalData.Files.Count <= 0 || string.IsNullOrWhiteSpace(LocalData.InstalledVersion))
         {
             StatusMessage = "Impossible to check. Game is not installed.";
             return;
@@ -160,8 +229,17 @@ public class GameViewModel : ReactiveObject
         {
             StatusMessage = "Checking for updates...";
 
-            bool updateNeeded = Game != null && await _installationService.CheckForUpdateAsync(Game, LocalData);
-            StatusMessage = updateNeeded ? "Update required." : "Game is up to date.";
+            var updateNeeded = Game != null && await _installationService.CheckForUpdateAsync(Game, LocalData);
+            if (updateNeeded)
+            {
+                IsUpdated = false;
+                StatusMessage = "Update required.";
+            }
+            else
+            {
+                IsUpdated = true;
+                StatusMessage = "Game is up to date.";
+            }
         }
         catch (Exception ex)
         {
@@ -174,7 +252,7 @@ public class GameViewModel : ReactiveObject
     {
         try
         {
-            if (LocalData == null)
+            if (LocalData == null || string.IsNullOrWhiteSpace(LocalData.InstalledVersion))
             {
                 StatusMessage = "Impossible to repair. Game is not installed.";
                 return;
@@ -206,7 +284,8 @@ public class GameViewModel : ReactiveObject
             if (corruptedFiles.Any())
             {
                 StatusMessage = $"Repairing {corruptedFiles.Count} files...";
-                await _installationService.DownloadAndReplaceFilesAsync(corruptedFiles, LocalData.Id, LocalData.InstallPath);
+                await _installationService.DownloadAndReplaceFilesAsync(corruptedFiles, LocalData.InstallPath);
+                RaiseLocalDataChanged();
                 StatusMessage = "Repair complete.";
             }
             else
@@ -223,65 +302,73 @@ public class GameViewModel : ReactiveObject
     
     private async Task UpdateOrInstallGameAndAddonsAsync()
     {
-        var userDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        var installPath = LocalData?.InstallPath ?? Path.Combine(userDirectory, "Forja", "games");
-
         if (Game != null)
         {
+            var userDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            var installPath = string.IsNullOrWhiteSpace(LocalData?.InstallPath) 
+                ? Path.Combine(userDirectory, "Forja", "games", Game.Title)
+                : LocalData.InstallPath;
+            
             LocalData ??= ModelMapper.MapToInstalledGame(Game, installPath);
+            if (LocalData == null)
+            {
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(LocalData.InstallPath))
+            {
+                LocalData.InstallPath = installPath;
+            }
 
             var currentPlatform = _installationService.GetCurrentPlatformType();
             var progress = new Progress<double>(p => Progress = p);
-
-            StatusMessage = "Checking for patch...";
-            bool patched = await _installationService.ApplyPatchIfAvailableAsync(LocalData, Game, progress);
-
+            
             var latestVersion = Game.Versions
                 .Where(v => v.Platform == currentPlatform)
                 .OrderByDescending(v => Version.Parse(v.Version))
                 .FirstOrDefault();
+            
+            if (latestVersion == null)
+            {
+                StatusMessage = "No available version for this platform.";
+                return;
+            }
+
+            StatusMessage = "Checking for patch...";
+            bool patched = await _installationService.ApplyPatchIfAvailableAsync(LocalData, Game, progress);
 
             if (patched)
             {
                 StatusMessage = $"Game patched to version {LocalData.InstalledVersion}.";
             }
+            
+            StatusMessage = "Verifying integrity...";
+
+            var filesToFix = await _installationService.VerifyIntegrityAsync(LocalData, latestVersion.Files);
+
+            if (filesToFix.Count > 0 && filesToFix.Count < latestVersion.Files.Count)
+            {
+                StatusMessage = $"Repairing {filesToFix.Count} files...";
+                await _installationService.DownloadAndReplaceFilesAsync(filesToFix, LocalData.InstallPath);
+
+                LocalData.InstalledVersion = latestVersion.Version;
+                LocalData.Files = latestVersion.Files.Select(ModelMapper.MapToIbInstalledFileModel).ToList();
+
+                StatusMessage = $"Game repaired to version {LocalData.InstalledVersion}.";
+            }
+            else if (filesToFix.Count == latestVersion.Files.Count ||
+                     string.IsNullOrEmpty(LocalData.InstalledVersion))
+            {
+                StatusMessage = "Performing full install...";
+                await _installationService.DownloadAndInstallFullAsync(Game, LocalData.InstallPath, progress);
+
+                LocalData.InstalledVersion = latestVersion.Version;
+                LocalData.Files = latestVersion.Files.Select(ModelMapper.MapToIbInstalledFileModel).ToList();
+
+                StatusMessage = $"Game fully installed to version {LocalData.InstalledVersion}.";
+            }
             else
             {
-                StatusMessage = "No patch available. Verifying integrity...";
-
-                if (latestVersion == null)
-                {
-                    StatusMessage = "No available version for this platform.";
-                    return;
-                }
-
-                var filesToFix = await _installationService.VerifyIntegrityAsync(LocalData, latestVersion.Files);
-
-                if (filesToFix.Count > 0 && filesToFix.Count < latestVersion.Files.Count)
-                {
-                    StatusMessage = $"Repairing {filesToFix.Count} files...";
-                    await _installationService.DownloadAndReplaceFilesAsync(filesToFix, Game.Id, LocalData.InstallPath);
-
-                    LocalData.InstalledVersion = latestVersion.Version;
-                    LocalData.Files = latestVersion.Files.Select(ModelMapper.MapToIbInstalledFileModel).ToList();
-
-                    StatusMessage = $"Game repaired to version {LocalData.InstalledVersion}.";
-                }
-                else if (filesToFix.Count == latestVersion.Files.Count ||
-                         string.IsNullOrEmpty(LocalData.InstalledVersion))
-                {
-                    StatusMessage = "Too many files missing or corrupted. Performing full install...";
-                    await _installationService.DownloadAndInstallFullAsync(Game, LocalData.InstallPath, progress);
-
-                    LocalData.InstalledVersion = latestVersion.Version;
-                    LocalData.Files = latestVersion.Files.Select(ModelMapper.MapToIbInstalledFileModel).ToList();
-
-                    StatusMessage = $"Game fully installed to version {LocalData.InstalledVersion}.";
-                }
-                else
-                {
-                    StatusMessage = "Game is up to date.";
-                }
+                StatusMessage = "Game is up to date.";
             }
 
             if (Game.Addons.Count > 0)
@@ -321,14 +408,15 @@ public class GameViewModel : ReactiveObject
                 }
             }
 
-            IsInstalled = LocalData != null;
-            IsUpdated = LocalData?.InstalledVersion == latestVersion?.Version;
+            IsInstalled = LocalData is { Files.Count: > 0 } && !string.IsNullOrWhiteSpace(LocalData.InstallPath);
+            IsUpdated = LocalData?.InstalledVersion == latestVersion.Version;
+            RaiseLocalDataChanged();
         }
     }
     
     private async Task DeleteGameAsync()
     {
-        if (LocalData == null)
+        if (LocalData == null || !IsInstalled)
         {
             StatusMessage = "Game is not installed.";
             return;
@@ -341,30 +429,36 @@ public class GameViewModel : ReactiveObject
 
             if (Directory.Exists(gameFolder))
             {
-                await Task.Run(() =>
+                try
                 {
-                    try
+                    if (_gameLaunchService.IsRunning)
                     {
-                        if (_gameLaunchService.IsRunning)
-                        {
-                            _gameLaunchService.StopGame();
-                        }
-                        Directory.Delete(gameFolder, true); 
+                        await _gameLaunchService.StopGameAsync();
                     }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine($"Error deleting game folder: {ex.Message}");
-                        throw;
-                    }
-                });
+                    Directory.Delete(gameFolder, true); 
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Error deleting game folder: {ex.Message}");
+                    throw;
+                }
             }
 
-            LocalData = null;
+            LocalData.Files.Clear();
+            LocalData.InstalledAddons.Clear();
+            LocalData.InstalledVersion = "";
+            LocalData.InstallPath = "";
+            
             IsInstalled = false;
             IsUpdated = false;
-
             StatusMessage = "Game deleted successfully.";
             Progress = 0;
+            
+            this.RaisePropertyChanged(nameof(IsInstalled));
+            this.RaisePropertyChanged(nameof(IsUpdated));
+            this.RaisePropertyChanged(nameof(StatusMessage));
+
+            RaiseLocalDataChanged();
         }
         catch (Exception ex)
         {

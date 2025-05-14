@@ -36,3 +36,7 @@ global using Avalonia.Platform;
 global using System.IO.Compression;
 global using System.Security.Cryptography;
 global using Forja.Launcher.Maping;
+global using DynamicData.Binding;
+global using System.Collections.Specialized;
+global using System.Collections.Concurrent;
+global using Mono.Unix;

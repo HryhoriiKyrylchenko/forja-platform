@@ -15,6 +15,7 @@
         <converters:NullToOpacityConverter x:Key="NullToOpacityConverter" />
         <converters:RepairButtonStateConverter x:Key="RepairButtonStateConverter" />
         <converters:DeleteButtonStateConverter x:Key="DeleteButtonStateConverter" />
+        <converters:BooleanNegationConverter x:Key="BooleanNegationConverter" />
     </UserControl.Resources>
     
     <UserControl.Styles>
@@ -87,57 +88,79 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:GameViewModel">
                             <Button Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).SelectGameCommand}"
-                                    CommandParameter="{Binding}" 
+                                    CommandParameter="{Binding}"
                                     BorderThickness="0"
                                     Background="Transparent"
                                     Padding="0"
-                                    Margin="5">
-                                <Border BorderThickness="2">
-                                    <Border.BorderBrush>
-                                        <SolidColorBrush Color="{Binding IsSelected, Converter={StaticResource SelectedToColorConverter}}" />
-                                    </Border.BorderBrush>
-                                    <Image Source="{Binding LogoBitmap}" Width="150" Height="100" />
-                                </Border>
+                                    Margin="5"
+                                    IsEnabled="{Binding IsSelectionEnabled}">
+                            
+                                <Grid Width="150" Height="100">
+                                    <!-- Border wraps the image to show selection -->
+                                    <Border BorderThickness="2" Background="Transparent">
+                                        <Border.BorderBrush>
+                                            <SolidColorBrush Color="{Binding IsSelected, Converter={StaticResource SelectedToColorConverter}}" />
+                                        </Border.BorderBrush>
+                            
+                                        <!-- Game Image -->
+                                        <Image Source="{Binding LogoBitmap}" Width="150" Height="100" />
+                                    </Border>
+                            
+                                    <!-- Unavailable Overlay -->
+                                    <ContentControl IsVisible="{Binding IsUnavailable}">
+                                        <Border Background="#80000080" BorderThickness="0">
+                                            <TextBlock Text="Unavailable"
+                                                       Foreground="White"
+                                                       FontWeight="Bold"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"
+                                                       FontSize="14" />
+                                        </Border>
+                                    </ContentControl>
+                                </Grid>
                             </Button>
-                        </DataTemplate>
+                            </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </ScrollViewer>
             
             <!-- Dropdown + Main Action -->
-            <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="10" DockPanel.Dock="Right" Spacing="10">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10" DockPanel.Dock="Right" Spacing="10">
                 
                 <StackPanel Orientation="Vertical" Spacing="5">
                     <!-- Repair Button -->
                     <Button Content="Repair"
                             Command="{Binding RepairCommand}"
-                            CommandParameter="{Binding SelectedGame}"
                             CornerRadius="0,0,5,0"
                             Width="100"
                             Height="25"
+                            Padding="4,0"
                             Background="#7147C5"
                             Foreground="#E2E2E2"
                             BorderBrush="#1C1231"
-                            IsEnabled="{Binding SelectedGame, Converter={StaticResource RepairButtonStateConverter}}" />
+                            FontSize="12"
+                            HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                            IsVisible="{Binding ShowRepairButton}" />
 
                     <!-- Delete Button -->
                     <Button Content="Delete"
                             Command="{Binding DeleteCommand}"
-                            CommandParameter="{Binding SelectedGame}"
                             CornerRadius="0,0,5,0"
                             Width="100"
                             Height="25"
+                            Padding="4,0"
                             Background="#7147C5"
                             Foreground="#E2E2E2"
                             BorderBrush="#1C1231"
-                            IsEnabled="{Binding SelectedGame, Converter={StaticResource DeleteButtonStateConverter}}" />
+                            FontSize="12"
+                            HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                            IsVisible="{Binding ShowDeleteButton}" />
                 </StackPanel>
 
                 <!-- Main Action Button -->
                 <Button Classes="custom-action-button"
                         Content="{Binding CurrentActionText}"
                         Command="{Binding CurrentActionCommand}"
-                        CommandParameter="{Binding SelectedGame}"
                         IsVisible="{Binding CurrentGameAction, Converter={StaticResource ActionToVisibilityConverter}}"
                         CornerRadius="0,0,10,0"
                         FontWeight="Bold"

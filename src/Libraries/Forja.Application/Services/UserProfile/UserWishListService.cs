@@ -9,14 +9,20 @@ namespace Forja.Application.Services.UserProfile;
         private readonly IUserWishListRepository _userWishListRepository;
         private readonly IProductRepository _productRepository;
         private readonly IUserRepository _userRepository;
+        private readonly IFileManagerService _fileManagerService;
+        private readonly IReviewRepository _reviewRepository;
 
     public UserWishListService( IUserWishListRepository userWishListRepository, 
-                                IProductRepository      productRepository, 
-                                IUserRepository         userRepository)
+                                IProductRepository productRepository, 
+                                IUserRepository userRepository,
+                                IFileManagerService fileManagerService,
+                                IReviewRepository reviewRepository)
     {
         _userWishListRepository = userWishListRepository;
         _productRepository = productRepository;
         _userRepository = userRepository;
+        _fileManagerService = fileManagerService;
+        _reviewRepository = reviewRepository;
     }
 
     /// <inheritdoc />
@@ -111,6 +117,50 @@ namespace Forja.Application.Services.UserProfile;
             var wishLists = await _userWishListRepository.GetByUserIdAsync(userId);
             return wishLists.Select(UserProfileEntityToDtoMapper.MapToUserWishListDto).ToList();
         }
+        
+        /// <inheritdoc />
+        public async Task<List<UserWishListWithExtendedGameDto>> GetByUserIdWithExtendedGameAsync(Guid userId)
+        {
+            if (userId == Guid.Empty)
+            {
+                throw new ArgumentException("Id cannot be empty.", nameof(userId));
+            }
+            var wishLists = await _userWishListRepository.GetByUserIdAsync(userId);
+            
+            var result = new List<UserWishListWithExtendedGameDto>();
+
+            foreach (var wish in wishLists)
+            {
+                if (wish.Product is not Game game)
+                    continue; 
+                
+                var logoUrl = await _fileManagerService.GetPresignedProductLogoUrlAsync(game.Id, 1900);
+                var reviewCount = await _reviewRepository.GetProductApprovedReviewsCountAsync(game.Id);
+
+                var addons = new List<GameAddonSmallDto>();
+                foreach (var addon in game.GameAddons)
+                {
+                    var addonLogo = await _fileManagerService.GetPresignedProductLogoUrlAsync(addon.Id, 1900);
+                    addons.Add(GamesEntityToDtoMapper.MapToGameAddonSmallDto(addon, addonLogo));
+                }
+
+                var achievements = new List<AchievementShortDto>();
+                foreach (var achievement in game.Achievements)
+                {
+                    var achievementLogo = await _fileManagerService.GetPresignedAchievementImageUrlAsync(achievement.Id, 1900);
+                    achievements.Add(UserProfileEntityToDtoMapper.MapToAchievementShortDto(achievement, achievementLogo));;
+                }
+                
+                result.Add(UserProfileEntityToDtoMapper.MapToUserWishListWithExtendedGameDto(wish.Id, 
+                    game,
+                    logoUrl,
+                    achievements,
+                    addons,
+                    reviewCount));
+            }
+
+            return result;
+        }
 
     #region User Statistics Methods
     /// <inheritdoc />
@@ -123,6 +173,6 @@ namespace Forja.Application.Services.UserProfile;
 
         return await _userWishListRepository.GetCountByUserIdAsync(userId);
     }
-    /// <inheritdoc />
+
     #endregion
 }

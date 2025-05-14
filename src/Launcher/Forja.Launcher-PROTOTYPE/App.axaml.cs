@@ -16,6 +16,8 @@ public partial class App : Application
             // Initialize the dependency injection container
             var services = new ServiceCollection();
             services.AddSingleton<ApiService>();
+            services.AddSingleton<GameLaunchService>();
+            services.AddSingleton<GameInstallationService>();
             services.AddSingleton<MainWindowViewModel>();
         
             // Set the ServiceProvider so it can be accessed by the MainWindow

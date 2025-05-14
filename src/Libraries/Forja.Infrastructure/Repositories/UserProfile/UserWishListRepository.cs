@@ -82,10 +82,34 @@ public class UserWishListRepository : IUserWishListRepository
         {
             throw new ArgumentException("User id cannot be empty.", nameof(userId));
         }
-        return await _userWishLists
-            .Where(uwl => uwl.UserId == userId)
+
+        var wishLists = await _userWishLists
+            .Where(uwl => uwl.UserId == userId && uwl.Product is Game)
             .Include(uwl => uwl.Product)
             .ToListAsync();
+
+        var productIds = wishLists.Select(w => w.ProductId).ToList();
+
+        var games = await _context.Games
+            .Where(g => productIds.Contains(g.Id))
+            .Include(g => g.ProductDiscounts)
+                .ThenInclude(pd => pd.Discount)
+            .Include(g => g.ProductGenres)
+                .ThenInclude(pg => pg.Genre)
+            .Include(g => g.GameAddons)
+            .Include(g => g.Achievements)
+            .ToListAsync();
+
+        foreach (var wishList in wishLists)
+        {
+            var game = games.FirstOrDefault(g => g.Id == wishList.ProductId);
+            if (game != null)
+            {
+                wishList.Product = game;
+            }
+        }
+
+        return wishLists;
     }
 
     /// <inheritdoc />

@@ -7,6 +7,8 @@ public class MainViewModel : ViewModelBase
     public ReactiveCommand<GameViewModel, Unit> SelectGameCommand { get; }
 
     private readonly ApiService _apiService;
+    private readonly GameInstallationService _gameInstallationService;
+    private readonly GameLaunchService _gameLaunchService;
     
     private GameAction _currentGameAction;
     public GameAction CurrentGameAction
@@ -15,13 +17,38 @@ public class MainViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _currentGameAction, value);
     }
     
+    private IDisposable? _selectedGameSubscription;
+    
     private GameViewModel? _selectedGame;
     public GameViewModel? SelectedGame
     {
         get => _selectedGame;
-        set => this.RaiseAndSetIfChanged(ref _selectedGame, value);
+        set
+        {
+            if (value == _selectedGame)
+                return;
+
+            _selectedGameSubscription?.Dispose();
+            
+            this.RaiseAndSetIfChanged(ref _selectedGame, value);
+            
+            if (_selectedGame != null)
+            {
+                _selectedGameSubscription = _selectedGame
+                    .WhenAnyPropertyChanged(
+                        nameof(GameViewModel.IsInstalled),
+                                                nameof(GameViewModel.IsUpdated),
+                                                nameof(GameViewModel.IsRunning))
+                    .Subscribe(_ => UpdateCurrentGameAction());
+            }
+            
+            this.RaisePropertyChanged(nameof(RepairCommand));
+            this.RaisePropertyChanged(nameof(DeleteCommand));
+            
+            UpdateCurrentGameAction();
+        }
     }
-    
+
     public string CurrentActionText =>
         CurrentGameAction switch
         {
@@ -45,11 +72,18 @@ public class MainViewModel : ViewModelBase
     public ICommand? RepairCommand => SelectedGame?.RepairGameCommand;
     public ICommand? DeleteCommand => SelectedGame?.DeleteGameCommand;
     
+    public bool ShowRepairButton => SelectedGame is { IsInstalled: true, IsRunning: false, IsUpdated: true };
+    public bool ShowDeleteButton => SelectedGame is { IsInstalled: true, IsRunning: false };
+    
     public Bitmap DefaultLogo { get; }
     
-    public MainViewModel(ApiService apiService)
+    public MainViewModel(ApiService apiService,
+        GameInstallationService gameInstallationService,
+        GameLaunchService gameLaunchService)
     {
         _apiService = apiService;
+        _gameInstallationService = gameInstallationService;
+        _gameLaunchService = gameLaunchService;
         
         var uri = new Uri("avares://Forja.Launcher-PROTOTYPE/Assets/logo_2.png");
         DefaultLogo = new Bitmap(AssetLoader.Open(uri));
@@ -76,8 +110,40 @@ public class MainViewModel : ViewModelBase
             {
                 UpdateCurrentGameAction();
             });
+        
+        this.WhenAnyValue(
+                x => x.SelectedGame,
+                x => x.SelectedGame.IsInstalled,
+                x => x.SelectedGame.IsRunning,
+                x => x.SelectedGame.IsUpdated)
+            .Subscribe(_ =>
+            {
+                this.RaisePropertyChanged(nameof(ShowRepairButton));
+                this.RaisePropertyChanged(nameof(ShowDeleteButton));
+            });
+
+        
+        _saveDelayCts = new CancellationTokenSource();
 
         InitializeGamesAsync();
+        
+        foreach (var game in Games)
+        {
+            game.LocalDataChanged += (_, _) => SaveInstalledGamesSafe();
+            game.MainStatsChanged += (_, _) => UpdateRepairAndDeleteButtonsState();
+        }
+        
+        Games.CollectionChanged += (_, args) =>
+        {
+            if (args.NewItems != null)
+            {
+                foreach (GameViewModel newGame in args.NewItems)
+                {
+                    newGame.LocalDataChanged += (_, _) => SaveInstalledGamesSafe();
+                    newGame.MainStatsChanged += (_, _) => UpdateRepairAndDeleteButtonsState();
+                }
+            }
+        };
     }
 
     private async void InitializeGamesAsync()
@@ -108,7 +174,7 @@ public class MainViewModel : ViewModelBase
 
                     foreach (var localGame in localGames)
                     {
-                        var gameVm = new GameViewModel(null, _apiService, localGame)
+                        var gameVm = new GameViewModel(null, localGame, _gameLaunchService, _gameInstallationService)
                         {
                             IsUnavailable = true
                         };
@@ -123,7 +189,8 @@ public class MainViewModel : ViewModelBase
                     {
                         var localData = localGames.FirstOrDefault(lg => lg.Id == apiGame.Id);
                         localData ??= ModelMapper.MapToInstalledGame(apiGame, string.Empty);
-                        var gameVm = new GameViewModel(apiGame, _apiService, localData)
+                        localData.LogoUrl = apiGame.LogoUrl;
+                        var gameVm = new GameViewModel(apiGame, localData, _gameLaunchService, _gameInstallationService)
                         {
                             IsUnavailable = !apiGame.Platforms.Contains(currentPlatform)
                         };
@@ -134,20 +201,16 @@ public class MainViewModel : ViewModelBase
                     var missingGames = localGames.Where(local => !apiGameDict.ContainsKey(local.Id));
                     foreach (var missingLocal in missingGames)
                     {
-                        var unavailableVm = new GameViewModel(null, _apiService, missingLocal)
+                        var unavailableVm = new GameViewModel(null, missingLocal, _gameLaunchService, _gameInstallationService)
                         {
                             IsUnavailable = true
                         };
                         Games.Add(unavailableVm);
                     }
-
-                    var installedGamesToSave = Games
-                        .Where(g => g is { IsInstalled: true, LocalData: not null })
-                        .Select(g => g.LocalData!)
-                        .ToList();
-
-                    await ProductStorage.SaveInstalledGamesAsync(installedGamesToSave);
                 }
+                
+                var gamesToSave = Games.Select(g => g.LocalData!).ToList();
+                await ProductStorage.SaveInstalledGamesAsync(gamesToSave);
             });
 
             foreach (var gameVm in Games)
@@ -194,5 +257,34 @@ public class MainViewModel : ViewModelBase
             PlatformID.MacOSX => PlatformType.Mac,
             _ => PlatformType.Windows
         };
+    }
+    
+    private CancellationTokenSource _saveDelayCts;
+
+    private void SaveInstalledGamesSafe()
+    {
+        _saveDelayCts.Cancel();
+        _saveDelayCts = new CancellationTokenSource();
+        var token = _saveDelayCts.Token;
+
+        Task.Delay(1000, token).ContinueWith(async t =>
+        {
+            if (!t.IsCanceled)
+            {
+                var gamesToSave = Games.Select(g => g.LocalData!).ToList();
+                await ProductStorage.SaveInstalledGamesAsync(gamesToSave);
+            }
+        }, TaskScheduler.FromCurrentSynchronizationContext());
+    }
+
+    private void UpdateRepairAndDeleteButtonsState()
+    {
+        this.RaisePropertyChanged(nameof(RepairCommand));
+        this.RaisePropertyChanged(nameof(DeleteCommand));
+    }
+    
+    public void RaiseSelectedGameChanged()
+    {
+        this.RaisePropertyChanged(nameof(SelectedGame));
     }
 }

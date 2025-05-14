@@ -11,6 +11,9 @@ sealed class Program
         var services = new ServiceCollection();
         
         services.AddSingleton<ApiService>();
+        services.AddSingleton<GameLaunchService>();
+        services.AddSingleton<GameInstallationService>();
+        
         services.AddSingleton<MainWindowViewModel>();
         services.AddSingleton<LoginViewModel>();
         services.AddSingleton<MainViewModel>();

@@ -81,9 +81,9 @@ public class FileManagerService : IFileManagerService
         string destinationPath = request.FileType switch
         {
             FileType.FullGame => $"games/{request.GameId}/{request.Platform.ToString().ToLowerInvariant()}/versions/{request.Version}/{request.FinalFileName}",
-            FileType.GameFile => $"games/{request.GameId}/{request.Platform.ToString().ToLowerInvariant()}/versions/{request.Version}/files/{request.FinalFileName}",
+            FileType.GameFile => $"games/{request.GameId}/{request.Platform.ToString().ToLowerInvariant()}/versions/{request.Version}/files/{request.FilePath}/{request.FinalFileName}",
             FileType.GameAddon => $"games/{request.GameId}/{request.Platform.ToString().ToLowerInvariant()}/addons/{request.AddonId}/versions/{request.Version}/{request.FinalFileName}",
-            FileType.AddonFile => $"games/{request.GameId}/{request.Platform.ToString().ToLowerInvariant()}/addons/{request.AddonId}/versions/{request.Version}/files/{request.FinalFileName}",
+            FileType.AddonFile => $"games/{request.GameId}/{request.Platform.ToString().ToLowerInvariant()}/addons/{request.AddonId}/versions/{request.Version}/files/{request.FilePath}/{request.FinalFileName}",
             FileType.GamePatch => $"games/{request.GameId}/{request.Platform.ToString().ToLowerInvariant()}/patches/{request.FromVersion}-{request.ToVersion}/{request.FinalFileName}",
             _ => throw new ArgumentOutOfRangeException(nameof(request.FileType), request.FileType, "Invalid file type")
         };

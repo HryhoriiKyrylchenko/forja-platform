@@ -7,10 +7,13 @@ namespace Forja.Application.Services.UserProfile;
 public class UserFollowerService : IUserFollowerService
 {
     private readonly IUserFollowerRepository _userFollowerRepository;
+    private readonly IFileManagerService _fileManagerService;
 
-    public UserFollowerService(IUserFollowerRepository userFollowerRepository)
+    public UserFollowerService(IUserFollowerRepository userFollowerRepository,
+        IFileManagerService fileManagerService)
     {
         _userFollowerRepository = userFollowerRepository;
+        _fileManagerService = fileManagerService;
     }
 
     /// <inheritdoc />
@@ -24,7 +27,21 @@ public class UserFollowerService : IUserFollowerService
             return new List<UserFollowerDto>();
         }
         
-        return userFollowers.Select(UserProfileEntityToDtoMapper.MapToUserFollowerDto).ToList();
+        var result = new List<UserFollowerDto>();
+
+        foreach (var userFollower in userFollowers)
+        {
+            string followerAvatarUrl = userFollower.Follower.AvatarUrl != null
+                ? await _fileManagerService.GetPresignedUrlAsync(userFollower.Follower.AvatarUrl, 1900)
+                : string.Empty;
+            string followedAvatarUrl = userFollower.Followed.AvatarUrl != null
+                ? await _fileManagerService.GetPresignedUrlAsync(userFollower.Followed.AvatarUrl, 1900)
+                : string.Empty;
+            
+            result.Add(UserProfileEntityToDtoMapper.MapToUserFollowerDto(userFollower, followerAvatarUrl, followedAvatarUrl));
+        }
+
+        return result;
     }
     
     /// <inheritdoc />
@@ -37,7 +54,15 @@ public class UserFollowerService : IUserFollowerService
         
         var userFollower = await _userFollowerRepository.GetByIdAsync(id);
         
-        return userFollower == null ? null : UserProfileEntityToDtoMapper.MapToUserFollowerDto(userFollower);
+        return userFollower == null ? null : UserProfileEntityToDtoMapper.MapToUserFollowerDto(
+            userFollower,
+            userFollower.Follower.AvatarUrl != null
+                ? await _fileManagerService.GetPresignedUrlAsync(userFollower.Follower.AvatarUrl, 1900)
+                : string.Empty,
+            userFollower.Followed.AvatarUrl != null
+                ? await _fileManagerService.GetPresignedUrlAsync(userFollower.Followed.AvatarUrl, 1900)
+                : string.Empty
+            );
     }
 
     /// <inheritdoc />
@@ -56,7 +81,15 @@ public class UserFollowerService : IUserFollowerService
         };
 
         var createdUserFollower = await _userFollowerRepository.AddAsync(userFollower);
-        return createdUserFollower == null ? null : UserProfileEntityToDtoMapper.MapToUserFollowerDto(createdUserFollower);
+        return createdUserFollower == null ? null : UserProfileEntityToDtoMapper.MapToUserFollowerDto(
+            createdUserFollower,
+            createdUserFollower.Follower.AvatarUrl != null
+                ? await _fileManagerService.GetPresignedUrlAsync(createdUserFollower.Follower.AvatarUrl, 1900)
+                : string.Empty,
+            createdUserFollower.Followed.AvatarUrl != null
+                ? await _fileManagerService.GetPresignedUrlAsync(createdUserFollower.Followed.AvatarUrl, 1900)
+                : string.Empty
+        );
     }
 
     /// <inheritdoc />
@@ -91,7 +124,7 @@ public class UserFollowerService : IUserFollowerService
     }
 
     /// <inheritdoc />
-    public async Task<List<UserFollowerDto>> GetFollowersByUserIdAsync(Guid userId) // підписані на мене
+    public async Task<List<UserFollowerDto>> GetFollowersByUserIdAsync(Guid userId) 
     {
         if (userId == Guid.Empty)
         {
@@ -99,13 +132,26 @@ public class UserFollowerService : IUserFollowerService
         }
         
         var followers = await _userFollowerRepository.GetFollowersByUserIdAsync(userId);
-
         
-        return followers.Select(UserProfileEntityToDtoMapper.MapToUserFollowerDto).ToList();
+        var result = new List<UserFollowerDto>();
+
+        foreach (var userFollower in followers)
+        {
+            string followerAvatarUrl = userFollower.Follower.AvatarUrl != null
+                ? await _fileManagerService.GetPresignedUrlAsync(userFollower.Follower.AvatarUrl, 1900)
+                : string.Empty;
+            string followedAvatarUrl = userFollower.Followed.AvatarUrl != null
+                ? await _fileManagerService.GetPresignedUrlAsync(userFollower.Followed.AvatarUrl, 1900)
+                : string.Empty;
+            
+            result.Add(UserProfileEntityToDtoMapper.MapToUserFollowerDto(userFollower, followerAvatarUrl, followedAvatarUrl));
+        }
+
+        return result;
     }
 
     /// <inheritdoc />
-    public async Task<List<UserFollowerDto>> GetFollowedByUserIdAsync(Guid userId) // я підписан
+    public async Task<List<UserFollowerDto>> GetFollowedByUserIdAsync(Guid userId) 
     {
         if (userId == Guid.Empty)
         {
@@ -113,7 +159,21 @@ public class UserFollowerService : IUserFollowerService
         }
         
         var followedUsers = await _userFollowerRepository.GetFollowedByUserIdAsync(userId);
-        return followedUsers.Select(UserProfileEntityToDtoMapper.MapToUserFollowerDto).ToList();
+        var result = new List<UserFollowerDto>();
+
+        foreach (var userFollower in followedUsers)
+        {
+            string followerAvatarUrl = userFollower.Follower.AvatarUrl != null
+                ? await _fileManagerService.GetPresignedUrlAsync(userFollower.Follower.AvatarUrl, 1900)
+                : string.Empty;
+            string followedAvatarUrl = userFollower.Followed.AvatarUrl != null
+                ? await _fileManagerService.GetPresignedUrlAsync(userFollower.Followed.AvatarUrl, 1900)
+                : string.Empty;
+            
+            result.Add(UserProfileEntityToDtoMapper.MapToUserFollowerDto(userFollower, followerAvatarUrl, followedAvatarUrl));
+        }
+
+        return result;
     }
 
     #region User Statistics Methods
@@ -121,7 +181,6 @@ public class UserFollowerService : IUserFollowerService
     ///  Retrieves the count of followers for a specified user and updates the provided statistics object.
     /// </summary>
     /// <param name="userId">Identifies the user for whom the follower count is being retrieved.</param>
-    /// <param name="statisticsDto">Holds the statistics data that will be updated with the follower count.</param>
     /// <returns>Returns the updated statistics object containing the follower count.</returns>
     /// <exception cref="ArgumentException">Thrown when the identifier for the user is empty.</exception>
     public async Task<int> GetFollowersCountAsync(Guid userId)

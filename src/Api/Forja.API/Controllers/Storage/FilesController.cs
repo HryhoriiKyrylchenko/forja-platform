@@ -1098,6 +1098,7 @@ public class FilesController : ControllerBase
     /// <param name="offset">Starting byte offset.</param>
     /// <param name="length">Length of the chunk in bytes.</param>
     /// <returns>The chunk of the file as a stream.</returns>
+    [Authorize]
     [HttpGet("chunk")]
     public async Task<IActionResult> DownloadChunk([FromQuery] string objectPath, [FromQuery] long offset, [FromQuery] long length)
     {
