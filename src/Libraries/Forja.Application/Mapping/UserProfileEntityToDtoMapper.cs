@@ -80,24 +80,26 @@ public static class UserProfileEntityToDtoMapper
             CreatedAt = review.CreatedAt
         };
     }
-    
+
     /// <summary>
-    /// Maps a UserFollower entity to a UserFollowerDTO.
+    /// Maps a <see cref="UserFollower"/> entity to a <see cref="UserFollowerDto"/>.
     /// </summary>
-    /// <param name="userFollower">The UserFollower entity to map.</param>
-    /// <returns>The mapped UserFollowerDTO.</returns>
-    public static UserFollowerDto MapToUserFollowerDto(UserFollower userFollower)
+    /// <param name="userFollower">The <see cref="UserFollower"/> entity to be mapped.</param>
+    /// <param name="followerAvatarUrl">The avatar URL to be associated with the user follower.</param>
+    /// <param name="followedAvatarUrl">The avatar URL to be associated with the user followed.</param>
+    /// <returns>A <see cref="UserFollowerDto"/> representing the mapped data.</returns>
+    public static UserFollowerDto MapToUserFollowerDto(UserFollower userFollower, string followerAvatarUrl, string followedAvatarUrl)
     {
         return new UserFollowerDto
         {
             Id = userFollower.Id,
             FollowerId = userFollower.FollowerId,
             FollowerUsername = userFollower.Follower.Username,
-            FollowerAvatarUrl = userFollower.Follower.AvatarUrl,
+            FollowerAvatarUrl = followerAvatarUrl,
             FollowerTag = userFollower.Follower.CustomUrl,
             FollowedId = userFollower.FollowedId,
             FollowedUsername = userFollower.Followed.Username,
-            FollowedAvatarUrl = userFollower.Followed.AvatarUrl,
+            FollowedAvatarUrl = followedAvatarUrl,
             FollowedTag = userFollower.Followed.CustomUrl
         };
     }
@@ -119,6 +121,20 @@ public static class UserProfileEntityToDtoMapper
             TotalGameAchievements = userLibraryGame.Game.Achievements.Count,
             CompletedAchievements = achievements,
             Addons = addons
+        };
+    }
+    
+    public static UserWishListWithExtendedGameDto MapToUserWishListWithExtendedGameDto(Guid wishListId,
+        Game game, 
+        string logoUrl,
+        List<AchievementShortDto> achievements,
+        List<GameAddonSmallDto> addons,
+        (int positiveReviews, int negativeReviews) rating)
+    {
+        return new UserWishListWithExtendedGameDto
+        {
+            Id = wishListId,
+            Game = GamesEntityToDtoMapper.MapToGameWishListDto(game, logoUrl, achievements, addons, rating),
         };
     }
     

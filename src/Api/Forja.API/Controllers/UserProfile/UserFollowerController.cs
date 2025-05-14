@@ -273,7 +273,7 @@ public class UserFollowerController : ControllerBase
 
         try
         {
-            var followers = await _userFollowerService.GetFollowersByUserIdAsync(userId); // підписані на мене
+            var followers = await _userFollowerService.GetFollowersByUserIdAsync(userId); 
             return Ok(followers);
         }
         catch (Exception ex)
@@ -311,7 +311,7 @@ public class UserFollowerController : ControllerBase
     /// <returns>A list of UserFollowerDTO entries where the user is being followed.</returns>
     [Authorize]
     [HttpGet("followed/{userId}")]
-    public async Task<ActionResult<List<UserFollowerDto>>> GetFollowedByUserId(Guid userId) // на кого я підписан
+    public async Task<ActionResult<List<UserFollowerDto>>> GetFollowedByUserId(Guid userId) 
     {
         if (userId == Guid.Empty)
         {

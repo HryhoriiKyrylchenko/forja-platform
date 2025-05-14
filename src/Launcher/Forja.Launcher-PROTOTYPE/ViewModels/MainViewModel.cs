@@ -25,17 +25,20 @@ public class MainViewModel : ViewModelBase
         get => _selectedGame;
         set
         {
-            if (_selectedGame != null)
-                _selectedGameSubscription?.Dispose();
+            if (value == _selectedGame)
+                return;
+
+            _selectedGameSubscription?.Dispose();
             
             this.RaiseAndSetIfChanged(ref _selectedGame, value);
             
             if (_selectedGame != null)
             {
                 _selectedGameSubscription = _selectedGame
-                    .WhenAnyPropertyChanged(nameof(GameViewModel.IsInstalled),
-                        nameof(GameViewModel.IsUpdated),
-                        nameof(GameViewModel.IsRunning))
+                    .WhenAnyPropertyChanged(
+                        nameof(GameViewModel.IsInstalled),
+                                                nameof(GameViewModel.IsUpdated),
+                                                nameof(GameViewModel.IsRunning))
                     .Subscribe(_ => UpdateCurrentGameAction());
             }
             

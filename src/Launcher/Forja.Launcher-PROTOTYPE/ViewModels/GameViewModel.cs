@@ -90,7 +90,7 @@ public class GameViewModel : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref _statusMessage, value);
     }
 
-    public bool CanPlay => _gameLaunchService.CurrentGame?.Id == LocalData?.Id && !_gameLaunchService.IsRunning;
+    //public bool CanPlay => _gameLaunchService.CurrentGame?.Id == LocalData?.Id && !_gameLaunchService.IsRunning;
     public bool CanSelectGame => !_gameLaunchService.IsRunning;
     
     public GameViewModel(LibraryGameModel? game, InstalledGameModel localData, GameLaunchService gameLaunchService, GameInstallationService gameInstallationService)
@@ -110,12 +110,14 @@ public class GameViewModel : ReactiveObject
         {
             IsRunning = _gameLaunchService.CurrentGame?.Id == LocalData.Id && isRunning;
             
-            this.RaisePropertyChanged(nameof(CanPlay));
+            //this.RaisePropertyChanged(nameof(CanPlay));
             this.RaisePropertyChanged(nameof(CanSelectGame));
             this.RaisePropertyChanged(nameof(IsSelectionEnabled));
         };
         
         InitializeState();
+        
+        Debug.WriteLine($"GameViewModel created for {LocalData?.Id}. HashCode: {GetHashCode()}");
     }
     
     public event EventHandler<bool>? LocalDataChanged;
@@ -191,29 +193,29 @@ public class GameViewModel : ReactiveObject
         return Task.CompletedTask;
     }
 
-    private Task StopGameAsync()
+    private async Task StopGameAsync()
     {
         if (LocalData == null || !_gameLaunchService.IsRunning)
         {
             StatusMessage = "Impossible to stop. Game is not running.";
-            return Task.CompletedTask;
+            return;
         }
 
         if (_gameLaunchService.CurrentGame?.Id != LocalData.Id)
         {
             StatusMessage = "Impossible to stop. Game is not running.";
-            return Task.CompletedTask;
+            return;
         }
+
         try
         {
-            _gameLaunchService.StopGame();
+            await _gameLaunchService.StopGameAsync();
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"Error stopping a game: {ex.Message}");
             StatusMessage = "Error stopping a game.";
         }
-        return Task.CompletedTask;
     }
 
     private async Task CheckForUpdateAsync()
@@ -427,22 +429,19 @@ public class GameViewModel : ReactiveObject
 
             if (Directory.Exists(gameFolder))
             {
-                await Task.Run(() =>
+                try
                 {
-                    try
+                    if (_gameLaunchService.IsRunning)
                     {
-                        if (_gameLaunchService.IsRunning)
-                        {
-                            _gameLaunchService.StopGame();
-                        }
-                        Directory.Delete(gameFolder, true); 
+                        await _gameLaunchService.StopGameAsync();
                     }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine($"Error deleting game folder: {ex.Message}");
-                        throw;
-                    }
-                });
+                    Directory.Delete(gameFolder, true); 
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Error deleting game folder: {ex.Message}");
+                    throw;
+                }
             }
 
             LocalData.Files.Clear();

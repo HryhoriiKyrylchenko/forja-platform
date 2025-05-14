@@ -1,5 +1,3 @@
-
-
 namespace Forja.Launcher.Services;
 
 public class GameLaunchService
@@ -34,8 +32,9 @@ public class GameLaunchService
      public GameLaunchService(ApiService apiService)
      {
          _apiService = apiService;
+         Debug.WriteLine($"GameLaunchService created. HashCode: {GetHashCode()}");
      }
-
+     
      public void LaunchGame(InstalledGameModel game)
      {
          if (IsRunning)
@@ -49,9 +48,9 @@ public class GameLaunchService
          var executablePath = FindExecutablePath(installPath);
          
          if (string.IsNullOrEmpty(executablePath) || !File.Exists(executablePath)) return;
-    
+     
          CurrentGame = game;
-    
+     
          _gameProcess = new Process();
          _gameProcess.StartInfo = new ProcessStartInfo
          {
@@ -59,33 +58,43 @@ public class GameLaunchService
              UseShellExecute = false,
              WorkingDirectory = Path.GetDirectoryName(executablePath)
          };
-    
+     
          _gameProcess.Exited += OnGameExited;
          _gameProcess.EnableRaisingEvents = true;
-    
+     
          _gameProcess.Start();
-    
+     
          Stopwatch = Stopwatch.StartNew();
-         RaiseGameRunningChanged(true);
+         IsRunning = true;
      }
      
-     public void StopGame()
+     public async Task StopGameAsync()
      {
+         Debug.WriteLine($"Attempting to stop game. IsRunning: {IsRunning}, Process Null: {_gameProcess == null}, HasExited: {_gameProcess?.HasExited}");
+         
          if (_gameProcess is { HasExited: false })
          {
              _gameProcess.Kill();
-             _gameProcess.WaitForExit();
+     
+             try
+             {
+                 await Task.Run(() => _gameProcess.WaitForExit());
+             }
+             catch (Exception ex)
+             {
+                 Debug.WriteLine("Error waiting for process to exit: " + ex.Message);
+             }
          }
-
+     
          CleanupAfterGameExit();
      }
-    
+     
      private async void OnGameExited(object? sender, EventArgs e)
      {
          try
          {
              Stopwatch?.Stop();
-
+     
              if (Stopwatch != null && CurrentGame != null)
              {
                  await _apiService.ReportPlayedTimeAsync(CurrentGame.Id, Stopwatch.Elapsed);
@@ -95,12 +104,8 @@ public class GameLaunchService
          {
              Debug.WriteLine(exception);
          }
-         finally
-         {
-             CleanupAfterGameExit();
-         }
      }
-    
+     
      private void CleanupAfterGameExit()
      {
          if (_gameProcess != null)
@@ -109,10 +114,11 @@ public class GameLaunchService
              _gameProcess.Dispose();
              _gameProcess = null;
          }
-    
+     
          Stopwatch = null;
          CurrentGame = null;
-    
+         IsRunning = false;
+     
          RaiseGameRunningChanged(false);
      }
     
@@ -153,6 +159,11 @@ public class GameLaunchService
                     return file;
                 }
             }
+            
+            // return files
+            //     .Where(file => string.IsNullOrEmpty(Path.GetExtension(file)) && IsExecutable(file))
+            //     .OrderByDescending(File.GetLastWriteTime) 
+            //     .FirstOrDefault();
         }
 
         return null;

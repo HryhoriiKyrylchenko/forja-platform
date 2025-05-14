@@ -72,6 +72,33 @@ public static class GamesEntityToDtoMapper
             NegativeReviewsCount = rating.negativeReviews
         };
     }
+
+    public static GameWishListDto MapToGameWishListDto(Game game, 
+        string logoUrl,
+        List<AchievementShortDto> achievements,
+        List<GameAddonSmallDto> addons,
+        (int positiveReviews, int negativeReviews) rating)
+    {
+        return new GameWishListDto
+        {
+            Id = game.Id,
+            Title = game.Title,
+            LogoUrl = logoUrl,
+            ReleaseDate = game.ReleaseDate,
+            Price = game.Price,
+            Discounts = game.ProductDiscounts.Select(pd => StoreEntityToDtoMapper.MapToDiscountDto(pd.Discount))
+                .Where(dto => 
+                    (!dto.StartDate.HasValue || dto.StartDate <= DateTime.UtcNow) && 
+                    (!dto.EndDate.HasValue || dto.EndDate >= DateTime.UtcNow))
+                .OrderBy(dto => dto.StartDate)
+                .ToList(),
+            Genres = game.ProductGenres.Select(pg => MapToGenreDto(pg.Genre)).ToList(),
+            Achievements = achievements,
+            Addons = addons,
+            PositiveRating = rating.positiveReviews,
+            NegativeRating = rating.negativeReviews
+        };
+    }
     
     public static GameSmallDto MapToGameSmallDto(Game game, string logoUrl)
     {
