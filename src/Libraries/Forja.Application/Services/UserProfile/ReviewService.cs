@@ -235,31 +235,63 @@ public class ReviewService : IReviewService
         {
             return new List<ReviewExtendedDto>();
         }
-
-        var reviewDtos = await Task.WhenAll(gameReviewsList.Select(async r =>
+        
+        var reviewDtos = new List<ReviewExtendedDto>();
+        
+        foreach (var review in gameReviewsList)
         {
-            var user = r.User;
+            var user = review.User;
+
             var avatarUrl = await _fileManagerService.GetPresignedUserAvatarUrlAsync(user.Id, 1900);
 
             var productsInLibrary = user.UserLibraryGames.Count;
             productsInLibrary += user.UserLibraryGames.Sum(ulg => ulg.PurchasedAddons.Count);
-            
-            var achievementDtos = await Task.WhenAll(user.UserAchievements.Select(async ua => 
-                UserProfileEntityToDtoMapper.MapToAchievementShortDto(
-                    ua.Achievement,
-                    await _fileManagerService.GetPresignedAchievementImageUrlAsync(ua.Achievement.Id))).ToList());
+
+            var achievementDtos = new List<AchievementShortDto>();
+            foreach (var userAchievement in user.UserAchievements)
+            {
+                var imageUrl = await _fileManagerService.GetPresignedAchievementImageUrlAsync(userAchievement.Achievement.Id);
+                var achievementDto = UserProfileEntityToDtoMapper.MapToAchievementShortDto(userAchievement.Achievement, imageUrl);
+                achievementDtos.Add(achievementDto);
+            }
 
             var userDto = UserProfileEntityToDtoMapper.MapToUserForReviewDto(
                 user,
                 avatarUrl,
                 productsInLibrary,
-                achievementDtos.ToList()
+                achievementDtos
             );
 
-            return UserProfileEntityToDtoMapper.MapToReviewExtendedDto(r, userDto);
-        }));
+            var reviewDto = UserProfileEntityToDtoMapper.MapToReviewExtendedDto(review, userDto);
+            reviewDtos.Add(reviewDto);
+        }
 
-        return reviewDtos.ToList();
+        return reviewDtos;
+
+        // var reviewDtos = await Task.WhenAll(gameReviewsList.Select(async r =>
+        // {
+        //     var user = r.User;
+        //     var avatarUrl = await _fileManagerService.GetPresignedUserAvatarUrlAsync(user.Id, 1900);
+        //
+        //     var productsInLibrary = user.UserLibraryGames.Count;
+        //     productsInLibrary += user.UserLibraryGames.Sum(ulg => ulg.PurchasedAddons.Count);
+        //     
+        //     var achievementDtos = await Task.WhenAll(user.UserAchievements.Select(async ua => 
+        //         UserProfileEntityToDtoMapper.MapToAchievementShortDto(
+        //             ua.Achievement,
+        //             await _fileManagerService.GetPresignedAchievementImageUrlAsync(ua.Achievement.Id))).ToList());
+        //
+        //     var userDto = UserProfileEntityToDtoMapper.MapToUserForReviewDto(
+        //         user,
+        //         avatarUrl,
+        //         productsInLibrary,
+        //         achievementDtos.ToList()
+        //     );
+        //
+        //     return UserProfileEntityToDtoMapper.MapToReviewExtendedDto(r, userDto);
+        // }));
+        //
+        // return reviewDtos.ToList();
     }
 
     /// <inheritdoc />

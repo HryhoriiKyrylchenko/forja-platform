@@ -534,7 +534,7 @@ public class ReviewController : ControllerBase
     }
     
     [HttpGet("products/{productId}")]
-    public async Task<ActionResult<PaginatedResult<ReviewDto>>> GetAllProductReviews(
+    public async Task<ActionResult<PaginatedResult<ReviewExtendedDto>>> GetAllProductReviews(
         [FromRoute] Guid productId,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
