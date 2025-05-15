@@ -12,13 +12,11 @@ public sealed class GameLaunchService
     public bool IsRunning
     {
         get => _isRunning;
-        set
+        private set
         {
-            if (_isRunning != value)
-            {
-                _isRunning = value;
-                RaiseGameRunningChanged(_isRunning);
-            }
+            if (_isRunning == value) return;
+            _isRunning = value;
+            RaiseGameRunningChanged(_isRunning);
         }
     }
     
@@ -27,6 +25,13 @@ public sealed class GameLaunchService
      private void RaiseGameRunningChanged(bool isRunning)
      {
          GameRunningChanged?.Invoke(this, isRunning);
+     }
+     
+     public event EventHandler<InstalledGameModel?>? CurrentGameChanged;
+
+     private void RaiseCurrentGameChanged()
+     {
+         CurrentGameChanged?.Invoke(this, CurrentGame);
      }
     
      public GameLaunchService(ApiService apiService)
@@ -50,6 +55,7 @@ public sealed class GameLaunchService
          if (string.IsNullOrEmpty(executablePath) || !File.Exists(executablePath)) return;
      
          CurrentGame = game;
+         RaiseCurrentGameChanged();
      
          _gameProcess = new Process();
          _gameProcess.StartInfo = new ProcessStartInfo
@@ -85,8 +91,6 @@ public sealed class GameLaunchService
                  Debug.WriteLine("Error waiting for process to exit: " + ex.Message);
              }
          }
-     
-         CleanupAfterGameExit();
      }
      
      private async void OnGameExited(object? sender, EventArgs e)
@@ -99,6 +103,8 @@ public sealed class GameLaunchService
              {
                  await _apiService.ReportPlayedTimeAsync(CurrentGame.Id, Stopwatch.Elapsed);
              }
+             
+             CleanupAfterGameExit();
          }
          catch (Exception exception)
          {
@@ -117,9 +123,8 @@ public sealed class GameLaunchService
      
          Stopwatch = null;
          CurrentGame = null;
+         RaiseCurrentGameChanged();
          IsRunning = false;
-     
-         RaiseGameRunningChanged(false);
      }
     
     private string? FindExecutablePath(string installPath)
@@ -130,46 +135,37 @@ public sealed class GameLaunchService
             return exeFiles.FirstOrDefault();
         }
 
-        if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+        if (!OperatingSystem.IsLinux() && !OperatingSystem.IsMacOS()) return null;
+        if (OperatingSystem.IsMacOS())
         {
-            if (OperatingSystem.IsMacOS())
+            var appBundles = Directory.GetDirectories(installPath, "*.app", SearchOption.AllDirectories);
+            foreach (var bundle in appBundles)
             {
-                var appBundles = Directory.GetDirectories(installPath, "*.app", SearchOption.AllDirectories);
-                foreach (var bundle in appBundles)
-                {
-                    var macOsPath = Path.Combine(bundle, "Contents", "MacOS");
-                    if (Directory.Exists(macOsPath))
-                    {
-                        var macExecutables = Directory.GetFiles(macOsPath)
-                            .Where(IsExecutable);
-                        var executables = macExecutables.ToList();
-                        if (executables.Any())
-                            return executables.First();
-                    }
-                }
+                var macOsPath = Path.Combine(bundle, "Contents", "MacOS");
+                if (!Directory.Exists(macOsPath)) continue;
+                var macExecutables = Directory.GetFiles(macOsPath)
+                    .Where(IsExecutable);
+                var executables = macExecutables.ToList();
+                if (executables.Count != 0)
+                    return executables.First();
             }
+        }
 
-            var files = Directory.GetFiles(installPath, "*", SearchOption.AllDirectories);
+        var files = Directory.GetFiles(installPath, "*", SearchOption.AllDirectories);
 
-            foreach (var file in files)
+        foreach (var file in files)
+        {
+            var extension = Path.GetExtension(file).ToLowerInvariant();
+            if (string.IsNullOrEmpty(extension) && IsExecutable(file) && file.Contains("TestGame"))
             {
-                var extension = Path.GetExtension(file).ToLowerInvariant();
-                if (string.IsNullOrEmpty(extension) && IsExecutable(file) && file.Contains("TestGame"))
-                {
-                    return file;
-                }
+                return file;
             }
-            
-            // return files
-            //     .Where(file => string.IsNullOrEmpty(Path.GetExtension(file)) && IsExecutable(file))
-            //     .OrderByDescending(File.GetLastWriteTime) 
-            //     .FirstOrDefault();
         }
 
         return null;
     }
 
-    private bool IsExecutable(string path)
+    private static bool IsExecutable(string path)
     {
         try
         {
