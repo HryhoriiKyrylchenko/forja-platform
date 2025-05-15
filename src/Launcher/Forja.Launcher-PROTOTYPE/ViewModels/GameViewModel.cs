@@ -1,6 +1,6 @@
 namespace Forja.Launcher.ViewModels;
 
-public class GameViewModel : ReactiveObject
+public sealed class GameViewModel : ViewModelBase
 {
     public LibraryGameModel? Game { get; }
     public InstalledGameModel? LocalData { get; set; }
@@ -90,7 +90,6 @@ public class GameViewModel : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref _statusMessage, value);
     }
 
-    //public bool CanPlay => _gameLaunchService.CurrentGame?.Id == LocalData?.Id && !_gameLaunchService.IsRunning;
     public bool CanSelectGame => !_gameLaunchService.IsRunning;
     
     public GameViewModel(LibraryGameModel? game, InstalledGameModel localData, GameLaunchService gameLaunchService, GameInstallationService gameInstallationService)
@@ -110,7 +109,6 @@ public class GameViewModel : ReactiveObject
         {
             IsRunning = _gameLaunchService.CurrentGame?.Id == LocalData.Id && isRunning;
             
-            //this.RaisePropertyChanged(nameof(CanPlay));
             this.RaisePropertyChanged(nameof(CanSelectGame));
             this.RaisePropertyChanged(nameof(IsSelectionEnabled));
         };

@@ -172,7 +172,7 @@ public static class UserProfileEntityToDtoMapper
         };
     }
 
-    public static UserForReviewDto MapToUserForReviewDto(User user, string avatarUrl, int productsCount, List<AchievementShortDto> achievements)
+    public static UserForReviewDto MapToUserForReviewDto(User user, string avatarUrl, int productsCount, string hatVariantUrl, List<AchievementShortDto> achievements)
     {
         return new UserForReviewDto
         {
@@ -181,6 +181,7 @@ public static class UserProfileEntityToDtoMapper
             UserTag = user.CustomUrl ?? user.Username,
             AvatarUrl = avatarUrl,
             ProductsInLibrary = productsCount,
+            HatVariantUrl = hatVariantUrl,
             Achievements = achievements
         };
     }
