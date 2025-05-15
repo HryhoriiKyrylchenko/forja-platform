@@ -1,6 +1,6 @@
 namespace Forja.Launcher.Services;
 
-public class GameLaunchService
+public sealed class GameLaunchService
 {
     private readonly ApiService _apiService;
     

@@ -1,42 +1,29 @@
 ﻿namespace Forja.Launcher.ViewModels;
 
-public partial class MainWindowViewModel : ViewModelBase, IReactiveObject
+public partial class MainWindowViewModel : ViewModelBase
 {
-    private readonly ApiService _apiService;
-    private readonly GameInstallationService _gameInstallationService;
-    private readonly GameLaunchService _gameLaunchService;
+    private readonly IServiceProvider _serviceProvider;
     private ViewModelBase? _currentViewModel;
     
     public ViewModelBase? CurrentViewModel
     {
         get => _currentViewModel;
-        set
-        {
-            if (_currentViewModel != value)
-            {
-                _currentViewModel = value;
-                RaisePropertyChanged(nameof(CurrentViewModel)); 
-            }
-        }
+        set => this.RaiseAndSetIfChanged(ref _currentViewModel, value);
     }
 
-    public MainWindowViewModel(ApiService apiService, 
-        GameInstallationService gameInstallationService,
-        GameLaunchService gameLaunchService)
+    public MainWindowViewModel(IServiceProvider serviceProvider)
     {
-        _apiService = apiService;
-        _gameInstallationService = gameInstallationService;
-        _gameLaunchService = gameLaunchService;
+        _serviceProvider = serviceProvider;
         
         var isLoggedIn = false;
 
         if (isLoggedIn)
         {
-            CurrentViewModel = new MainViewModel(apiService, gameInstallationService, gameLaunchService);
+            CurrentViewModel = _serviceProvider.GetRequiredService<MainViewModel>();
         }
         else
         {
-            var loginViewModel = new LoginViewModel(apiService);
+            var loginViewModel = _serviceProvider.GetRequiredService<LoginViewModel>();
             loginViewModel.LoginSucceeded += OnLoginSucceeded;
             CurrentViewModel = loginViewModel;
         }
@@ -46,20 +33,7 @@ public partial class MainWindowViewModel : ViewModelBase, IReactiveObject
     {
         Dispatcher.UIThread.Post(() =>
         {
-            CurrentViewModel = new MainViewModel(_apiService, _gameInstallationService, _gameLaunchService);
+            CurrentViewModel = _serviceProvider.GetRequiredService<MainViewModel>();
         });
-    }
-    
-    public new event PropertyChangingEventHandler? PropertyChanging;
-    public new event PropertyChangedEventHandler? PropertyChanged;
-
-    public void RaisePropertyChanging(PropertyChangingEventArgs args)
-    {
-        PropertyChanging?.Invoke(this, args);
-    }
-
-    private void RaisePropertyChanged(string propertyName)  
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); 
     }
 }

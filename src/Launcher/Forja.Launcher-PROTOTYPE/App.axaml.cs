@@ -19,6 +19,8 @@ public partial class App : Application
             services.AddSingleton<GameLaunchService>();
             services.AddSingleton<GameInstallationService>();
             services.AddSingleton<MainWindowViewModel>();
+            services.AddSingleton<LoginViewModel>();
+            services.AddSingleton<MainViewModel>();
         
             // Set the ServiceProvider so it can be accessed by the MainWindow
             ServiceProvider = services.BuildServiceProvider();

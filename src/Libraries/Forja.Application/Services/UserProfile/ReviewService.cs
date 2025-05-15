@@ -247,6 +247,12 @@ public class ReviewService : IReviewService
             var productsInLibrary = user.UserLibraryGames.Count;
             productsInLibrary += user.UserLibraryGames.Sum(ulg => ulg.PurchasedAddons.Count);
 
+            var hatVariantUrl = await _fileManagerService.GetPresignedProfileHatVariantUrlAsync(
+                new ProfileHatVariantGetByIdRequest
+                {
+                    ProfileHatVariantId = user.ProfileHatVariant
+                });
+
             var achievementDtos = new List<AchievementShortDto>();
             foreach (var userAchievement in user.UserAchievements)
             {
@@ -259,6 +265,7 @@ public class ReviewService : IReviewService
                 user,
                 avatarUrl,
                 productsInLibrary,
+                hatVariantUrl,
                 achievementDtos
             );
 
@@ -267,31 +274,6 @@ public class ReviewService : IReviewService
         }
 
         return reviewDtos;
-
-        // var reviewDtos = await Task.WhenAll(gameReviewsList.Select(async r =>
-        // {
-        //     var user = r.User;
-        //     var avatarUrl = await _fileManagerService.GetPresignedUserAvatarUrlAsync(user.Id, 1900);
-        //
-        //     var productsInLibrary = user.UserLibraryGames.Count;
-        //     productsInLibrary += user.UserLibraryGames.Sum(ulg => ulg.PurchasedAddons.Count);
-        //     
-        //     var achievementDtos = await Task.WhenAll(user.UserAchievements.Select(async ua => 
-        //         UserProfileEntityToDtoMapper.MapToAchievementShortDto(
-        //             ua.Achievement,
-        //             await _fileManagerService.GetPresignedAchievementImageUrlAsync(ua.Achievement.Id))).ToList());
-        //
-        //     var userDto = UserProfileEntityToDtoMapper.MapToUserForReviewDto(
-        //         user,
-        //         avatarUrl,
-        //         productsInLibrary,
-        //         achievementDtos.ToList()
-        //     );
-        //
-        //     return UserProfileEntityToDtoMapper.MapToReviewExtendedDto(r, userDto);
-        // }));
-        //
-        // return reviewDtos.ToList();
     }
 
     /// <inheritdoc />

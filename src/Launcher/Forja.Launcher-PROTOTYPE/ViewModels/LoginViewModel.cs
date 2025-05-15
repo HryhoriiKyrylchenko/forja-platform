@@ -1,6 +1,6 @@
 namespace Forja.Launcher.ViewModels;
 
-public class LoginViewModel : ViewModelBase, IReactiveObject
+public class LoginViewModel : ViewModelBase
 {
     private string _email = string.Empty;
     private string _password = string.Empty;
