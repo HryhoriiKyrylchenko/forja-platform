@@ -3,7 +3,7 @@ namespace Forja.Launcher.ViewModels;
 public sealed class GameViewModel : ViewModelBase
 {
     public LibraryGameModel? Game { get; }
-    public InstalledGameModel? LocalData { get; set; }
+    public InstalledGameModel? LocalData { get; private set; }
     
     private readonly GameInstallationService _installationService;
     private readonly GameLaunchService _gameLaunchService;
@@ -58,6 +58,10 @@ public sealed class GameViewModel : ViewModelBase
             RaiseMainStatsChanged();
         }
     }
+    
+    private readonly ObservableAsPropertyHelper<bool> _canSelectGame;
+    public bool CanSelectGame => _canSelectGame.Value;
+
 
     private Bitmap? _logoBitmap;
     public Bitmap? LogoBitmap
@@ -80,8 +84,13 @@ public sealed class GameViewModel : ViewModelBase
             this.RaisePropertyChanged(nameof(IsSelectionEnabled));
         }
     }
+    
+    public bool IsGloballySelectable => !_gameLaunchService.IsRunning || IsRunning; //
 
-    public bool IsSelectionEnabled => !IsUnavailable && CanSelectGame;
+    public bool IsSelectionEnabled 
+        => !IsUnavailable 
+           && CanSelectGame
+           && IsGloballySelectable; //
 
     private string _statusMessage = "";
     public string StatusMessage
@@ -89,8 +98,6 @@ public sealed class GameViewModel : ViewModelBase
         get => _statusMessage;
         set => this.RaiseAndSetIfChanged(ref _statusMessage, value);
     }
-
-    public bool CanSelectGame => !_gameLaunchService.IsRunning;
     
     public GameViewModel(LibraryGameModel? game, InstalledGameModel localData, GameLaunchService gameLaunchService, GameInstallationService gameInstallationService)
     {
@@ -107,11 +114,27 @@ public sealed class GameViewModel : ViewModelBase
         
         _gameLaunchService.GameRunningChanged += (_, isRunning) =>
         {
-            IsRunning = _gameLaunchService.CurrentGame?.Id == LocalData.Id && isRunning;
+            IsRunning = isRunning;
             
             this.RaisePropertyChanged(nameof(CanSelectGame));
             this.RaisePropertyChanged(nameof(IsSelectionEnabled));
+            this.RaisePropertyChanged(nameof(IsGloballySelectable));
         };
+        
+        _gameLaunchService.CurrentGameChanged += (_, currentGame) =>
+        {
+            IsRunning = currentGame?.Id == LocalData?.Id;
+            this.RaisePropertyChanged(nameof(CanSelectGame));
+            this.RaisePropertyChanged(nameof(IsSelectionEnabled));
+            this.RaisePropertyChanged(nameof(IsGloballySelectable));
+        };
+        
+        this.WhenAnyValue(x => x.IsRunning)
+            .Select(running => !running)
+            .ToProperty(this, x => x.CanSelectGame, out _canSelectGame);
+        
+        this.WhenAnyValue(x => x.CanSelectGame)
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(IsSelectionEnabled)));
         
         InitializeState();
         

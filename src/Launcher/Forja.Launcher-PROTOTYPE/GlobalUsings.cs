@@ -38,3 +38,4 @@ global using System.Security.Cryptography;
 global using Forja.Launcher.Maping;
 global using DynamicData.Binding;
 global using Mono.Unix;
+global using System.Reactive.Linq;

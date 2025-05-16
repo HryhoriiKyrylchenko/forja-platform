@@ -59,15 +59,17 @@ public class MainViewModel : ViewModelBase
             _ => string.Empty
         };
     
-    public ICommand? CurrentActionCommand =>
-        CurrentGameAction switch
-        {
-            GameAction.Install => SelectedGame?.InstallOrUpdateCommand,
-            GameAction.Update => SelectedGame?.InstallOrUpdateCommand,
-            GameAction.Start => SelectedGame?.PlayCommand,
-            GameAction.Stop => SelectedGame?.StopCommand,
-            _ => null
-        };
+    // public ICommand? CurrentActionCommand =>
+    //     CurrentGameAction switch
+    //     {
+    //         GameAction.Install => SelectedGame?.InstallOrUpdateCommand,
+    //         GameAction.Update => SelectedGame?.InstallOrUpdateCommand,
+    //         GameAction.Start => SelectedGame?.PlayCommand,
+    //         GameAction.Stop => SelectedGame?.StopCommand,
+    //         _ => null
+    //     };
+    
+    public ReactiveCommand<Unit, Unit> CurrentActionCommand { get; }
     
     public ICommand? RepairCommand => SelectedGame?.RepairGameCommand;
     public ICommand? DeleteCommand => SelectedGame?.DeleteGameCommand;
@@ -98,6 +100,30 @@ public class MainViewModel : ViewModelBase
             SelectedGame = gameVm;
         });
         
+        CurrentActionCommand = ReactiveCommand.Create(() =>
+        {
+            if (SelectedGame == null)
+                return;
+
+            switch(CurrentGameAction)
+            {
+                case GameAction.Install:
+                case GameAction.Update:
+                    SelectedGame.InstallOrUpdateCommand.Execute();
+                    break;
+                case GameAction.Start:
+                    SelectedGame.PlayCommand.Execute();
+                    break;
+                case GameAction.Stop:
+                    SelectedGame.StopCommand.Execute();
+                    break;
+                case GameAction.None:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        });
+        
         this.WhenAnyValue(x => x.CurrentGameAction)
             .Subscribe(_ =>
             {
@@ -111,11 +137,13 @@ public class MainViewModel : ViewModelBase
                 UpdateCurrentGameAction();
             });
         
-        this.WhenAnyValue(
-                x => x.SelectedGame,
-                x => x.SelectedGame.IsInstalled,
-                x => x.SelectedGame.IsRunning,
-                x => x.SelectedGame.IsUpdated)
+        this.WhenAnyValue(x => x.SelectedGame)
+            .Where(x => x != null)
+            .SelectMany(game => game!.WhenAnyValue(
+                g => g.IsInstalled,
+                g => g.IsRunning,
+                g => g.IsUpdated,
+                (_, _, _) => Unit.Default))
             .Subscribe(_ =>
             {
                 this.RaisePropertyChanged(nameof(ShowRepairButton));
