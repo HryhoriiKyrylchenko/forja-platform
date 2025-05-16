@@ -84,8 +84,13 @@ public sealed class GameViewModel : ViewModelBase
             this.RaisePropertyChanged(nameof(IsSelectionEnabled));
         }
     }
+    
+    public bool IsGloballySelectable => !_gameLaunchService.IsRunning || IsRunning; //
 
-    public bool IsSelectionEnabled => !IsUnavailable && CanSelectGame;
+    public bool IsSelectionEnabled 
+        => !IsUnavailable 
+           && CanSelectGame
+           && IsGloballySelectable; //
 
     private string _statusMessage = "";
     public string StatusMessage
@@ -107,19 +112,21 @@ public sealed class GameViewModel : ViewModelBase
         PlayCommand = ReactiveCommand.CreateFromTask(PlayGameAsync);
         StopCommand = ReactiveCommand.CreateFromTask(StopGameAsync);
         
-        // _gameLaunchService.GameRunningChanged += (_, isRunning) =>
-        // {
-        //     IsRunning = isRunning;
-        //     
-        //     this.RaisePropertyChanged(nameof(CanSelectGame));
-        //     this.RaisePropertyChanged(nameof(IsSelectionEnabled));
-        // };
+        _gameLaunchService.GameRunningChanged += (_, isRunning) =>
+        {
+            IsRunning = isRunning;
+            
+            this.RaisePropertyChanged(nameof(CanSelectGame));
+            this.RaisePropertyChanged(nameof(IsSelectionEnabled));
+            this.RaisePropertyChanged(nameof(IsGloballySelectable));
+        };
         
         _gameLaunchService.CurrentGameChanged += (_, currentGame) =>
         {
             IsRunning = currentGame?.Id == LocalData?.Id;
             this.RaisePropertyChanged(nameof(CanSelectGame));
             this.RaisePropertyChanged(nameof(IsSelectionEnabled));
+            this.RaisePropertyChanged(nameof(IsGloballySelectable));
         };
         
         this.WhenAnyValue(x => x.IsRunning)
