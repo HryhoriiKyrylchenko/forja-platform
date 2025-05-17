@@ -54,15 +54,6 @@ public class GameUpdateRequest
     public decimal Price { get; set; }
 
     /// <summary>
-    /// Gets or sets the URL of the game's logo image.
-    /// </summary>
-    /// <remarks>
-    /// This property holds the web address pointing to the game's logo,
-    /// which can be used for display purposes in the application's interface.
-    /// </remarks>
-    public string LogoUrl { get; set; } = string.Empty;
-
-    /// <summary>
     /// Represents the release date of the game.
     /// </summary>
     /// <remarks>

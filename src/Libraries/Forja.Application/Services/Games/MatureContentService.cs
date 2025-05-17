@@ -90,7 +90,6 @@ public class MatureContentService : IMatureContentService
 
         existingMatureContent.Name = request.Name;
         existingMatureContent.Description = request.Description;
-        existingMatureContent.LogoUrl = request.LogoUrl;
 
         var updatedMatureContent = await _matureContentRepository.UpdateAsync(existingMatureContent);
 

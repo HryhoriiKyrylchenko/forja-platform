@@ -164,12 +164,6 @@ public static class CommonRequestsValidator
             return false;
         }
 
-        if (string.IsNullOrWhiteSpace(request.ImageUrl))
-        {
-            error = "The ImageUrl cannot be empty if provided.";
-            return false;
-        }
-
         if (request.ProductId == Guid.Empty)
         {
             error = "If ProductId is provided, it must be a valid GUID.";

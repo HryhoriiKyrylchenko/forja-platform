@@ -70,15 +70,6 @@ public class GameAddonUpdateRequest
     public decimal Price { get; set; }
 
     /// <summary>
-    /// Gets or sets the URL of the logo associated with the game addon.
-    /// </summary>
-    /// <remarks>
-    /// This property contains the path or address to the logo image file.
-    /// It is used to represent the game's addon visually.
-    /// </remarks>
-    public string LogoUrl { get; set; } = string.Empty;
-
-    /// <summary>
     /// Represents the release date of the game add-on. This property is required and must be set to a valid date.
     /// It is used to indicate when the game add-on is officially available.
     /// </summary>

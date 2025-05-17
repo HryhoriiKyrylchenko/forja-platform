@@ -180,7 +180,6 @@ public class GameService : IGameService
         existingGame.MinimalAge = (MinimalAge)request.MinimalAge;
         existingGame.Platforms = request.Platforms;
         existingGame.Price = request.Price;
-        existingGame.LogoUrl = request.LogoUrl;
         existingGame.ReleaseDate = request.ReleaseDate;
         existingGame.IsActive = request.IsActive;
         existingGame.InterfaceLanguages = request.InterfaceLanguages;
