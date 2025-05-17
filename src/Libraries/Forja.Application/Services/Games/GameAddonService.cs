@@ -210,7 +210,6 @@ public class GameAddonService : IGameAddonService
         existingAddon.MinimalAge = (MinimalAge)request.MinimalAge;
         existingAddon.Platforms = request.Platforms;
         existingAddon.Price = request.Price;
-        existingAddon.LogoUrl = request.LogoUrl;
         existingAddon.ReleaseDate = request.ReleaseDate;
         existingAddon.IsActive = request.IsActive;
         existingAddon.InterfaceLanguages = request.InterfaceLanguages;

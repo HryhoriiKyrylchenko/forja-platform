@@ -31,9 +31,4 @@ public class MatureContentUpdateRequest
     /// Represents the description of the mature content. This property provides additional details or context for the related content.
     /// </summary>
     public string Description { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Gets or sets the URL of the logo associated with the request.
-    /// </summary>
-    public string? LogoUrl { get; set; } = string.Empty;
 }

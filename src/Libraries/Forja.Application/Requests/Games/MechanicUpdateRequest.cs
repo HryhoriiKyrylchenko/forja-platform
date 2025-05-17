@@ -26,12 +26,6 @@ public class MechanicUpdateRequest
     public string Description { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the URL of the logo associated with the mechanic update request.
-    /// This property can be null or an empty string if no logo URL is specified.
-    /// </summary>
-    public string? LogoUrl { get; set; } = string.Empty;
-
-    /// <summary>
     /// Gets or sets a value indicating whether the mechanic is marked as deleted.
     /// </summary>
     public bool IsDeleted { get; set; }

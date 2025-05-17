@@ -95,7 +95,6 @@ public class MechanicService : IMechanicService
 
         existingMechanic.Name = request.Name;
         existingMechanic.Description = request.Description;
-        existingMechanic.LogoUrl = request.LogoUrl;
         existingMechanic.IsDeleted = request.IsDeleted;
 
         var updatedMechanic = await _mechanicRepository.UpdateAsync(existingMechanic);

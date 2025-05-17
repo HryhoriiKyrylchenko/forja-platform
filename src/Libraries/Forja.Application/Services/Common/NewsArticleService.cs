@@ -110,7 +110,6 @@ public class NewsArticleService : INewsArticleService
         article.PublicationDate = request.PublicationDate;
         article.IsActive = request.IsActive;
         article.IsPrioritized = request.IsPrioritized;
-        article.ImageUrl = request.ImageUrl;
         article.ProductId = request.ProductId;
         article.FileContent = request.FileContent;
 

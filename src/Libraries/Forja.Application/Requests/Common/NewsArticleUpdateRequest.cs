@@ -11,6 +11,5 @@ public class NewsArticleUpdateRequest
     public bool IsActive { get; set; }
     public bool IsPrioritized { get; set; }
     public byte[]? FileContent { get; set; }
-    public string? ImageUrl { get; set; }
     public Guid? ProductId { get; set; }
 }
