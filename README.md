@@ -42,6 +42,7 @@ Forja Platform is a modern web application built to serve as an analog to battle
 - **Robust Backend:** Developed with .NET/C# to handle business logic and API endpoints.
 - **Efficient Caching:** Redis integration for improved performance.
 - **Database:** PostgreSQL for reliable and scalable data storage.
+- **Cross-platform desktop launcher application:** Built on Avalonia framework.
 - **Future AI Integration:** Potential integration with Llama for AI-powered features.
 
 ---
@@ -55,6 +56,7 @@ Forja Platform is a modern web application built to serve as an analog to battle
 - **Database:** PostgreSQL
 - **Caching:** Redis
 - **Orchestration:** .Net Aspire
+- **Cross-platform desktop launcher application:** Avalonia
 
 ---
 
