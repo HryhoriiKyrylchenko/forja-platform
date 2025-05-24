@@ -417,3 +417,8 @@ Thumbs.db
 .directory
 [._]*.s[a-v][a-z]
 [._]*.sw[a-p]
+/src/Api/Forja.API/appsettings.json
+/src/Libraries/Forja.Domain/Entities.zip
+/src/Libraries/Forja.Infrastructure/Migrations/20250328182040_newsArticlePropertyCorrection.cs
+/src/Libraries/Forja.Infrastructure/Migrations/20250328182040_newsArticlePropertyCorrection.Designer.cs
+/src/Aspire/Forja.AppHost/aspire-manifest/manifest.json

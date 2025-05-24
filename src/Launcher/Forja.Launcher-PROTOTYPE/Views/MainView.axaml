@@ -1,0 +1,175 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Forja.Launcher.ViewModels"
+             xmlns:converters="clr-namespace:Forja.Launcher.Converters"
+             x:Class="Forja.Launcher.Views.MainView"
+             x:DataType="vm:MainViewModel"
+             Background="#1E1E1E" >
+
+    <UserControl.Resources>
+        <converters:ActionToVisibilityConverter x:Key="ActionToVisibilityConverter" />
+        <converters:SelectedToColorConverter x:Key="SelectedToColorConverter" />
+        <converters:ProgressToBooleanConverter x:Key="ProgressToBooleanConverter" />
+        <converters:GameOrDefaultLogoConverter x:Key="GameOrDefaultLogoConverter" />
+        <converters:ProgressToPercentConverter x:Key="ProgressToPercentConverter" />
+        <converters:NullToOpacityConverter x:Key="NullToOpacityConverter" />
+        <converters:RepairButtonStateConverter x:Key="RepairButtonStateConverter" />
+        <converters:DeleteButtonStateConverter x:Key="DeleteButtonStateConverter" />
+        <converters:BooleanNegationConverter x:Key="BooleanNegationConverter" />
+    </UserControl.Resources>
+    
+    <UserControl.Styles>
+        <Style Selector="Button.custom-action-button">
+            <Setter Property="Background" Value="#FF9050"/>
+            <Setter Property="Foreground" Value="#E2E2E2"/>
+            <Setter Property="BorderBrush" Value="#1E1E1E"/>
+        </Style>
+
+        <Style Selector="Button.custom-action-button:pointerover">
+            <Setter Property="Background" Value="#7147C5"/>
+            <Setter Property="BorderBrush" Value="#1C1231"/>
+        </Style>
+
+        <Style Selector="Button.custom-action-button:pressed">
+            <Setter Property="Background" Value="#CC7340"/>
+            <Setter Property="BorderBrush" Value="#331D10"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid Background="#363636">
+        <!-- Define rows: main area plus bottom list area -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" /> <!-- Main area (75-80%) -->
+            <RowDefinition Height="0.25*" /> <!-- Bottom bar (20-25%) -->
+        </Grid.RowDefinitions>
+
+        <!-- Main logo area -->
+        <Border Grid.Row="0" Background="Gray" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Image Stretch="Uniform" Width="800">
+                <Image.Source>
+                    <MultiBinding Converter="{StaticResource GameOrDefaultLogoConverter}">
+                        <Binding Path="SelectedGame.LogoBitmap" />
+                        <Binding Path="DefaultLogo" />
+                    </MultiBinding>
+                </Image.Source>
+            </Image>
+        </Border>
+
+        <!-- Bottom list with games and action button -->
+        <DockPanel Grid.Row="1" LastChildFill="False" Margin="10">
+            <!-- Progress bar + Status -->
+            <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="5">
+                <!-- Status Message -->
+                <TextBlock Text="{Binding SelectedGame.StatusMessage}"
+                           Foreground="White"
+                           FontSize="14"
+                           TextWrapping="Wrap"
+                           HorizontalAlignment="Center"
+                           IsVisible="{Binding SelectedGame, Converter={StaticResource NullToOpacityConverter}}" />
+
+                <!-- Progress bar -->
+                <ProgressBar 
+                    Minimum="0"
+                    Maximum="100"
+                    Height="10"
+                    Margin="0,0,0,5"
+                    Value="{Binding SelectedGame.Progress, Converter={StaticResource ProgressToPercentConverter}}"
+                    IsVisible="{Binding SelectedGame.Progress, Converter={StaticResource ProgressToBooleanConverter}}" />
+            </StackPanel>
+
+            <!-- Game list -->
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" DockPanel.Dock="Left">
+                <ItemsControl ItemsSource="{Binding Games}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:GameViewModel">
+                            <Button Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).SelectGameCommand}"
+                                    CommandParameter="{Binding}"
+                                    BorderThickness="0"
+                                    Background="Transparent"
+                                    Padding="0"
+                                    Margin="5"
+                                    IsEnabled="{Binding IsSelectionEnabled}">
+                            
+                                <Grid Width="150" Height="100">
+                                    <!-- Border wraps the image to show selection -->
+                                    <Border BorderThickness="2" Background="Transparent">
+                                        <Border.BorderBrush>
+                                            <SolidColorBrush Color="{Binding IsSelected, Converter={StaticResource SelectedToColorConverter}}" />
+                                        </Border.BorderBrush>
+                            
+                                        <!-- Game Image -->
+                                        <Image Source="{Binding LogoBitmap}" Width="150" Height="100" />
+                                    </Border>
+                            
+                                    <!-- Unavailable Overlay -->
+                                    <ContentControl IsVisible="{Binding IsUnavailable}">
+                                        <Border Background="#80000080" BorderThickness="0">
+                                            <TextBlock Text="Unavailable"
+                                                       Foreground="White"
+                                                       FontWeight="Bold"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"
+                                                       FontSize="14" />
+                                        </Border>
+                                    </ContentControl>
+                                </Grid>
+                            </Button>
+                            </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+            
+            <!-- Dropdown + Main Action -->
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10" DockPanel.Dock="Right" Spacing="10">
+                
+                <StackPanel Orientation="Vertical" Spacing="5">
+                    <!-- Repair Button -->
+                    <Button Content="Repair"
+                            Command="{Binding RepairCommand}"
+                            CornerRadius="0,0,5,0"
+                            Width="100"
+                            Height="25"
+                            Padding="4,0"
+                            Background="#7147C5"
+                            Foreground="#E2E2E2"
+                            BorderBrush="#1C1231"
+                            FontSize="12"
+                            HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                            IsVisible="{Binding ShowRepairButton}" />
+
+                    <!-- Delete Button -->
+                    <Button Content="Delete"
+                            Command="{Binding DeleteCommand}"
+                            CornerRadius="0,0,5,0"
+                            Width="100"
+                            Height="25"
+                            Padding="4,0"
+                            Background="#7147C5"
+                            Foreground="#E2E2E2"
+                            BorderBrush="#1C1231"
+                            FontSize="12"
+                            HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                            IsVisible="{Binding ShowDeleteButton}" />
+                </StackPanel>
+
+                <!-- Main Action Button -->
+                <Button Classes="custom-action-button"
+                        Content="{Binding CurrentActionText}"
+                        Command="{Binding CurrentActionCommand}"
+                        IsVisible="{Binding CurrentGameAction, Converter={StaticResource ActionToVisibilityConverter}}"
+                        CornerRadius="0,0,10,0"
+                        FontWeight="Bold"
+                        Width="150"
+                        Height="50"
+                        FontSize="18"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center" />
+            </StackPanel>
+        </DockPanel>
+    </Grid>
+</UserControl>

@@ -11,4 +11,3 @@
 
 - **Pages**: Home, Profile, Game Library, Settings
 - **Components**: Buttons, Cards, Navigation Bar, Modals
-- **State Management**: Redux 

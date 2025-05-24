@@ -29,7 +29,7 @@ Forja Platform is a modern web application built to serve as an analog to battle
 - A **.NET backend** to handle business logic, data storage, and external integrations.
 - A **React frontend** for a dynamic and responsive user interface.
 - A ***.Net Aspire** to orchestrate services.
-- Integration with third-party services such as **Keycloak** for authentication, **MinIO** for file storage, **PostgreSQL** for the database, **Redis** for caching, and **HashiCorp Vault** for secrets management.
+- Integration with third-party services such as **Keycloak** for authentication, **MinIO** for file storage, **PostgreSQL** for the database, **Redis** for caching.
 - A clean and scalable codebase suitable for further expansion and additional features like AI integration in the future.
 
 ---
@@ -41,8 +41,8 @@ Forja Platform is a modern web application built to serve as an analog to battle
 - **Secure File Storage:** Leveraging MinIO for S3-compatible storage.
 - **Robust Backend:** Developed with .NET/C# to handle business logic and API endpoints.
 - **Efficient Caching:** Redis integration for improved performance.
-- **Secrets Management:** Secure handling of credentials and secrets using HashiCorp Vault.
 - **Database:** PostgreSQL for reliable and scalable data storage.
+- **Cross-platform desktop launcher application:** Built on Avalonia framework.
 - **Future AI Integration:** Potential integration with Llama for AI-powered features.
 
 ---
@@ -55,9 +55,8 @@ Forja Platform is a modern web application built to serve as an analog to battle
 - **Storage:** MinIO
 - **Database:** PostgreSQL
 - **Caching:** Redis
-- **Secrets Management:** HashiCorp Vault
 - **Orchestration:** .Net Aspire
-- **Containerization:** Docker & Docker Compose
+- **Cross-platform desktop launcher application:** Avalonia
 
 ---
 
@@ -71,12 +70,14 @@ Forja Platform is a modern web application built to serve as an analog to battle
     │   ├── Aspire/                   # .Net Aspire orchestration projects
     │   │   ├── Forja.AppHost/         # Projects orchestration
     │   │   └── Forja.ServiceDefaults/ # General dependencies
+    │   ├── Launcher/                # .NET layer libraries
+    │   │   └── Forja.Launcher/       # Cross-platform game launcher
     │   ├── Libraries/                # .NET layer libraries
     │   │   ├── Forja.Application/     # Business logic, services, and use case implementations
     │   │   ├── Forja.Domain/          # Domain models, entities, and interfaces
     │   │   └── Forja.Infrastructure/  # Data access and integration with external services
     │   └── Web/                      # Web applications
-    │       └── forja-react/          # React web application
+    │       └── forja-next/          # React web application
     │           ├── public/           # Static assets
     │           ├── src/              # Source code: components, pages, services, store, utils
     │           └── package.json       # Node dependencies and scripts
@@ -107,12 +108,13 @@ Before you begin, ensure you have installed:
 
 ```bash
     git clone https://github.com/HryhoriiKyrylchenko/forja-platform.git
-    cd forja-platform
+    cd forja-platform/src/Web/
+    git clone https://github.com/CheDeniss/forja-next
 ```
 
 2. **Backend Setup:**
 
-- Navigate to the `backend/` folder.
+- Navigate to the backend folder.
 - Restore dependencies and build the project:
 
 ```bash
@@ -126,6 +128,7 @@ Before you begin, ensure you have installed:
 
 ```bash
     npm install
+    npm install keycloak-js
     # or if you use Yarn:
     yarn install
 ```
@@ -146,43 +149,9 @@ You can run the project directly from Visual Studio or using the command line:
     dotnet run --project aspire/Forja.AppHost/Forja.AppHost.csproj
 ```
 
-### Running Locally with Docker Compose
-
-The project includes a [`docker-compose.yml`](./deployment/docker-compose.yml) file that sets up all required services:
-
-```bash
-    docker-compose up --build
-```
-
-This command will build and run:
-
-- The .NET backend on port 5000.
-- The React frontend on port 3000.
-- PostgreSQL, Redis, Keycloak, Vault, and MinIO containers.
-
-### Running Individually
-
-- Backend:
-
-You can run the backend directly from Visual Studio or using the command line:
-
-```bash
-    dotnet run --project backend/Forja.API/Forja.API.csproj
-```
-
-- Frontend:
-
-Start the React development server:
-
-```bash
-    cd frontend
-    npm start
-```
----
-
 ## Deployment
 
-For production deployment, consider using your preferred cloud hosting or container orchestration service. Refer to the deployment/scripts/ folder for additional helper scripts and migration steps.
+For production deployment, consider using your preferred cloud hosting or container orchestration service.
 
 ---
 

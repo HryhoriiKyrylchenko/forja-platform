@@ -12,7 +12,7 @@ Forja is designed as a modular and scalable gaming platform inspired by battle.n
 - **Storage (MinIO)**: S3-compatible object storage for user content.
 - **Database (PostgreSQL)**: Stores relational data for users, transactions, and game details.
 - **Caching (Redis)**: Enhances performance by caching frequently accessed data.
-- **Secrets Management (HashiCorp Vault)**: Securely manages API keys, database credentials, and sensitive information.
+- **Launcher (Avalonia)**: Desktop launcher application manages user's game library.
 
 ### Service Communication
 
@@ -20,8 +20,9 @@ Forja is designed as a modular and scalable gaming platform inspired by battle.n
 - The backend integrates with PostgreSQL, MinIO, and Redis to manage data.
 - Keycloak handles authentication and token validation.
 - Redis is used for session storage and frequently accessed queries.
-- HashiCorp Vault manages sensitive credentials securely.
+- Desktop launcher communicates with the backend through APIs.
 
 ### Diagram
 
-[Frontend (React)]  <--->  [Backend (.NET)]  <--->  [PostgreSQL, MinIO, Redis, Keycloak, Vault]
+[Frontend (React)]  <--->  [Backend (.NET)]  <--->  [PostgreSQL, MinIO, Redis, Keycloak]  <--->  [Backend (.NET)]  <--->  [Launcher (Avalonia)] 
+

@@ -1,0 +1,53 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Forja.Launcher.ViewModels"
+             x:Class="Forja.Launcher.Views.LoginView"
+             x:DataType="vm:LoginViewModel">
+    
+    <UserControl.Styles>
+        <Style Selector="Button.custom-action-button">
+            <Setter Property="Background" Value="#FF9050"/>
+            <Setter Property="Foreground" Value="#E2E2E2"/>
+            <Setter Property="BorderBrush" Value="#1E1E1E"/>
+        </Style>
+
+        <Style Selector="Button.custom-action-button:pointerover">
+            <Setter Property="Background" Value="#7147C5"/>
+            <Setter Property="BorderBrush" Value="#1C1231"/>
+        </Style>
+
+        <Style Selector="Button.custom-action-button:pressed">
+            <Setter Property="Background" Value="#CC7340"/>
+            <Setter Property="BorderBrush" Value="#331D10"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid Background="#1E1E1E">
+        <Image Source="avares://Forja.Launcher-PROTOTYPE/Assets/Login.png"
+               Stretch="Uniform"
+               IsHitTestVisible="False" />
+        
+        <StackPanel Margin="30" Width="300" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock Text="LOGIN" FontWeight="Bold" FontSize="24" Margin="0 0 0 0" HorizontalAlignment="Right"/>
+            
+            <TextBlock Text="EMAIL" FontSize="14" FontWeight="Light" Margin="0 0 0 5" HorizontalAlignment="Left"/>
+            <TextBox Watermark="Email" Text="{Binding Email}" Margin="0 0 0 10" />
+            
+            <TextBlock Text="PASSWORD" FontSize="14" FontWeight="Light" Margin="0 0 0 5" HorizontalAlignment="Left"/>
+            <TextBox Watermark="Password" Text="{Binding Password}" PasswordChar="•" Margin="0 0 0 5" />
+
+            <TextBlock Text="{Binding ErrorMessage}" Foreground="Red" FontSize="12" Margin="0 0 0 5" />
+
+            <Button Classes="custom-action-button"
+                    FontWeight="Bold"
+                    Content="LOG IN" 
+                    Command="{Binding LoginCommand}" 
+                    CornerRadius="0,0,10,0"
+                    HorizontalAlignment="Right">
+                <Button.Effect>
+                    <DropShadowEffect BlurRadius="10" Color="Black" Opacity="0.3"/>
+                </Button.Effect>
+            </Button>
+        </StackPanel>
+    </Grid>
+</UserControl>
