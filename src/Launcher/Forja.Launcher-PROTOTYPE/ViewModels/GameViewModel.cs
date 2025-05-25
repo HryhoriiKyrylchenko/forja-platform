@@ -90,7 +90,7 @@ public sealed class GameViewModel : ViewModelBase
     public bool IsSelectionEnabled 
         => !IsUnavailable 
            && CanSelectGame
-           && IsGloballySelectable; //
+           && IsGloballySelectable;
 
     private string _statusMessage = "";
     public string StatusMessage

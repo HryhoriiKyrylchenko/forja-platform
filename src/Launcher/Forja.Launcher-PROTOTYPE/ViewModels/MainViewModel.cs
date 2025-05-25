@@ -59,16 +59,6 @@ public class MainViewModel : ViewModelBase
             _ => string.Empty
         };
     
-    // public ICommand? CurrentActionCommand =>
-    //     CurrentGameAction switch
-    //     {
-    //         GameAction.Install => SelectedGame?.InstallOrUpdateCommand,
-    //         GameAction.Update => SelectedGame?.InstallOrUpdateCommand,
-    //         GameAction.Start => SelectedGame?.PlayCommand,
-    //         GameAction.Stop => SelectedGame?.StopCommand,
-    //         _ => null
-    //     };
-    
     public ReactiveCommand<Unit, Unit> CurrentActionCommand { get; }
     
     public ICommand? RepairCommand => SelectedGame?.RepairGameCommand;
